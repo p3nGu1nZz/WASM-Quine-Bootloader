@@ -1,0 +1,5 @@
+{
+  "name": "WASM Quine Bootloader",
+  "description": "A visualization of a WebAssembly bootloader that loads a kernel from a memory glob, executes it as a quine to output its own source, and triggers a recursive reload cycle.",
+  "requestFramePermissions": []
+}
