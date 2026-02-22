@@ -19,6 +19,10 @@ bash scripts/test.sh
 ./build/linux-debug/test_<module>
 ```
 
+The test harness will exercise the export and log-generation code; running
+`test_util_dpi.cpp` creates temporary files under `bin/` which are cleaned
+up automatically by the script.
+
 ## Behaviour
 
 1. Calls `bash scripts/build.sh` to ensure the main application is up-to-date.

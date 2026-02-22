@@ -70,6 +70,15 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 
 ### Step 1 — Install dependencies and build
 
+The `setup.sh` script can also reset your workspace:
+
+```bash
+bash scripts/setup.sh --clean    # remove external/, bin/ and then run setup
+```
+
+This is useful if you want a completely fresh third-party checkout before
+re-running the normal install steps.
+
 ```bash
 bash scripts/setup.sh
 ```

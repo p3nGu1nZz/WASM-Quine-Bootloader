@@ -12,7 +12,16 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 SETUP_WINDOWS=false
-[[ "${1:-}" == "windows" ]] && SETUP_WINDOWS=true
+CLEAN_ONLY=false
+
+# parse arguments
+for arg in "$@"; do
+    if [[ "$arg" == "windows" ]]; then
+        SETUP_WINDOWS=true
+    elif [[ "$arg" == "--clean" ]]; then
+        CLEAN_ONLY=true
+    fi
+done
 
 EXTERNAL_DIR="${REPO_ROOT}/external"
 
@@ -21,6 +30,15 @@ info()    { echo -e "${GREEN}[INFO]${NC}  $*"; }
 warn()    { echo -e "${YELLOW}[WARN]${NC}  $*"; }
 error()   { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 section() { echo -e "\n${GREEN}===== $* =====${NC}"; }
+
+# ── cleanup option
+if $CLEAN_ONLY; then
+    info "Cleaning external dependencies and previous build artifacts..."
+    rm -rf "${EXTERNAL_DIR}"
+    rm -rf "${REPO_ROOT}/bin"
+    # after cleaning, continue with normal setup to rebuild everything
+    info "Clean complete; proceeding with setup."
+fi
 
 # ── 0. Sudo helper ─────────────────────────────────────────────────────────────
 if [[ "$EUID" -eq 0 ]]; then

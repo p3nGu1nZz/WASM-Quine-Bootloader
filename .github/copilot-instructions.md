@@ -74,7 +74,10 @@ The original design included an ANSI/terminal renderer (headless mode). If requi
 
 ```bash
 # One-time setup
-bash scripts/setup.sh
+bash scripts/setup.sh        # or `setup.sh windows` for cross-build
+
+# Clean third-party sources and rerun setup
+bash scripts/setup.sh --clean
 
 # Build (default: linux-debug)
 bash scripts/build.sh
@@ -82,15 +85,26 @@ bash scripts/build.sh
 # Build a specific target
 bash scripts/build.sh linux-release
 
+# Clean then build
+bash scripts/build.sh --clean linux-debug
+
 # Run in terminal (headless) mode
 bash scripts/run.sh
 
 # Run with SDL3 GUI window
 bash scripts/run.sh --gui
 
+# Tail the runtime log
+bash scripts/run.sh --monitor
+
 # Build and run all unit tests
 bash scripts/test.sh
 ```
+
+By default the executable is started with its working directory set to the
+build target (e.g. `build/linux-debug`).  Runtime log files are written to
+`bin/logs/` inside that directory, and automatic telemetry exports live under
+`bin/seq/<runid>/` (generation reports, kernel blobs, etc.).
 
 ## Important Constraints
 

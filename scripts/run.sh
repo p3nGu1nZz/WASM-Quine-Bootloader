@@ -10,6 +10,15 @@
 
 set -euo pipefail
 
+# colour helpers
+GREEN="\e[32m"
+YELLOW="\e[33m"
+RED="\e[31m"
+RESET="\e[0m"
+info() { echo -e "${GREEN}[run]${RESET} $*"; }
+warn() { echo -e "${YELLOW}[run]${RESET} $*"; }
+error() { echo -e "${RED}[run]${RESET} $*"; }
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET="${BUILD_TARGET:-linux-debug}"
@@ -17,7 +26,7 @@ BINARY="$REPO_ROOT/build/$TARGET/bootloader"
 
 # Build the project automatically if the binary is missing
 if [[ ! -f "$BINARY" ]]; then
-    echo "[run.sh] Binary not found – building ($TARGET) first..."
+    info "Binary not found – building ($TARGET) first..."
     bash "$SCRIPT_DIR/build.sh" "$TARGET"
 fi
 
@@ -29,6 +38,7 @@ mkdir -p bin/logs
 mkdir -p bin/seq
 
 # monitoring support: if --monitor passed, run in background and tail logs
+info "Working directory: $BUILD_DIR"
 if [[ "$1" == "--monitor" ]]; then
     shift
     ./bootloader "$@" &

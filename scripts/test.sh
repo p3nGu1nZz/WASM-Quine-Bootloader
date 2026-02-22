@@ -12,16 +12,25 @@
 
 set -euo pipefail
 
+# color helpers match build.sh
+GREEN="\e[32m"
+YELLOW="\e[33m"
+RED="\e[31m"
+RESET="\e[0m"
+info() { echo -e "${GREEN}[test]${RESET} $*"; }
+warn() { echo -e "${YELLOW}[test]${RESET} $*"; }
+error() { echo -e "${RED}[test]${RESET} $*"; exit 1; }
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET="${1:-${BUILD_TARGET:-linux-debug}}"
 BUILD_DIR="$REPO_ROOT/build/$TARGET"
 
-echo "[test.sh] Building project and tests (target: $TARGET)..."
+info "Building project and tests (target: $TARGET)..."
 bash "$SCRIPT_DIR/build.sh" "$TARGET"
 
-echo "[test.sh] Running tests..."
+info "Running tests..."
 cd "$BUILD_DIR"
 ctest --output-on-failure
 
-echo "[test.sh] All tests passed."
+info "All tests passed."
