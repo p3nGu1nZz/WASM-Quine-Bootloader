@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # build.sh – Build the WASM Quine Bootloader.
 #
-# Usage:  bash scripts/build.sh [TARGET | ---clean]
+# Usage:  bash scripts/build.sh [TARGET | --clean]
 #
 # This script has been audited for warnings and errors; no shellcheck
 # issues were discovered during maintenance.  Care is taken to quote
