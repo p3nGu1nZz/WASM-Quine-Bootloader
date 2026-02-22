@@ -11,7 +11,7 @@ Produce a concise porting report summarizing missing features, bugs, and suggest
 
 Usage
 
-- Run after reviewing `src/` and `web/` code, or use automated heuristics to detect mismatches.
+- Run after reviewing `src/` (and legacy web prototype if needed) code, or use automated heuristics to detect mismatches.
 
 Outputs
 

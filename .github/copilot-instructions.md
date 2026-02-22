@@ -33,7 +33,7 @@
 │   ├── run.sh                  # Build (if needed) then run the bootloader
 │   ├── test.sh                 # Build app + tests then run all tests
 │   └── setup.sh                # One-time install of system deps (SDL3 from source, etc.)
-└── web/                        # Legacy TypeScript/React prototype (not built by CMake)
+└── (legacy web prototype removed)  
 ```
 
 ## Build Targets

@@ -15,7 +15,7 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 | Memory Visualizer | Real-time SDL3 canvas heatmap of WASM heap activity |
 | Instruction Stream | Step-by-step WASM opcode visualizer with program counter |
 | Terminal Log | Colour-coded system event log (info / success / warning / error / mutation) |
-| Era System | Four visual themes as the kernel evolves (Primordial → Expansion → Complexity → Singularity) |
+| Era System | *removed; terminal-only app no longer uses eras* |
 | Telemetry Export | Dump full hex / disassembly / history report to a `.txt` file |
 
 ---
@@ -29,14 +29,14 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 ├── src/                      # C++17 application source
 │   ├── main.cpp              # SDL3 init + main loop
 │   ├── gui/window.h / gui/window.cpp # Gui class: ImGui backend lifecycle, panel orchestration
-│   ├── gui/colors.h          # Header-only colour helpers (state/era/log → ImVec4)
+│   ├── gui/colors.h          # Header-only colour helpers (state/log → ImVec4)
 │   ├── gui/heatmap.h/.cpp    # GuiHeatmap: memory heat-decay visualizer
-│   ├── util.h / util.cpp     # stateStr, eraStr, randomId, nowIso
+│   ├── util.h / util.cpp     # stateStr, randomId, nowIso
 │   ├── app.h / app.cpp       # App: top-level orchestrator
 │   ├── fsm.h / fsm.cpp       # BootFsm: finite state machine
 │   ├── log.h / log.cpp # AppLogger: live log ring-buffer + history ledger
 │   ├── exporter.h / exporter.cpp # buildReport(): telemetry text report
-│   ├── types.h               # SystemState, SystemEra, LogEntry, HistoryEntry, BootConfig
+│   ├── types.h               # SystemState, LogEntry, HistoryEntry, BootConfig
 │   ├── constants.h           # KERNEL_GLOB (base64 WASM), DEFAULT_BOOT_CONFIG
 │   ├── base64.h              # Inline base64 encode / decode
 │   ├── wasm/                  # subdirectory for WASM-related modules
@@ -157,12 +157,12 @@ bash scripts/run.sh linux-release
 
 | Panel | Description |
 |---|---|
-| **Top bar** | ERA · GEN · STATE · UPTIME · RETRIES – control buttons |
+| **Top bar** | GEN · STATE · UPTIME · RETRIES – control buttons |
 | **System Log** | Colour-coded ring-buffer of up to 1 000 events; auto-scrolls |
 | **Instruction Stack** | WASM opcode list with live program-counter highlight |
 | **Kernel Source** | Base64 diff view: header (blue), mutation (yellow), expansion (green) |
 | **Memory Map** | Heat-decay block visualizer of WASM linear memory activity |
-| **Status Bar** | ERA · RUNNING/PAUSED indicator |
+| **Status Bar** | RUNNING/PAUSED indicator |
 
 ---
 
@@ -206,10 +206,6 @@ All three are fetched by `scripts/setup.sh`.
 
 ## Original TypeScript Web App
 
-The original TypeScript/React reference implementation is preserved in `web/`:
+## Original TypeScript Web App (archived)
 
-```bash
-cd web
-npm install
-npm run dev
-```
+The original TypeScript/React reference implementation was previously stored in `web/` but has been removed from this repository after a successful native C++ port. If you need the original prototype, consult the repository history or contact the maintainers.
