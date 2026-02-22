@@ -70,6 +70,16 @@ bash scripts/run.sh --monitor                 # tail logs
 bash scripts/test.sh                          # build + run all tests
 ```
 
+> **Note:** the build scripts respect the standard `CC`/`CXX` environment
+> variables.  Export a different compiler (e.g. `export CXX=/usr/bin/g++-12`)
+> before running `build.sh` if you need a non-default toolchain.  The
+> wrapper will pass those overrides through to CMake automatically.
+
+> **Maintainer tip:** after adding or renaming skills or modifying
+> telemetry/CLI behaviour, run `update-skills` followed by `update-memory`.
+> These ensure the agent documentation and memory stay in sync with the
+> repository state.
+
 Executables run from their build folder; logs/seq created there.
 
 ## Constraints
@@ -93,7 +103,6 @@ Available skills:
 - `update-memory` – write repository facts to memory.
 - `search-memory` – search the memory store.
 - `telemetry-review` – inspect logs/seq exports.
-- `generate-report` – create porting/migration reports.
 - `commit-push` – stage changes, craft a commit message, and push to remote.
 - `introspect-telemetry` – review logs and sequence exports for anomalies.
 - `improve-skills` – refine and compact all existing skill documents.
