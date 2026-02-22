@@ -5,23 +5,9 @@ description: Analyze the native C++ code against the original web implementation
 
 # generate-report
 
-Purpose
+Create a migration/porting report by comparing native C++ code with the
+original web prototype.  Run after examining `src/` (or via heuristics).
 
-Produce a concise porting report summarizing missing features, bugs, and suggested fixes when migrating implementations (e.g., web → native).
-
-Usage
-
-- Run after reviewing `src/` (and legacy web prototype if needed) code, or use automated heuristics to detect mismatches.
-
-Outputs
-
-- A Markdown report in `docs/PORTING_REPORT.md` and an issue body ready in `docs/ISSUE_BODY_FOR_GITHUB.md`.
-
-Acceptance Criteria
-
-- Lists critical bugs to fix before merge.
-- Includes suggested fixes and acceptance criteria for each item.
-
-Security / Notes
-
-- Do not include secrets or large binary dumps in the report.
+Outputs a Markdown report (`docs/PORTING_REPORT.md`) and a GitHub issue
+body.  It should list critical bugs, suggest fixes, and avoid secrets or
+large binaries.

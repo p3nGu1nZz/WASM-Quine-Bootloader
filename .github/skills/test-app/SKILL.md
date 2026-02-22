@@ -7,44 +7,20 @@ description: Build and run the unit tests for the WASM Quine Bootloader applicat
 
 ## Purpose
 
-Compile the code and execute the project's unit-test binaries. This skill ensures new features (e.g. CLI parsing, GUI scaling) do not regress.
+Build the project and run unit tests to catch regressions.
 
 ## Quick Commands
 
 ```bash
-# Build the app and tests, then run all tests
-bash scripts/test.sh
-
-# Run a single test binary directly (useful during development)
-./build/linux-debug/test_<module>
+bash scripts/test.sh                    # build & execute all tests
+./build/linux-debug/test_<module>       # run individual test binary
 ```
 
-The test harness will exercise the export and log‑generation code; running
-`test_util_dpi.cpp` creates temporary files under `bin/` which the script
-removes automatically.  On failure the coloured Catch2 output combined with
-`[test]` prefixes makes failures easy to spot.
+The harness exercises export/log code; `test_util_dpi` creates temp files
+in `bin/` then cleans them.  Failures are shown with coloured Catch2 output.
 
-## Behaviour
+Behaviour: invokes `build.sh`, builds all `enable_testing()` targets,
+runs `ctest --output-on-failure`, and exits non-zero on failure.
 
-1. Calls `bash scripts/build.sh` to ensure the main application is up-to-date.
-2. Builds all test targets defined in `CMakeLists.txt` under `enable_testing()`.
-3. Runs `ctest --output-on-failure` inside the build directory.
-4. Reports a summary: number of tests passed / failed.
-5. Exits non-zero if any test fails.
-
-## Test Directory Layout
-
-```
-test/
-├── test_wasm_kernel.cpp    # Tests for src/wasm/kernel.cpp (boot, run, terminate)
-├── test_util.cpp           # Tests for src/util.h utility functions
-└── test_evolution.cpp      # Tests for WASM binary mutation logic
-```
-
-## Writing a New Test
-
-(see prompt file for details)
-
-## Troubleshooting
-
-(see prompt file for troubleshooting tips)
+See the `test/` directory for example test files.  For writing new tests or
+troubleshooting consult the prompt file.

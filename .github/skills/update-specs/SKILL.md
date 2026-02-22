@@ -9,12 +9,7 @@ This skill corresponds to the instructions in `.github/prompts/update-specs.prom
 
 ## Spec locations
 
-- `docs/spec_wasm_kernel.md`
-- `docs/spec_evolution.md`
-- `docs/spec_terminal_renderer.md`
-- `docs/spec_gui.md`
-- `docs/specs/spec_cli.md`  # updated when CLI flags change (fullscreen/headless)
-- `docs/specs/spec_telemetry.md`  # describe export format and logs
+Most specs live under `docs/` or `docs/specs/` (CLI, telemetry, GUI, wasm kernel, evolution, terminal renderer).
 
 ## Instructions
 

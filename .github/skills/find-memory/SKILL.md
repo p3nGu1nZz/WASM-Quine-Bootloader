@@ -5,13 +5,8 @@ description: Search the agent's memory store for facts matching a query. Useful 
 
 # find-memory
 
-## Purpose
-
-Run this skill when you need to check whether an important fact about the repository has been stored previously. It helps avoid duplicate memory entries and guides agents by past knowledge.
-
-## Usage
-
-Provide a keyword or short phrase describing what you want to retrieve. The skill returns matching memory entries with their subjects and citations.
+Search stored memory entries by keyword or phrase to recall past facts and
+avoid duplication.  The skill returns subjects, facts, citations, and reasons.
 
 Example prompt:
 ```

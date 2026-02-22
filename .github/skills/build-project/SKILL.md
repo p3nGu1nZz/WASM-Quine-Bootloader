@@ -5,54 +5,22 @@ description: Build the C++ project using the provided scripts and run the unit t
 
 # build-project
 
-## Quick Commands
+Quick reference for building the code and running tests.
 
 ```bash
-# One-time dependency setup (only needed once per machine)
-bash scripts/setup.sh
+bash scripts/setup.sh             # install deps
+bash scripts/setup.sh --clean     # wipe external/ and bin/
 
-# Clean dependencies & build directory then rerun setup
-bash scripts/setup.sh --clean
+bash scripts/build.sh             # linux-debug (default)
+bash scripts/build.sh <target>    # linux-release, windows-debug, windows-release
+bash scripts/build.sh --clean <target>
 
-# Build default target (linux-debug)
-bash scripts/build.sh
+bash scripts/test.sh              # build + run all tests
+``` 
 
-# Build a specific target (linux-release, windows-debug, windows-release)
-bash scripts/build.sh <target>
+Targets produce `build/<target>/bootloader(.exe)` and link against
+SDL3/wasm3 as needed.  Add sources in `CMakeLists.txt` under
+`target_sources(bootloader …)` and `enable_testing()` for new tests.
 
-# Clean build directory and rebuild a target
-display \"build.sh --clean <target>\"
-```
-
-The build script prints coloured `[build]` messages and suppresses
-spurious warnings from third‑party sources for a tidy console output.
-
-### Build Targets
-
-| Target | Output binary |
-|--------|---------------|
-| `linux-debug` | `build/linux-debug/bootloader` |
-| `linux-release` | `build/linux-release/bootloader` |
-| `windows-debug` | `build/windows-debug/bootloader.exe` |
-| `windows-release` | `build/windows-release/bootloader.exe` |
-
-## How `scripts/build.sh` Works
-
-1. Accepts an optional target argument (default: `linux-debug`).
-2. Runs `cmake -S . -B build/<TARGET>` with any target-specific flags (e.g. MinGW toolchain for Windows targets).
-3. Runs `cmake --build build/<TARGET>` using Ninja.
-4. Exits non-zero on any error.
-
-## Modifying `CMakeLists.txt`
-
-- Add new source files to the `target_sources(bootloader …)` block.
-- Add new test executables in the `enable_testing()` section at the bottom.
-- Link new external libraries via `target_link_libraries`.
-- Keep C++ standard set to **C++17** (`set(CMAKE_CXX_STANDARD 17)`).
-
-## Troubleshooting
-
-- **SDL3 not found**: run `bash scripts/setup.sh` to build SDL3 from source into `external/SDL3/build/`.
-- **wasm3 compile errors**: check `external/wasm3/` is present (it is a git submodule – run `git submodule update --init`).
-- **Ninja not found**: install with `sudo apt install ninja-build` (Linux) or `choco install ninja` (Windows).
-- **CMake version too old**: project requires CMake ≥ 3.20.
+Troubleshooting: missing SDL3? rerun setup; missing wasm3? `git
+submodule update --init`; install Ninja or bump CMake (>3.20) if errors.
