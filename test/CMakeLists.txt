@@ -132,3 +132,14 @@ target_link_libraries(test_loss PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME loss_test COMMAND test_loss)
+
+# Trainer tests
+add_executable(test_train test_train.cpp)
+target_include_directories(test_train PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_train PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME train_test COMMAND test_train)
