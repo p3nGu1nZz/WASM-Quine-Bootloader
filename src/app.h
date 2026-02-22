@@ -56,6 +56,15 @@ public:
     // expose reboot helper for tests
     void doReboot(bool success);
 
+    // test helpers
+    // simulate a boot failure triggered by the given mutation sequence
+    // (calls private handleBootFailure internally)
+    void test_simulateFailure(const std::string& reason,
+                               const std::vector<uint8_t>& mutation) {
+        m_pendingMutation = mutation;
+        handleBootFailure(reason);
+    }
+
     // Blacklist management
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);

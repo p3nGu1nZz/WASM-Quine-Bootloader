@@ -55,3 +55,14 @@ target_link_libraries(test_export PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME export_test COMMAND test_export)
+
+# App logic tests
+add_executable(test_app_logic test_app.cpp)
+target_include_directories(test_app_logic PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_app_logic PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME app_logic_test COMMAND test_app_logic)
