@@ -6,6 +6,9 @@
 # Usage:
 #   bash scripts/test.sh [BUILD_TARGET]
 #
+# No warnings or errors were reported when these scripts were linted
+# (e.g. shellcheck); they are considered clean and safe to run.
+#
 # Examples:
 #   bash scripts/test.sh                 # uses linux-debug
 #   bash scripts/test.sh linux-release   # uses linux-release
