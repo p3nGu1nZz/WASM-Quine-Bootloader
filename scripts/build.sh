@@ -53,9 +53,17 @@ esac
 BUILD_DIR="${REPO_ROOT}/build/${TARGET}"
 TOOLCHAIN_ARG=""
 
+# ── Linux: use external/SDL3/linux if present (no system SDL3) ────────────────
+if [[ "${PLATFORM}" == "Linux" ]]; then
+    SDL3_LIN="${REPO_ROOT}/external/SDL3/linux"
+    if [[ -f "${SDL3_LIN}/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
+        TOOLCHAIN_ARG="-DSDL3_DIR=${SDL3_LIN}/lib/cmake/SDL3"
+    fi
+fi
+
 # ── Windows: MinGW-w64 toolchain ──────────────────────────────────────────────
 if [[ "${PLATFORM}" == "Windows" ]]; then
-    TOOLCHAIN_FILE="${REPO_ROOT}/scripts/toolchain-mingw64.cmake"
+    TOOLCHAIN_FILE="${REPO_ROOT}/cmake/toolchain-windows-x64.cmake"
     if [[ ! -f "${TOOLCHAIN_FILE}" ]]; then
         echo "[build] ERROR: toolchain file not found: ${TOOLCHAIN_FILE}"
         exit 1
@@ -67,8 +75,8 @@ if [[ "${PLATFORM}" == "Windows" ]]; then
     fi
     TOOLCHAIN_ARG="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
 
-    # Cross-compiled SDL3 lives in external/SDL3-windows/
-    SDL3_WIN="${REPO_ROOT}/external/SDL3-windows"
+    # Cross-compiled SDL3 lives in external/SDL3/windows/
+    SDL3_WIN="${REPO_ROOT}/external/SDL3/windows"
     if [[ ! -f "${SDL3_WIN}/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
         echo "[build] Windows SDL3 not found at ${SDL3_WIN}."
         echo "[build] Run: bash scripts/setup.sh windows  (to build SDL3 for Windows)"

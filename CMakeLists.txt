@@ -7,13 +7,10 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ── SDL3 ───────────────────────────────────────────────────────────────────────
-# Try to find a system-installed SDL3 first; if not found use external/SDL3
-find_package(SDL3 QUIET CONFIG)
-if(NOT SDL3_FOUND)
-    set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3/build/lib/cmake/SDL3"
-        CACHE PATH "SDL3 CMake config directory")
-    find_package(SDL3 REQUIRED CONFIG)
-endif()
+# SDL3_DIR must be set via -DSDL3_DIR on the cmake command line, or SDL3 must
+# be installed system-wide.  build.sh sets this automatically when the project's
+# external/SDL3/linux or external/SDL3/windows tree is present.
+find_package(SDL3 REQUIRED CONFIG)
 
 # ── wasm3 ─────────────────────────────────────────────────────────────────────
 set(WASM3_DIR "${CMAKE_SOURCE_DIR}/external/wasm3")

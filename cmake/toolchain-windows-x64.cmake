@@ -1,4 +1,4 @@
-# scripts/toolchain-mingw64.cmake
+# cmake/toolchain-windows-x64.cmake
 # CMake toolchain file for cross-compiling to Windows x86-64 using MinGW-w64 on Linux/WSL.
 # Install MinGW with: sudo apt-get install mingw-w64
 

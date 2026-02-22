@@ -52,9 +52,9 @@ if [[ "$SETUP_WINDOWS" == "true" ]]; then
     info "MinGW-w64 installed."
 fi
 
-# ── 3. Create external/ directory ─────────────────────────────────────────────
+# ── 3. Create external/ directory structure ────────────────────────────────────
 section "External libraries directory"
-mkdir -p "${EXTERNAL_DIR}"
+mkdir -p "${EXTERNAL_DIR}/SDL3"
 info "Directory: ${EXTERNAL_DIR}"
 
 # ── Helper: clone or update a git repo ────────────────────────────────────────
@@ -84,25 +84,30 @@ clone_or_update "https://github.com/ocornut/imgui.git" "${EXTERNAL_DIR}/imgui" "
 info "ImGui ready."
 
 # ── 6. SDL3 (Linux) ───────────────────────────────────────────────────────────
+# Layout:  external/SDL3/src/   – source tree
+#          external/SDL3/linux/ – installed headers + libs for Linux
 section "SDL3 (Linux)"
+SDL3_SRC="${EXTERNAL_DIR}/SDL3/src"
+SDL3_LINUX="${EXTERNAL_DIR}/SDL3/linux"
+
 build_sdl3_linux() {
-    local src="${EXTERNAL_DIR}/SDL3"
-    clone_or_update "https://github.com/libsdl-org/SDL.git" "${src}" "release-3.2.x"
-    mkdir -p "${src}/build"
-    cmake -S "${src}" -B "${src}/build" -G Ninja \
+    clone_or_update "https://github.com/libsdl-org/SDL.git" "${SDL3_SRC}" "release-3.2.x"
+    local bld="${SDL3_SRC}/build-linux"
+    mkdir -p "${bld}"
+    cmake -S "${SDL3_SRC}" -B "${bld}" -G Ninja \
         -DCMAKE_BUILD_TYPE=Release \
         -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TESTS=OFF \
         -DSDL_AUDIO=OFF \
-        -DCMAKE_INSTALL_PREFIX="${src}/build" \
+        -DCMAKE_INSTALL_PREFIX="${SDL3_LINUX}" \
         -Wno-dev --log-level=WARNING
-    cmake --build "${src}/build" --parallel "$(nproc)"
-    cmake --install "${src}/build"
-    info "SDL3 (Linux) built at ${src}/build"
+    cmake --build "${bld}" --parallel "$(nproc)"
+    cmake --install "${bld}"
+    info "SDL3 (Linux) installed at ${SDL3_LINUX}"
 }
 
 if pkg-config --exists sdl3 2>/dev/null; then
     info "SDL3 found via pkg-config (system install) – skipping build."
-elif [[ -f "${EXTERNAL_DIR}/SDL3/build/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
+elif [[ -f "${SDL3_LINUX}/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
     info "SDL3 (Linux) already built."
 else
     warn "SDL3 not found – building from source (this may take a few minutes)."
@@ -110,27 +115,29 @@ else
 fi
 
 # ── 7. SDL3 (Windows cross-compile) ──────────────────────────────────────────
+# Layout:  external/SDL3/src/     – shared source tree (reused from above)
+#          external/SDL3/windows/ – installed headers + libs for Windows
 if [[ "$SETUP_WINDOWS" == "true" ]]; then
     section "SDL3 (Windows cross-compile)"
-    SDL3_WIN="${EXTERNAL_DIR}/SDL3-windows"
+    SDL3_WIN="${EXTERNAL_DIR}/SDL3/windows"
     if [[ -f "${SDL3_WIN}/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
         info "SDL3 (Windows) already built."
     else
         warn "Building SDL3 for Windows via MinGW-w64 (this may take a few minutes)."
-        SDL3_SRC="${EXTERNAL_DIR}/SDL3"
         [[ -d "${SDL3_SRC}/.git" ]] || \
             clone_or_update "https://github.com/libsdl-org/SDL.git" "${SDL3_SRC}" "release-3.2.x"
-        mkdir -p "${EXTERNAL_DIR}/SDL3-windows-build"
-        cmake -S "${SDL3_SRC}" -B "${EXTERNAL_DIR}/SDL3-windows-build" -G Ninja \
+        bld_win="${SDL3_SRC}/build-windows"
+        mkdir -p "${bld_win}"
+        cmake -S "${SDL3_SRC}" -B "${bld_win}" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE="${REPO_ROOT}/scripts/toolchain-mingw64.cmake" \
+            -DCMAKE_TOOLCHAIN_FILE="${REPO_ROOT}/cmake/toolchain-windows-x64.cmake" \
             -DSDL_SHARED=OFF -DSDL_STATIC=ON -DSDL_TESTS=OFF \
             -DSDL_AUDIO=OFF \
             -DCMAKE_INSTALL_PREFIX="${SDL3_WIN}" \
             -Wno-dev --log-level=WARNING
-        cmake --build "${EXTERNAL_DIR}/SDL3-windows-build" --parallel "$(nproc)"
-        cmake --install "${EXTERNAL_DIR}/SDL3-windows-build"
-        info "SDL3 (Windows) built at ${SDL3_WIN}"
+        cmake --build "${bld_win}" --parallel "$(nproc)"
+        cmake --install "${bld_win}"
+        info "SDL3 (Windows) installed at ${SDL3_WIN}"
     fi
 fi
 
@@ -151,8 +158,8 @@ done
 
 if pkg-config --exists sdl3 2>/dev/null; then
     info "✔  SDL3 headers (system)"
-elif [[ -f "${EXTERNAL_DIR}/SDL3/build/include/SDL3/SDL.h" ]]; then
-    info "✔  SDL3 headers (external/SDL3)"
+elif [[ -f "${SDL3_LINUX}/include/SDL3/SDL.h" ]]; then
+    info "✔  SDL3 headers (external/SDL3/linux)"
 else
     warn "✘  SDL3 headers not found"; ALL_OK=false
 fi

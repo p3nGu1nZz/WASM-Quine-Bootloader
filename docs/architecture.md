@@ -284,13 +284,14 @@ logger.h     exporter.h          fsm.h
 | `scripts/setup.sh` | Installs apt packages, clones external libs, builds SDL3, builds the project |
 | `scripts/build.sh` | Configures + compiles one of four targets; `--clean` wipes build/ |
 | `scripts/run.sh` | Builds if needed, then execs the binary |
-| `scripts/toolchain-mingw64.cmake` | CMake toolchain for MinGW-w64 Windows cross-compile from WSL |
+| `cmake/toolchain-windows-x64.cmake` | CMake toolchain for MinGW-w64 Windows cross-compile from WSL |
 
 External libraries live in `external/` (not committed; populated by `setup.sh`):
 
 | Library | Path | Purpose |
 |---|---|---|
-| SDL3 | `external/SDL3/` | Linux build |
-| SDL3-windows | `external/SDL3-windows/` | Windows cross-compile (optional) |
+| SDL3 (source) | `external/SDL3/src/` | Shared SDL3 source tree |
+| SDL3 (Linux)  | `external/SDL3/linux/` | Linux build |
+| SDL3 (Windows)| `external/SDL3/windows/` | Windows cross-compile (optional) |
 | Dear ImGui | `external/imgui/` | Immediate-mode GUI |
 | wasm3 | `external/wasm3/` | WebAssembly interpreter |

@@ -49,16 +49,19 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 ├── scripts/
 │   ├── setup.sh              # One-shot dependency installer + initial build
 │   ├── build.sh              # Build for a specific target (or --clean)
-│   ├── run.sh                # Build if needed, then launch
-│   └── toolchain-mingw64.cmake  # MinGW-w64 CMake toolchain (Windows cross-compile)
+│   └── run.sh                # Build if needed, then launch
+├── cmake/
+│   └── toolchain-windows-x64.cmake  # MinGW-w64 CMake toolchain (Windows cross-compile)
 ├── docs/
 │   ├── design.md             # Design goals, simulation loop, mutation strategy
 │   └── architecture.md       # Per-file module specs and dependency graph
 └── external/                 # Populated by scripts/setup.sh (NOT committed)
     ├── imgui/
     ├── wasm3/
-    ├── SDL3/                 # Built for Linux
-    └── SDL3-windows/         # Built for Windows (optional)
+    └── SDL3/
+        ├── src/              # SDL3 source tree
+        ├── linux/            # Built + installed for Linux
+        └── windows/          # Built + installed for Windows (optional)
 ```
 
 > **Note:** `external/` is excluded from the repository (`.gitignore: /external/*`).
@@ -78,7 +81,7 @@ This script will:
 1. Install system packages (`build-essential`, `cmake`, `ninja-build`, SDL3 system deps, fonts)
 2. Clone **Dear ImGui** → `external/imgui`
 3. Clone **wasm3** → `external/wasm3`
-4. Install or build **SDL3** for Linux → `external/SDL3`
+4. Install or build **SDL3** for Linux → `external/SDL3/linux`
 5. Build the `linux-debug` target → `build/linux-debug/bootloader`
 
 ### Step 2 — Run

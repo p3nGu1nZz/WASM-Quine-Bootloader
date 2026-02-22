@@ -55,3 +55,18 @@ std::string nowIso() {
     ss << buf << '.' << std::setw(3) << std::setfill('0') << ms.count() << 'Z';
     return ss.str();
 }
+
+std::string nowFileStamp() {
+    using namespace std::chrono;
+    auto tp = system_clock::now();
+    auto tt = system_clock::to_time_t(tp);
+    std::tm utc{};
+#if defined(_WIN32)
+    gmtime_s(&utc, &tt);
+#else
+    gmtime_r(&tt, &utc);
+#endif
+    char buf[20];
+    std::strftime(buf, sizeof buf, "%Y%m%d_%H%M%S", &utc);
+    return buf;
+}

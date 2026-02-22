@@ -19,6 +19,9 @@ App::App() {
     m_currentKernel  = KERNEL_GLOB;
     m_lastFrameTicks = now();
 
+    // Open buffered log file (flushes every ~1 s; always flushed on exit/signal)
+    m_logger.init("bootloader_" + nowFileStamp() + ".log");
+
     // Parse initial kernel
     auto bytes = base64_decode(m_currentKernel);
     m_instructions = extractCodeSection(bytes);
