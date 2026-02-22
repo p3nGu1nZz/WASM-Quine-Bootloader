@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "mutation_advisor.h"
+#include "advisor.h"
 #include <filesystem>
 #include <fstream>
 
@@ -15,7 +15,7 @@ static void writeExport(const fs::path& path, int gen, const std::string& kernel
     o << kernel << "\n";
 }
 
-TEST_CASE("MutationAdvisor loads entries from telemetry files", "[advisor]") {
+TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     fs::path root = fs::temp_directory_path() / "advtest";
     fs::remove_all(root);
     fs::create_directories(root / "runA");
@@ -25,7 +25,7 @@ TEST_CASE("MutationAdvisor loads entries from telemetry files", "[advisor]") {
     fs::create_directories(root / "runB");
     writeExport(root / "runB" / "gen_5.txt", 5, "CCC", "trap");
 
-    MutationAdvisor adv(root.string());
+    Advisor adv(root.string());
     REQUIRE(adv.size() == 3);
     auto& entries = adv.entries();
     // verify that expected generations exist somewhere in the list

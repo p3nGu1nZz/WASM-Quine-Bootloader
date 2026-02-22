@@ -1,5 +1,5 @@
 #include "loss.h"
-#include "mutation_advisor.h"
+#include "advisor.h"
 
 float Loss::compute(const TelemetryEntry& entry) {
     // negative generation as loss; more features may be added later

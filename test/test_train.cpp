@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include "train.h"
-#include "mutation_advisor.h"
+#include "advisor.h"
 
 TEST_CASE("Trainer observation increments count and save/load", "[train]") {
     Trainer t;

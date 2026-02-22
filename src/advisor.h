@@ -10,11 +10,11 @@ struct TelemetryEntry {
     std::string trapCode;
 };
 
-// MutationAdvisor loads all telemetry exports under a given base
+// Advisor loads all telemetry exports under a given base
 // directory and makes them available for training/advice.
-class MutationAdvisor {
+class Advisor {
 public:
-    explicit MutationAdvisor(const std::string& baseDir = "bin/seq");
+    explicit Advisor(const std::string& baseDir = "bin/seq");
 
     // number of entries successfully parsed
     size_t size() const { return m_entries.size(); }

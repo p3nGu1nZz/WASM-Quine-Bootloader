@@ -63,7 +63,7 @@ set(CORE_SOURCES
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
     src/cli.cpp
-    src/mutation_advisor.cpp
+    src/advisor.cpp
     src/feature.cpp
     src/policy.cpp
     src/loss.cpp

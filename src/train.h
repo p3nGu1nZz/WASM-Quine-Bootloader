@@ -1,7 +1,7 @@
 #pragma once
 
 #include "policy.h"
-#include "mutation_advisor.h"
+#include "advisor.h"
 
 // Trainer applies online updates to a policy network given telemetry data.
 class Trainer {

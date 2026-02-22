@@ -1,6 +1,6 @@
 #pragma once
 
-#include "mutation_advisor.h"
+#include "advisor.h"
 #include "wasm/parser.h"
 #include <vector>
 

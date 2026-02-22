@@ -1,4 +1,4 @@
-#include "mutation_advisor.h"
+#include "advisor.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -6,7 +6,7 @@
 
 namespace fs = std::filesystem;
 
-MutationAdvisor::MutationAdvisor(const std::string& baseDir) {
+Advisor::Advisor(const std::string& baseDir) {
     try {
         for (auto& run : fs::directory_iterator(baseDir)) {
             if (run.is_directory()) {
@@ -18,7 +18,7 @@ MutationAdvisor::MutationAdvisor(const std::string& baseDir) {
     }
 }
 
-void MutationAdvisor::scanDirectory(const std::string& runDir) {
+void Advisor::scanDirectory(const std::string& runDir) {
     for (auto& entry : fs::directory_iterator(runDir)) {
         if (!entry.is_regular_file()) continue;
         const auto& name = entry.path().filename().string();
@@ -28,7 +28,7 @@ void MutationAdvisor::scanDirectory(const std::string& runDir) {
     }
 }
 
-void MutationAdvisor::parseFile(const std::string& path) {
+void Advisor::parseFile(const std::string& path) {
     std::ifstream fin(path);
     if (!fin) return;
 
