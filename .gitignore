@@ -22,3 +22,26 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# C++ build artifacts
+build/
+*.o
+*.a
+*.so
+*.dll
+*.exe
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps/
+
+# External dependencies (downloaded by setup.sh)
+external/SDL3/
+external/imgui/
+external/wasm3/
+
+# Exported telemetry files
+quine_telemetry_*.txt
