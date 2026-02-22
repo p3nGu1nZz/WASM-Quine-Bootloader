@@ -106,11 +106,13 @@ endif()
 
 # ── Compiler warnings ──────────────────────────────────────────────────────────
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    # general warnings plus suppress some noisy unused-variable noise from
+    # embedded sources (wasm3, etc.) which we don't control.
     target_compile_options(core PRIVATE
-        -Wall -Wextra -Wno-unused-parameter
+        -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
     )
     target_compile_options(bootloader PRIVATE
-        -Wall -Wextra -Wno-unused-parameter
+        -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable
     )
 endif()
 

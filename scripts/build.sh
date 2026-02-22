@@ -18,6 +18,16 @@
 
 set -euo pipefail
 
+# colour helpers
+GREEN="\e[32m"
+YELLOW="\e[33m"
+RED="\e[31m"
+RESET="\e[0m"
+
+info() { echo -e "${GREEN}[build]${RESET} $*"; }
+warn() { echo -e "${YELLOW}[build]${RESET} $*"; }
+error() { echo -e "${RED}[build]${RESET} $*"; }
+
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET="${1:-linux-debug}"
 JOBS="${JOBS:-$(nproc)}"
@@ -39,7 +49,7 @@ for arg in "$@"; do
 done
 
 if $CLEAN_ONLY; then
-    echo "[build] Cleaning build directory and caches..."
+    info "Cleaning build directory and caches..."
     rm -rf "${REPO_ROOT}/build"
     # Remove CMake / Ninja caches that may live at the repo root
     rm -f  "${REPO_ROOT}/CMakeCache.txt"
@@ -52,7 +62,7 @@ if $CLEAN_ONLY; then
     rm -rf "${REPO_ROOT}/bin"
     # Remove telemetry exports left by the binary (old behaviour)
     rm -f  "${REPO_ROOT}"/quine_telemetry_*.txt
-    echo "[build] Clean done."
+    info "Clean done."
     # if there are no other args, exit; otherwise fall through to build
     if [[ $# -eq 0 ]]; then
         exit 0
@@ -68,8 +78,8 @@ case "${TARGET}" in
     windows-debug)  BUILD_TYPE=Debug;   PLATFORM=Windows ;;
     windows-release)BUILD_TYPE=Release; PLATFORM=Windows ;;
     *)
-        echo "[build] ERROR: unknown target '${TARGET}'."
-        echo "[build] Valid targets: linux-debug linux-release windows-debug windows-release"
+        error "Unknown target '${TARGET}'."
+        info "Valid targets: linux-debug linux-release windows-debug windows-release"
         exit 1
         ;;
 esac
@@ -89,12 +99,12 @@ fi
 if [[ "${PLATFORM}" == "Windows" ]]; then
     TOOLCHAIN_FILE="${REPO_ROOT}/cmake/toolchain-windows-x64.cmake"
     if [[ ! -f "${TOOLCHAIN_FILE}" ]]; then
-        echo "[build] ERROR: toolchain file not found: ${TOOLCHAIN_FILE}"
+        error "Toolchain file not found: ${TOOLCHAIN_FILE}"
         exit 1
     fi
     if ! command -v x86_64-w64-mingw32-gcc &>/dev/null; then
-        echo "[build] ERROR: MinGW-w64 not found."
-        echo "[build] Install with: sudo apt-get install mingw-w64"
+        error "MinGW-w64 not found."
+        info "Install with: sudo apt-get install mingw-w64"
         exit 1
     fi
     TOOLCHAIN_ARG="-DCMAKE_TOOLCHAIN_FILE=${TOOLCHAIN_FILE}"
@@ -102,8 +112,8 @@ if [[ "${PLATFORM}" == "Windows" ]]; then
     # Cross-compiled SDL3 lives in external/SDL3/windows/
     SDL3_WIN="${REPO_ROOT}/external/SDL3/windows"
     if [[ ! -f "${SDL3_WIN}/lib/cmake/SDL3/SDL3Config.cmake" ]]; then
-        echo "[build] Windows SDL3 not found at ${SDL3_WIN}."
-        echo "[build] Run: bash scripts/setup.sh windows  (to build SDL3 for Windows)"
+        error "Windows SDL3 not found at ${SDL3_WIN}."
+        info "Run: bash scripts/setup.sh windows  (to build SDL3 for Windows)"
         exit 1
     fi
     TOOLCHAIN_ARG="${TOOLCHAIN_ARG} -DSDL3_DIR=${SDL3_WIN}/lib/cmake/SDL3"

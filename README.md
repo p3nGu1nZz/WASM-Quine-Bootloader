@@ -106,6 +106,10 @@ build target (e.g. `build/linux-debug`).  Runtime log files are written to
 `bin/logs/` inside that directory, and automatic telemetry exports live under
 `bin/seq/<runid>/` (generation reports, kernel blobs, etc.).
 
+The build script prints colored, prefixed `[build]` messages (green for info,
+yellow for warnings, red for errors) on top of the usual cmake/ninja output to
+make important steps easy to scan.
+
 The `--monitor` option runs the bootloader in the background and tails
 `bin/logs/*.log` in real time so you can watch system messages as evolution
 proceeds.
