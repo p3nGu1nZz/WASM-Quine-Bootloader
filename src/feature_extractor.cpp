@@ -1,0 +1,15 @@
+#include "feature_extractor.h"
+#include "base64.h"
+
+std::vector<float> FeatureExtractor::extract(const TelemetryEntry& entry) {
+    std::vector<float> vec(256, 0.0f);
+    if (entry.kernelBase64.empty()) return vec;
+
+    auto bytes = base64_decode(entry.kernelBase64);
+    auto instrs = extractCodeSection(bytes);
+    for (auto& inst : instrs) {
+        uint8_t op = inst.opcode;
+        vec[op] += 1.0f;
+    }
+    return vec;
+}

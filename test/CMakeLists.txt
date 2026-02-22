@@ -99,3 +99,14 @@ target_link_libraries(test_advisor PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME advisor_test COMMAND test_advisor)
+
+# Feature extractor tests
+add_executable(test_feature test_feature.cpp)
+target_include_directories(test_feature PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_feature PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME feature_test COMMAND test_feature)
