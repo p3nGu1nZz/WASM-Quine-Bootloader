@@ -17,6 +17,18 @@ struct ExportData {
     std::vector<Instruction>   instructions;
     std::deque<LogEntry>       logs;
     std::vector<HistoryEntry>  history;
+
+    // telemetry metrics (optional)
+    int mutationsAttempted = 0;
+    int mutationsApplied   = 0;
+    int mutationInsert     = 0;
+    int mutationDelete     = 0;
+    int mutationModify     = 0;
+    int mutationAdd        = 0;
+    std::string trapCode;
+    double genDurationMs   = 0.0;
+    int kernelSizeMin      = 0;
+    int kernelSizeMax      = 0;
 };
 
 // Build a full text report (hex dump, disassembly, history) from the given data.

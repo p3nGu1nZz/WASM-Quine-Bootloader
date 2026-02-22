@@ -5,6 +5,7 @@
 #include "log.h"
 #include "wasm/kernel.h"
 #include "wasm/parser.h"
+#include <climits>
 
 #include <string>
 #include <vector>
@@ -55,6 +56,21 @@ public:
     // expose reboot helper for tests
     void doReboot(bool success);
 
+    // Blacklist management
+    bool isBlacklisted(const std::vector<uint8_t>& seq) const;
+    void addToBlacklist(const std::vector<uint8_t>& seq);
+
+    // telemetry accessors (for tests or GUI)
+    int mutationsApplied() const { return m_mutationsApplied; }
+    int mutationInsertCount() const { return m_mutationInsert; }
+    int mutationDeleteCount() const { return m_mutationDelete; }
+    int mutationModifyCount() const { return m_mutationModify; }
+    int mutationAddCount() const { return m_mutationAdd; }
+    double lastGenDurationMs() const { return m_lastGenDurationMs; }
+    int kernelSizeMin() const { return m_kernelSizeMin; }
+    int kernelSizeMax() const { return m_kernelSizeMax; }
+    const std::string& lastTrapReason() const { return m_lastTrapReason; }
+
 private:
     // FSM helpers
     void transitionTo(SystemState s);
@@ -89,6 +105,20 @@ private:
     double m_uptimeMs          = 0.0;
     int    m_retryCount        = 0;
     int    m_evolutionAttempts = 0;
+    // telemetry counters
+    int    m_mutationsApplied = 0;
+    int    m_mutationInsert   = 0;
+    int    m_mutationDelete   = 0;
+    int    m_mutationModify   = 0;
+    int    m_mutationAdd      = 0;
+    // heuristic blacklist: sequences that previously caused traps
+    std::vector<std::vector<uint8_t>> m_blacklist;
+    // profiling / telemetry timing
+    uint64_t m_genStartTime   = 0; // steady ticks at generation start
+    double   m_lastGenDurationMs = 0.0;
+    int      m_kernelSizeMin  = INT_MAX;
+    int      m_kernelSizeMax  = 0;
+    std::string m_lastTrapReason;
     int    m_programCounter    = -1;
 
     std::string m_stableKernel;

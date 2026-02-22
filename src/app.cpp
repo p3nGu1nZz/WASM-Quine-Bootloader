@@ -251,8 +251,16 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
 
         // Evolve
         try {
-            auto evo     = evolveBinary(m_currentKernel, m_knownInstructions,
-                                        m_generation + 1);
+            int seed = m_generation + 1;
+            auto evo = evolveBinary(m_currentKernel, m_knownInstructions, seed);
+            // if the mutation is blacklisted, retry a few times
+            int tries = 0;
+            while (!evo.mutationSequence.empty() && isBlacklisted(evo.mutationSequence) && tries < 8) {
+                m_logger.log("EVOLUTION: mutation sequence blacklisted, reroll", "warning");
+                seed++;
+                evo = evolveBinary(m_currentKernel, m_knownInstructions, seed);
+                tries++;
+            }
             auto evolved = base64_decode(evo.binary);
             if (evolved.size() < 8 || evolved[0] != 0x00 || evolved[1] != 0x61 ||
                 evolved[2] != 0x73 || evolved[3] != 0x6D)
@@ -260,7 +268,17 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
 
             m_nextKernel      = evo.binary;
             m_pendingMutation = evo.mutationSequence;
+
             m_evolutionAttempts++;
+            if (!evo.mutationSequence.empty()) {
+                m_mutationsApplied++;
+                switch (evo.actionUsed) {
+                    case EvolutionAction::MODIFY: m_mutationModify++; break;
+                    case EvolutionAction::INSERT: m_mutationInsert++; break;
+                    case EvolutionAction::ADD   : m_mutationAdd++; break;
+                    case EvolutionAction::DELETE: m_mutationDelete++; break;
+                }
+            }
             m_logger.log("EVOLUTION: " + evo.description, "mutation");
             m_logger.addHistory({ m_generation, nowIso(), (int)kernelBytes(),
                                    "EVOLVE", evo.description, true });
@@ -282,12 +300,33 @@ void App::onGrowMemory(uint32_t /*pages*/) {
     m_memGrowFlashUntil = now() + 800;
 }
 
+bool App::isBlacklisted(const std::vector<uint8_t>& seq) const {
+    for (const auto& b : m_blacklist) {
+        if (b == seq) return true;
+    }
+    return false;
+}
+
+void App::addToBlacklist(const std::vector<uint8_t>& seq) {
+    if (seq.empty()) return;
+    if (!isBlacklisted(seq))
+        m_blacklist.push_back(seq);
+}
+
 // ─── Failure / Repair ────────────────────────────────────────────────────────
 
 void App::handleBootFailure(const std::string& reason) {
     m_logger.log("CRITICAL: " + reason, "error");
     m_logger.addHistory({ m_generation, nowIso(), (int)kernelBytes(),
                           "REPAIR", reason, false });
+
+    // record trap reason for telemetry
+    m_lastTrapReason = reason;
+    // add the mutation that just produced the failing kernel to blacklist
+    if (!m_pendingMutation.empty()) {
+        addToBlacklist(m_pendingMutation);
+        m_logger.log("HEURISTIC: blacklisted mutation sequence", "warning");
+    }
 
     m_retryCount++;
 
@@ -321,15 +360,26 @@ void App::doReboot(bool success) {
     m_focusLen       = 0;
     m_sysReading     = false;
 
+    if (success && m_genStartTime != 0) {
+        // compute duration for previous generation
+        uint64_t nowTicks = now();
+        m_lastGenDurationMs = (nowTicks - m_genStartTime) / 1000.0; // ticks are us?
+    }
+
     if (success) {
         m_generation++;
-
+        // record generation start time
+        m_genStartTime = now();
 
         if (!m_nextKernel.empty()) {
             m_currentKernel = m_nextKernel;
             m_nextKernel.clear();
             auto bytes = base64_decode(m_currentKernel);
             m_instructions = extractCodeSection(bytes);
+            // update size min/max
+            int sz = (int)bytes.size();
+            m_kernelSizeMin = std::min(m_kernelSizeMin, sz);
+            m_kernelSizeMax = std::max(m_kernelSizeMax, sz);
         }
 
         if (!m_pendingMutation.empty()) {
@@ -365,6 +415,17 @@ std::string App::exportHistory() const {
     d.instructions  = m_instructions;
     d.logs          = m_logger.logs();
     d.history       = m_logger.history();
+    // telemetry metrics
+    d.mutationsAttempted = m_evolutionAttempts;
+    d.mutationsApplied   = m_mutationsApplied;
+    d.mutationInsert     = m_mutationInsert;
+    d.mutationDelete     = m_mutationDelete;
+    d.mutationModify     = m_mutationModify;
+    d.mutationAdd        = m_mutationAdd;
+    d.trapCode           = m_lastTrapReason;
+    d.genDurationMs      = m_lastGenDurationMs;
+    d.kernelSizeMin      = m_kernelSizeMin;
+    d.kernelSizeMax      = m_kernelSizeMax;
     return buildReport(d);
 }
 

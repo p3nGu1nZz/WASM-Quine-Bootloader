@@ -31,3 +31,29 @@ TEST_CASE("CLI explicit --fullscreen overrides --windowed") {
     CliOptions opts = parseCli(3, const_cast<char**>(argv));
     REQUIRE(opts.fullscreen == true);
 }
+
+TEST_CASE("CLI parses --telemetry-level value") {
+    const char* argv[] = {"bootloader", "--telemetry-level=none"};
+    CliOptions opts = parseCli(2, const_cast<char**>(argv));
+    REQUIRE(opts.telemetryLevel == TelemetryLevel::NONE);
+}
+
+TEST_CASE("CLI parses --max-gen and --profile") {
+    const char* argv[] = {"bootloader", "--max-gen", "5", "--profile"};
+    CliOptions opts = parseCli(4, const_cast<char**>(argv));
+    REQUIRE(opts.maxGen == 5);
+    REQUIRE(opts.profile == true);
+}
+
+TEST_CASE("CLI accepts mutation-strategy and heuristic") {
+    const char* argv[] = {"bootloader", "--mutation-strategy=blacklist", "--heuristic", "blacklist"};
+    CliOptions opts = parseCli(4, const_cast<char**>(argv));
+    REQUIRE(opts.mutationStrategy == MutationStrategy::BLACKLIST);
+    REQUIRE(opts.heuristic == HeuristicMode::BLACKLIST);
+}
+
+TEST_CASE("CLI ignores unknown options but still records others") {
+    const char* argv[] = {"bootloader", "--foo", "--windowed", "--bar"};
+    CliOptions opts = parseCli(4, const_cast<char**>(argv));
+    REQUIRE(opts.fullscreen == false);
+}

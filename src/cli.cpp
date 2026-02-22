@@ -2,20 +2,68 @@
 #include <cstring>
 #include <cstdlib>
 
+static TelemetryLevel parseTelemetryLevel(const char* v) {
+    if (std::strcmp(v, "none") == 0) return TelemetryLevel::NONE;
+    if (std::strcmp(v, "full") == 0) return TelemetryLevel::FULL;
+    return TelemetryLevel::BASIC;
+}
+
+static MutationStrategy parseMutationStrategy(const char* v) {
+    if (std::strcmp(v, "blacklist") == 0) return MutationStrategy::BLACKLIST;
+    if (std::strcmp(v, "smart") == 0) return MutationStrategy::SMART;
+    return MutationStrategy::RANDOM;
+}
+
+static HeuristicMode parseHeuristicMode(const char* v) {
+    if (std::strcmp(v, "blacklist") == 0) return HeuristicMode::BLACKLIST;
+    return HeuristicMode::NONE;
+}
+
 CliOptions parseCli(int argc, char** argv) {
     CliOptions opts;
     for (int i = 1; i < argc; ++i) {
-        const char* arg = argv[i];
-        if (std::strcmp(arg, "--gui") == 0) {
+        std::string argstr = argv[i];
+        if (argstr == "--gui") {
             opts.useGui = true;
-        } else if (std::strcmp(arg, "--headless") == 0 ||
-                   std::strcmp(arg, "--no-gui") == 0 ||
-                   std::strcmp(arg, "--nogui") == 0) {
+        } else if (argstr == "--headless" || argstr == "--no-gui" ||
+                   argstr == "--nogui") {
             opts.useGui = false;
-        } else if (std::strcmp(arg, "--fullscreen") == 0) {
+        } else if (argstr == "--fullscreen") {
             opts.fullscreen = true;
-        } else if (std::strcmp(arg, "--windowed") == 0) {
+        } else if (argstr == "--windowed") {
             opts.fullscreen = false;
+        } else if (argstr.rfind("--telemetry-level", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.telemetryLevel = parseTelemetryLevel(val);
+        } else if (argstr.rfind("--telemetry-dir", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.telemetryDir = val;
+        } else if (argstr.rfind("--mutation-strategy", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.mutationStrategy = parseMutationStrategy(val);
+        } else if (argstr.rfind("--heuristic", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.heuristic = parseHeuristicMode(val);
+        } else if (argstr == "--profile") {
+            opts.profile = true;
+        } else if (argstr.rfind("--max-gen", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.maxGen = std::atoi(val);
         }
         // unrecognised args are silently ignored; the run.sh script
         // forwards remaining arguments to the executable so they can be

@@ -44,3 +44,14 @@ target_link_libraries(test_cli PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME cli_test COMMAND test_cli)
+
+# Export report formatting tests
+add_executable(test_export test_export.cpp)
+target_include_directories(test_export PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_export PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME export_test COMMAND test_export)

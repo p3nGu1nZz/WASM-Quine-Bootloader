@@ -67,7 +67,26 @@ std::string buildReport(const ExportData& d) {
     out << "WASM QUINE BOOTLOADER - SYSTEM HISTORY EXPORT\n"
         << "Generated: " << nowIso() << '\n'
         << "Final Generation: " << d.generation << '\n'
-        << "Kernel Size: " << raw.size() << " bytes\n\n"
+        << "Kernel Size: " << raw.size() << " bytes\n";
+    if (d.mutationsAttempted || d.mutationsApplied) {
+        out << "Mutations Attempted: " << d.mutationsAttempted << '\n'
+            << "Mutations Applied: " << d.mutationsApplied << '\n'
+            << "Mutation Breakdown: insert=" << d.mutationInsert
+            << ", delete=" << d.mutationDelete
+            << ", modify=" << d.mutationModify
+            << ", append=" << d.mutationAdd << "\n";
+    }
+    if (!d.trapCode.empty()) {
+        out << "Traps: " << d.trapCode << "\n";
+    }
+    if (d.genDurationMs > 0.0) {
+        out << "Gen Duration: " << d.genDurationMs << " ms\n";
+    }
+    if (d.kernelSizeMin || d.kernelSizeMax) {
+        out << "Kernel Size Min/Max: " << d.kernelSizeMin
+            << "/" << d.kernelSizeMax << "\n";
+    }
+    out << "\n"
         << "CURRENT KERNEL (BASE64):\n"
         << std::string(80, '-') << '\n'
         << d.currentKernel << '\n'
