@@ -31,7 +31,7 @@ bash scripts/test.sh
 
 ```
 test/
-├── test_wasm_kernel.cpp    # Tests for src/wasm_kernel.cpp (boot, run, terminate)
+├── test_wasm_kernel.cpp    # Tests for src/wasm/kernel.cpp (boot, run, terminate)
 ├── test_util.cpp           # Tests for src/util.h utility functions
 └── test_evolution.cpp      # Tests for WASM binary mutation logic
 ```

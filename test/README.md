@@ -8,7 +8,7 @@ One `.cpp` file per module under test:
 
 | File | Tests for |
 |------|-----------|
-| `test_wasm_kernel.cpp` | `src/wasm_kernel.cpp` – boot, run, terminate |
+| `test_wasm_kernel.cpp` | `src/wasm/kernel.cpp` – boot, run, terminate |
 | `test_util.cpp` | `src/util.h` – string helpers, Base64, LEB128 |
 | `test_evolution.cpp` | WASM binary mutation / evolution logic |
 

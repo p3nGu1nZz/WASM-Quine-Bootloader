@@ -40,9 +40,9 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 │   ├── constants.h           # KERNEL_GLOB (base64 WASM), DEFAULT_BOOT_CONFIG
 │   ├── base64.h              # Inline base64 encode / decode
 │   ├── wasm/                  # subdirectory for WASM-related modules
-│   │   ├── wasm_parser.h/.cpp    # WASM binary parser (LEB-128, code section)
-│   │   ├── wasm_evolution.h/.cpp # WASM mutation engine
-│   │   └── wasm_kernel.h/.cpp    # WasmKernel – wasm3 integration
+│   │   ├── parser.h/.cpp    # WASM binary parser (LEB-128, code section)
+│   │   ├── evolution.h/.cpp # WASM mutation engine
+│   │   └── kernel.h/.cpp    # WasmKernel – wasm3 integration
 ├── scripts/
 │   ├── setup.sh              # One-shot dependency installer + initial build
 │   ├── build.sh              # Build for a specific target (or --clean)

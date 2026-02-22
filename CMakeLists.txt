@@ -42,9 +42,9 @@ set(APP_SOURCES
     src/fsm.cpp
     src/exporter.cpp
     src/app.cpp
-    src/wasm/wasm_kernel.cpp
-    src/wasm/wasm_parser.cpp
-    src/wasm/wasm_evolution.cpp
+    src/wasm/kernel.cpp
+    src/wasm/parser.cpp
+    src/wasm/evolution.cpp
 )
 
 add_executable(bootloader

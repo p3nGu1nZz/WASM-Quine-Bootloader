@@ -1,7 +1,7 @@
 #include "exporter.h"
 #include "base64.h"
 #include "util.h"
-#include "wasm/wasm_parser.h"
+#include "wasm/parser.h"
 
 #include <sstream>
 #include <iomanip>

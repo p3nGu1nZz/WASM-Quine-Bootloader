@@ -23,7 +23,7 @@
 │   ├── main.cpp                # Entry point – parses --gui flag, starts terminal or GUI loop
 │   ├── gui.h / gui.cpp         # Gui class – SDL3 window, panel rendering, F11 fullscreen toggle
 │   ├── util.h / util.cpp       # String and general utilities
-│   └── wasm_kernel.cpp         # wasm3 host – boots kernel, wires env.log / env.grow_memory
+│   └── wasm/kernel.cpp         # wasm3 host – boots kernel, wires env.log / env.grow_memory
 ├── test/                       # Unit tests (one .cpp file per module under test)
 ├── external/
 │   ├── SDL3/                   # SDL3 source (built from source via setup.sh)
@@ -64,7 +64,7 @@ The original design included an ANSI/terminal renderer (headless mode). If requi
 
 - **C++17** – use `std::string_view`, structured bindings, `[[nodiscard]]`, etc. where appropriate.
 - **wasm3 host functions** must use the `m3ApiRawFunction` macro (returns `const void*`). Read args with `m3ApiGetArg`. Link with `m3_LinkRawFunction`. Access user data via `m3_GetUserData(runtime)`.
-- **SDL3 rendering**: all drawing goes through the `Gui` class (`src/gui.h`). Do not call SDL functions directly from `main.cpp` or `wasm_kernel.cpp`.
+- **SDL3 rendering**: all drawing goes through the `Gui` class (`src/gui.h`). Do not call SDL functions directly from `main.cpp` or `wasm/kernel.cpp`.
 - **Utilities**: string helpers live in `src/util.h`; add new general-purpose helpers there.
 - **Header guards**: use `#pragma once` in all headers.
 - **Error handling**: prefer returning `bool` / `std::optional` over throwing exceptions in low-level code.
@@ -98,7 +98,7 @@ bash scripts/test.sh
 - Do not introduce division opcodes (`i32.div_s`, `i32.div_u`, `i32.rem_s`, `i32.rem_u`) in the evolution engine — they trap on divide-by-zero.
 - The kernel `run(ptr, len)` function must maintain a balanced operand stack; all generated instruction sequences must be stack-neutral.
 - Evolution limits the function body to 32 KB to prevent runaway growth.
-- The seed kernel binary constant is defined in `src/wasm_kernel.cpp`; do not change it without also updating the WAT comment alongside it.
+- The seed kernel binary constant is defined in `src/wasm/kernel.cpp`; do not change it without also updating the WAT comment alongside it.
 
 ## Agent Skills
 

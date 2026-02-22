@@ -1,4 +1,4 @@
-#include "wasm/wasm_parser.h"
+#include "wasm/parser.h"
 #include <sstream>
 #include <iomanip>
 

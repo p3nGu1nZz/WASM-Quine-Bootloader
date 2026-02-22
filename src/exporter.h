@@ -1,7 +1,7 @@
 #pragma once
 
 #include "types.h"
-#include "wasm/wasm_parser.h"
+#include "wasm/parser.h"
 #include <string>
 #include <vector>
 #include <deque>

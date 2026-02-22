@@ -3,7 +3,7 @@
 #include "base64.h"
 #include "util.h"
 #include "exporter.h"
-#include "wasm/wasm_evolution.h"
+#include "wasm/evolution.h"
 
 #include <SDL3/SDL.h>
 

@@ -6,13 +6,13 @@
 main.cpp
  └── Gui          (gui.h / gui.cpp)
  │    ├── GuiHeatmap    (heatmap.h / heatmap.cpp)
- │    └── [uses] colors.h, util.h, wasm/wasm_parser.h
+ │    └── [uses] colors.h, util.h, wasm/parser.h
  └── App          (app.h / app.cpp)
       ├── BootFsm       (fsm.h / fsm.cpp)
       ├── AppLogger     (logger.h / logger.cpp)
-      ├── WasmKernel    (wasm/wasm_kernel.h / wasm/wasm_kernel.cpp)
-      ├── [uses] wasm/wasm_evolution.h / wasm/wasm_evolution.cpp
-      ├── [uses] wasm/wasm_parser.h / wasm/wasm_parser.cpp
+      ├── WasmKernel    (wasm/kernel.h / wasm/kernel.cpp)
+      ├── [uses] wasm/evolution.h / wasm/evolution.cpp
+      ├── [uses] wasm/parser.h / wasm/parser.cpp
       ├── [uses] exporter.h / exporter.cpp
       └── [uses] base64.h, constants.h, types.h, util.h
 ```
@@ -125,7 +125,7 @@ Transition history is not recorded here; that is the responsibility of `AppLogge
 | `ExportData` | POD aggregate: generation, era, kernel, instructions, logs, history |
 | `buildReport(data)` | Returns a multi-section text string (header, hex dump, disassembly, history log) |
 
-**Dependencies:** `types.h`, `wasm/wasm_parser.h`, `base64.h`, `util.h`
+**Dependencies:** `types.h`, `wasm/parser.h`, `base64.h`, `util.h`
 
 ---
 
@@ -139,12 +139,12 @@ host callbacks (`onWasmLog`, `onGrowMemory`).
 
 Exposes read-only accessors for everything the `Gui` needs to render.
 
-**Dependencies:** `fsm.h`, `logger.h`, `exporter.h`, `wasm/wasm_kernel.h`, `wasm/wasm_parser.h`,
+**Dependencies:** `fsm.h`, `logger.h`, `exporter.h`, `wasm/kernel.h`, `wasm/parser.h`,
 `wasm_evolution.h`, `base64.h`, `constants.h`, `util.h`, `types.h`
 
 ---
 
-### `src/wasm/wasm_kernel.h` / `src/wasm/wasm_kernel.cpp`
+### `src/wasm/kernel.h` / `src/wasm/kernel.cpp`
 **Role:** Wrapper around the wasm3 interpreter.
 
 | Member | Description |
@@ -162,7 +162,7 @@ deleted in `terminate()`.
 
 ---
 
-### `src/wasm/wasm_parser.h` / `src/wasm/wasm_parser.cpp`
+### `src/wasm/parser.h` / `src/wasm/parser.cpp`
 **Role:** Minimal WASM binary parser.
 
 | Symbol | Description |
@@ -178,7 +178,7 @@ deleted in `terminate()`.
 
 ---
 
-### `src/wasm/wasm_evolution.h` / `src/wasm/wasm_evolution.cpp`
+### `src/wasm/evolution.h` / `src/wasm/evolution.cpp`
 **Role:** WASM binary mutation engine.
 
 | Symbol | Description |
@@ -257,10 +257,10 @@ Block geometry scales automatically with kernel size:
 types.h ◄── constants.h
    ▲               ▲
    │               │
-base64.h    wasm/wasm_parser.h ◄── wasm/wasm_evolution.h
+base64.h    wasm/parser.h ◄── wasm/evolution.h
    ▲               ▲                  ▲
    │               │                  │
-util.h ────────────┤           wasm_kernel.h
+util.h ────────────┤           kernel.h
    ▲               │                  ▲
    │               │                  │
 logger.h     exporter.h          fsm.h
