@@ -67,6 +67,7 @@ echo "[build] Output:    ${BUILD_DIR}"
 mkdir -p "${BUILD_DIR}"
 
 # shellcheck disable=SC2086
+# TOOLCHAIN_ARG may contain multiple space-separated cmake flags; intentional word-splitting here.
 cmake -S "${REPO_ROOT}" -B "${BUILD_DIR}" \
     -G Ninja \
     -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" \

@@ -9,9 +9,15 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
-#include <cstdlib>   // rand
+#include <random>
 #include <cmath>
 #include <vector>
+
+// Lightweight per-frame random int in [0, n)
+static int guiRandInt(int n) {
+    static thread_local std::mt19937 rng(std::random_device{}());
+    return std::uniform_int_distribution<int>(0, n - 1)(rng);
+}
 
 // ─── Color helpers ────────────────────────────────────────────────────────────
 
@@ -111,7 +117,7 @@ static void drawMemoryHeatmap(const App& app, ImDrawList* dl,
 
         if (focused)
             s_heatMap[i] = 1.0f;
-        else if (app.isSystemReading() && ((rand() % 100) > 98))
+        else if (app.isSystemReading() && (guiRandInt(100) > 98))
             s_heatMap[i] = std::min(1.0f, s_heatMap[i] + 0.5f);
 
         s_heatMap[i] *= 0.85f;
@@ -135,7 +141,7 @@ static void drawMemoryHeatmap(const App& app, ImDrawList* dl,
                 IM_COL32((int)(c.x*255),(int)(c.y*255),(int)(c.z*255),(int)(c.w*255)));
         }
 
-        if (app.isMemoryGrowing() && ((rand() % 100) > 98))
+        if (app.isMemoryGrowing() && (guiRandInt(100) > 98))
             dl->AddRectFilled({ x, y }, { x + BLOCK, y + BLOCK },
                               IM_COL32(255, 255, 255, 100));
     }

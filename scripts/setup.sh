@@ -23,7 +23,11 @@ error()   { echo -e "${RED}[ERROR]${NC} $*"; exit 1; }
 section() { echo -e "\n${GREEN}===== $* =====${NC}"; }
 
 # ── 0. Sudo helper ─────────────────────────────────────────────────────────────
-SUDO=""; [[ "$EUID" -ne 0 ]] && SUDO="sudo"
+if [[ "$EUID" -eq 0 ]]; then
+    SUDO=""
+else
+    SUDO="sudo"
+fi
 
 # ── 1. System packages ─────────────────────────────────────────────────────────
 section "System packages"
