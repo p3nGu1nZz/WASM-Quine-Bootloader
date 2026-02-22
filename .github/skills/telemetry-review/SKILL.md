@@ -5,16 +5,46 @@ description: Analyse the runtime logs and telemetry exports produced by the boot
 
 # telemetry-review
 
-Inspect bootloader outputs in `build/<target>/bin/logs/` and
-`bin/seq/<runid>/` after running the app to:
-- check quine/evolution correctness
-- spot errors, retries or shrinking kernel sizes
-- verify generation reports (gen_<n>.txt) include base64 dumps and fields
-- detect missing telemetry or parse failures
+Inspect bootloader outputs under `build/<target>/bin/logs/` and
+`build/<target>/bin/seq/<runid>/` after executing the app.  The goal is to:
 
-Typical steps: run for a while, open latest log searching `[error]`/`[warning]`,
-list latest seq directory, `head` the first gen file, and note anomalies.  
-Optionally summarize or file an issue.
+- validate quine/evolution cycles and kernel integrity across generations
+- spot `[error]`/`[warning]` lines, retries, or unexpected kernel size changes
+- ensure each `gen_<n>.txt` export contains its header, base64 blob, hex dump,
+  disassembly section and history entries
+- detect telemetry omissions, serialization glitches, or parse failures
+- collect data points useful for performance or mutation analysis
+
+**Workflow**
+
+1. Launch the bootloader (headless or GUI) for a representative period.
+2. Use `ls -t` to identify the newest log file, then `grep` for errors and
+   count generation cycles.
+3. Navigate into the corresponding `seq/<runid>` folder and inspect the
+   first few `gen_*.txt` files with `head`/`grep`.
+4. If anomalies are found, note them, update `docs/specs/spec_telemetry.md`,
+   or open a GitHub issue with sample exports attached.
+5. Optionally write a small script or use the data in analysis tools (Python,
+   CSV) to visualize mutation trends.
+
+**Examples**
+
+```bash
+# find new log and look for problems
+latest=$(ls -t build/*/bin/logs/*.log | head -1)
+grep -n "\[error\]\|\[warning\]" "$latest"
+# inspect first generation export
+head -20 build/linux-debug/bin/seq/$(ls -1 build/linux-debug/bin/seq | tail -1)/gen_1.txt
+```
+
+**Notes**
+
+- The telemetry export format is defined in `App::exportHistory()` and may
+  change; keep specs in `docs/specs/spec_telemetry.md` updated accordingly.
+- When adding new telemetry fields, run this skill to ensure the data is
+  serialized properly and the history exports remain parseable.
+- Consider coupling this skill with `introspect-telemetry` for a deeper
+  diagnostic session.
 
 ## Notes
 

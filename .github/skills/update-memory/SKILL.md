@@ -17,10 +17,20 @@ Record important repository facts—conventions, paths, behaviours, new features
 
 ## Behaviour
 
-1. Review recent commits or changes since last memory update.
-2. Identify persistent facts (naming schemes, directory structures, default behaviours, tools available).
-3. Use the `memory` tool to store each fact with a topic, citation, and reason.
-4. Optionally delete outdated memories by overwriting them with corrected statements.
+1. Run `git log --stat -n 5` (or examine workspace diffs) to see what’s
+   changed since the last invocation of this skill.
+2. From the diff/commit messages, pick out lasting, repo‑wide facts such as
+   new directories, renamed components, coding conventions, CLI flags or
+   build requirements.
+3. For each fact, call the `memory` tool with a concise subject, the fact
+   string, proper citations (file paths/commits), and a detailed reason.
+4. If a previously stored fact is now invalid, either overwrite it with a
+   corrected statement or add a new entry explaining the deprecation.
+5. Optionally, invoke `runSubagent` with the `search-memory` agent to verify
+   whether similar facts already exist before adding duplicates.
+
+Agents using this skill may also store meta‑facts such as the date of the
+last update so cron‑style reminders can be generated.
 
 ## Examples
 
