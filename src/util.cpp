@@ -5,6 +5,7 @@
 #include <random>
 #include <sstream>
 #include <ctime>
+#include <filesystem>
 
 std::string stateStr(SystemState s) {
     switch (s) {
@@ -85,4 +86,13 @@ std::string nowFileStamp() {
     char buf[20];
     std::strftime(buf, sizeof buf, "%Y%m%d_%H%M%S", &utc);
     return buf;
+}
+
+std::string executableDir() {
+    try {
+        auto exe = std::filesystem::read_symlink("/proc/self/exe");
+        if (exe.has_parent_path())
+            return exe.parent_path().string();
+    } catch (...) {}
+    return std::filesystem::current_path().string();
 }

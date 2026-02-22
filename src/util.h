@@ -20,3 +20,7 @@ std::string nowIso();
 
 // Return a filename-safe UTC timestamp (e.g. "20260102_030405")
 std::string nowFileStamp();
+
+// Return directory containing the running executable (Linux-specific).
+// Falls back to current_path() if unreadable.
+std::string executableDir();
