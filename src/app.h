@@ -2,7 +2,7 @@
 
 #include "types.h"
 #include "fsm.h"
-#include "logger.h"
+#include "log.h"
 #include "wasm/kernel.h"
 #include "wasm/parser.h"
 

@@ -38,7 +38,7 @@ set(APP_SOURCES
     src/gui.cpp
     src/heatmap.cpp
     src/util.cpp
-    src/logger.cpp
+    src/log.cpp
     src/fsm.cpp
     src/exporter.cpp
     src/app.cpp

@@ -34,7 +34,7 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 │   ├── util.h / util.cpp     # stateStr, eraStr, randomId, nowIso
 │   ├── app.h / app.cpp       # App: top-level orchestrator
 │   ├── fsm.h / fsm.cpp       # BootFsm: finite state machine
-│   ├── logger.h / logger.cpp # AppLogger: live log ring-buffer + history ledger
+│   ├── log.h / log.cpp # AppLogger: live log ring-buffer + history ledger
 │   ├── exporter.h / exporter.cpp # buildReport(): telemetry text report
 │   ├── types.h               # SystemState, SystemEra, LogEntry, HistoryEntry, BootConfig
 │   ├── constants.h           # KERNEL_GLOB (base64 WASM), DEFAULT_BOOT_CONFIG

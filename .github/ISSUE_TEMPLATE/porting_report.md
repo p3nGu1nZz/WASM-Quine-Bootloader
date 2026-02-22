@@ -14,7 +14,7 @@ about: Use this template to report porting, migration, or large refactor finding
 Describe what you examined and what is the problem. Include relevant file paths and short excerpts.
 
 - File: `src/main.cpp` — incorrect SDL initialization check causes immediate exit on success.
-- File: `src/logger.cpp` — signal handler calls non-async-safe functions (IO) which is unsafe.
+- File: `src/log.cpp` — signal handler calls non-async-safe functions (IO) which is unsafe.
 - File: `src/` — missing or unimplemented headless terminal mode vs docs.
 
 ## Reproduction steps
@@ -26,7 +26,7 @@ Describe what you examined and what is the problem. Include relevant file paths 
 ## Suggested fixes
 
 - Fix `SDL_Init` check in `src/main.cpp`.
-- Replace signal-handler flushing with atomic flag + flush on main loop in `src/logger.cpp`.
+- Replace signal-handler flushing with atomic flag + flush on main loop in `src/log.cpp`.
 - Add CLI parsing and headless renderer or align docs.
 
 ## Acceptance criteria

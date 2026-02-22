@@ -9,7 +9,7 @@ main.cpp
  │    └── [uses] colors.h, util.h, wasm/parser.h
  └── App          (app.h / app.cpp)
       ├── BootFsm       (fsm.h / fsm.cpp)
-      ├── AppLogger     (logger.h / logger.cpp)
+      ├── AppLogger     (log.h / log.cpp)
       ├── WasmKernel    (wasm/kernel.h / wasm/kernel.cpp)
       ├── [uses] wasm/evolution.h / wasm/evolution.cpp
       ├── [uses] wasm/parser.h / wasm/parser.cpp
