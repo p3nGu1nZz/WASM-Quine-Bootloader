@@ -61,7 +61,8 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     fs::path seqdir = fs::path("bin") / "seq" / app.runId();
     REQUIRE(fs::exists(seqdir));
     REQUIRE(fs::exists(seqdir / "gen_1.txt"));
-    REQUIRE(fs::exists(seqdir / "kernel_1.b64"));
+    // default telemetry level is BASIC, which does not write kernel blob
+    REQUIRE(!fs::exists(seqdir / "kernel_1.b64"));
 
     // create stray files at root and confirm constructor cleans them up
     std::ofstream stray1("bootloader_old.log");

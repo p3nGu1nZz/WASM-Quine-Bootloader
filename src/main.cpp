@@ -59,7 +59,7 @@ int main(int argc, char** argv) {
         Gui gui;
         gui.init(window, renderer);
 
-        App  app;
+        App  app(opts);
         bool running = true;
         while (running) {
             SDL_Event ev;
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
         // fallback headless mode (very simple for now).  We still create an
         // App instance and call update() on a timer so that the core logic
         // exercises the boot sequence; logs are not rendered.
-        App app;
+        App app(opts);
         bool running = true;
         using Clock = std::chrono::high_resolution_clock;
         auto last = Clock::now();
