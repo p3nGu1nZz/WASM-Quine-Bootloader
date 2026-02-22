@@ -7,14 +7,23 @@
 A self-replicating, self-evolving WebAssembly kernel visualizer — native C++17
 desktop application built with **SDL3** and **Dear ImGui**.
 
-For full documentation, see **[docs/README.md](docs/README.md)**.
+For full documentation see **[docs/README.md](docs/README.md)**.
 
 ## Quick Start (Windows WSL2 / Ubuntu)
 
 ```bash
 # Install all dependencies, build, and run:
-bash setup.sh
+bash scripts/setup.sh
 bash scripts/run.sh
+```
+
+## Build Targets
+
+```bash
+bash scripts/build.sh                    # linux-debug (default)
+bash scripts/build.sh linux-release
+bash scripts/build.sh windows-debug     # requires setup.sh windows first
+bash scripts/build.sh windows-release   # requires setup.sh windows first
 ```
 
 ## Controls
@@ -24,4 +33,3 @@ bash scripts/run.sh
 | `Space` | Pause / Resume |
 | `Q` / `Esc` | Quit |
 | **EXPORT** button | Save telemetry report to disk |
-

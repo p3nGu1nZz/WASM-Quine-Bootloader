@@ -7,7 +7,9 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node / Web app
 node_modules
+web/node_modules
 dist
 dist-ssr
 *.local
@@ -38,10 +40,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps/
 
-# External dependencies (downloaded by setup.sh)
-external/SDL3/
-external/imgui/
-external/wasm3/
+# External dependencies (downloaded by scripts/setup.sh – not committed)
+/external/*
 
 # Exported telemetry files
 quine_telemetry_*.txt

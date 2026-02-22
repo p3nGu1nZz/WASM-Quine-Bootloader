@@ -1,17 +1,28 @@
 #!/usr/bin/env bash
 # run.sh – Build (if needed) and launch the WASM Quine Bootloader.
-# Run from the repository root, or with: bash scripts/run.sh
+#
+# Usage:  bash scripts/run.sh [TARGET]
+#
+# TARGET defaults to linux-debug (same as build.sh).
 
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-BINARY="${REPO_ROOT}/build/wasm_quine_bootloader"
+TARGET="${1:-linux-debug}"
 
-# Build first if the binary does not exist
-if [[ ! -f "${BINARY}" ]]; then
-    echo "[run] Binary not found, building first..."
-    bash "${REPO_ROOT}/scripts/build.sh"
+case "${TARGET}" in
+    windows-debug|windows-release)
+        BIN="${REPO_ROOT}/build/${TARGET}/bootloader.exe"
+        ;;
+    *)
+        BIN="${REPO_ROOT}/build/${TARGET}/bootloader"
+        ;;
+esac
+
+if [[ ! -f "${BIN}" ]]; then
+    echo "[run] Binary not found for target '${TARGET}', building first..."
+    bash "${REPO_ROOT}/scripts/build.sh" "${TARGET}"
 fi
 
-echo "[run] Starting WASM Quine Bootloader..."
-exec "${BINARY}" "$@"
+echo "[run] Starting WASM Quine Bootloader (${TARGET})..."
+exec "${BIN}" "$@"
