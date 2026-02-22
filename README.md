@@ -1,5 +1,11 @@
 # WASM Quine Bootloader
 
+This project now supports configurable mutation heuristics and richer
+telemetry output.  See `docs/specs/spec_heuristics.md` and
+`docs/specs/spec_telemetry.md` for details.  CLI flags such as
+`--telemetry-level`, `--mutation-strategy`, `--profile` and
+`--max-gen` allow fine‑grained control of runs.
+
 A self-replicating, self-evolving WebAssembly kernel visualizer — native **C++17** desktop application using **SDL3** and **Dear ImGui**.
 
 For technical design details see **[docs/design.md](docs/design.md)** and **[docs/architecture.md](docs/architecture.md)**.
@@ -119,6 +125,21 @@ This script will:
 5. Build the `linux-debug` target → `build/linux-debug/bootloader`
 
 ### Step 2 — Run
+
+The launcher supports several new command‑line options (see
+`spec_cli.md` for full semantics):
+
+- `--telemetry-level=<none|basic|full>` – control how much export data is
+  written (header only, full report, or disabled).
+- `--telemetry-dir=<path>` – change output directory for reports.
+- `--mutation-strategy=<random|blacklist|smart>` – choose evolution
+  policy; `blacklist` enables the adaptive heuristic.
+- `--heuristic=<none|blacklist>` – shorthand toggle for the heuristic.
+- `--profile` – log per-generation timing and memory usage.
+- `--max-gen=<n>` – stop after `n` successful generations (handy for CI).
+
+These may be passed to `scripts/run.sh` and will be forwarded to the
+binary when launched directly.
 
 ```bash
 # GUI is the default; window starts fullscreen

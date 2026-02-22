@@ -36,6 +36,15 @@ dependencies first with `bash scripts/setup.sh`.
 - **Headless**: `--headless` runs without a window (useful for CI). The CLI
   parser is in `src/cli.*`.
 
+Additional CLI flags (see `docs/specs/spec_cli.md`):
+
+- `--telemetry-level` / `--telemetry-dir` – control export verbosity and
+  destination.
+- `--mutation-strategy` / `--heuristic` – choose evolution policy; blacklist
+  heuristic avoids repeated trap-causing edits.
+- `--profile` – record timing and memory stats in the log.
+- `--max-gen` – limit total successful generations, handy for tests.
+
 Telemetry/logs:
 - Logs → `build/<target>/bin/logs/*.log`.
 - Exports → `build/<target>/bin/seq/<runid>/gen_<n>.txt` plus kernel blobs.
