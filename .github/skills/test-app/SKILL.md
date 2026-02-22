@@ -19,9 +19,10 @@ bash scripts/test.sh
 ./build/linux-debug/test_<module>
 ```
 
-The test harness will exercise the export and log-generation code; running
-`test_util_dpi.cpp` creates temporary files under `bin/` which are cleaned
-up automatically by the script.
+The test harness will exercise the export and log‑generation code; running
+`test_util_dpi.cpp` creates temporary files under `bin/` which the script
+removes automatically.  On failure the coloured Catch2 output combined with
+`[test]` prefixes makes failures easy to spot.
 
 ## Behaviour
 

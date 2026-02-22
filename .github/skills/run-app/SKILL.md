@@ -12,9 +12,13 @@ Run the bootloader application in whichever mode is required. By default the ski
 Usage
 
 - Ensure `external/SDL3` and `external/imgui` are present (use `bash scripts/setup.sh`).
-- Build the linux-debug target or a chosen target.
+- Build the linux-debug target or a chosen target (
+  `bash scripts/build.sh`).
 - When reinitializing dependencies, run `bash scripts/setup.sh --clean` to
   wipe and reclone external libs.
+
+The script also creates `bin/logs` and `bin/seq` under the build directory
+and supports `--monitor` mode to tail runtime logs in real time.
 
 Commands
 

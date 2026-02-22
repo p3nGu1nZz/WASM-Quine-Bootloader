@@ -23,6 +23,7 @@ This skill mirrors the contents of `.github/prompts/update-docs.prompt.md`.
 ## Checklist
 
 - [ ] README prerequisites accurate?
+- [ ] README reflects cleanup flags, log/seq directories and coloured output?
 - [ ] Build steps in README match `scripts/build.sh`?
 - [ ] Public API documented in headers?
 - [ ] `copilot-instructions.md` structure updated?

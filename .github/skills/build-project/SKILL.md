@@ -11,6 +11,9 @@ description: Build the C++ project using the provided scripts and run the unit t
 # One-time dependency setup (only needed once per machine)
 bash scripts/setup.sh
 
+# Clean dependencies & build directory then rerun setup
+bash scripts/setup.sh --clean
+
 # Build default target (linux-debug)
 bash scripts/build.sh
 
@@ -18,7 +21,13 @@ bash scripts/build.sh
 bash scripts/build.sh linux-release
 bash scripts/build.sh windows-debug
 bash scripts/build.sh windows-release
+
+# Clean everything and rebuild a target
+bash scripts/build.sh --clean linux-debug
 ```
+
+The build script prints coloured `[build]` messages and suppresses
+spurious warnings from third‑party sources for a tidy console output.
 
 ### Build Targets
 

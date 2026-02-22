@@ -118,6 +118,7 @@ build target (e.g. `build/linux-debug`).  Runtime log files are written to
 
 This repository includes a small set of agent "skills" used by the Copilot agent. The current skills folder contains:
 
+- `setup-project` – installs or refreshes third‑party dependencies (SDL3, ImGui, wasm3, Catch2) and can clean them.
 - `build-project` – compiles the project for a specified target.
 - `run-app` – launches the bootloader in terminal or GUI mode.
 - `test-app` – builds and executes the unit tests.
