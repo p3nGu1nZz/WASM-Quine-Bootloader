@@ -2,82 +2,98 @@
 
 ## Project Overview
 
-**WASM Quine Bootloader** is a React + TypeScript single-page application that simulates a self-replicating WebAssembly (WASM) bootloader. The core concept: a minimal WASM binary (the "kernel") is instantiated, executes itself, outputs its own source (Base64-encoded binary), verifies that the output matches its own source, and then *evolves* the binary before rebooting into the next generation. This is a quine – a program that reproduces itself – implemented in WebAssembly and visualised in the browser.
+**WASM Quine Bootloader** is a self-replicating WebAssembly (WASM) bootloader implemented in **C++ with SDL3 and wasm3**. A minimal WASM binary (the "kernel") is instantiated by the wasm3 interpreter, executes itself, outputs its own source (Base64-encoded binary), verifies the output matches its own source, then *evolves* the binary before rebooting into the next generation — a quine that runs, mutates, and visualises itself.
 
 ## Technology Stack
 
-- **Framework**: React 19 with TypeScript
-- **Build Tool**: Vite 6
-- **Styling**: Tailwind CSS (utility classes via `className`)
-- **Runtime**: WebAssembly (browser-native `WebAssembly.instantiate`)
-- **No backend** – everything runs client-side in the browser
+- **Language**: C++17
+- **Build System**: CMake + Ninja
+- **GUI Rendering**: SDL3 (window mode; toggled to fullscreen with F11)
+- **WASM Runtime**: wasm3 (embedded interpreter)
+- **Terminal Rendering**: ANSI escape codes (default headless/server mode, refreshes like `top`)
+- **Unit Tests**: custom test runner in `test/`
+- **No web framework, no Node.js** – all code is native C++
 
 ## Repository Structure
 
 ```
 /
-├── App.tsx                     # Root component – state machine & boot loop
-├── constants.ts                # KERNEL_GLOB (Base64 WASM binary) & DEFAULT_BOOT_CONFIG
-├── types.ts                    # Shared TypeScript enums and interfaces
-├── index.tsx                   # React entry point
-├── index.html                  # HTML shell
-├── vite.config.ts              # Vite configuration
-├── components/
-│   ├── TerminalLog.tsx         # Scrolling log panel with coloured log types
-│   ├── SystemStatus.tsx        # Header status bar (state, generation, uptime, era)
-│   ├── MemoryVisualizer.tsx    # Animated memory grid showing active byte ranges
-│   └── InstructionStream.tsx  # WASM instruction list with animated program counter
-├── services/
-│   └── wasmService.ts          # WasmKernel class – boots, runs, and terminates instances
-└── utils/
-    ├── wasmParser.ts           # WASM binary parser (LEB128, opcode names, code section)
-    └── wasmEvolution.ts        # Genetic mutation engine (INSERT, DELETE, MODIFY, ADD)
+├── CMakeLists.txt              # Top-level CMake build definition
+├── src/
+│   ├── main.cpp                # Entry point – parses --gui flag, starts terminal or GUI loop
+│   ├── gui.h / gui.cpp         # Gui class – SDL3 window, panel rendering, F11 fullscreen toggle
+│   ├── util.h / util.cpp       # String and general utilities
+│   └── wasm_kernel.cpp         # wasm3 host – boots kernel, wires env.log / env.grow_memory
+├── test/                       # Unit tests (one .cpp file per module under test)
+├── external/
+│   ├── SDL3/                   # SDL3 source (built from source via setup.sh)
+│   └── wasm3/                  # wasm3 embedded WASM interpreter
+├── scripts/
+│   ├── build.sh                # Build wrapper (target: linux-debug, linux-release, …)
+│   ├── run.sh                  # Build (if needed) then run the bootloader
+│   ├── test.sh                 # Build app + tests then run all tests
+│   └── setup.sh                # One-time install of system deps (SDL3 from source, etc.)
+└── web/                        # Legacy TypeScript/React prototype (not built by CMake)
 ```
 
-## Key Concepts
+## Build Targets
 
-### SystemState (state machine in App.tsx)
-`IDLE → BOOTING → LOADING_KERNEL → EXECUTING → VERIFYING_QUINE → IDLE` (success path)  
-`EXECUTING → REPAIRING → IDLE` (failure/self-repair path)
+| Target | Description |
+|--------|-------------|
+| `linux-debug` | Debug build for Linux (default) |
+| `linux-release` | Optimised release build for Linux |
+| `windows-debug` | Cross-compiled debug build via MinGW-w64 |
+| `windows-release` | Cross-compiled release build via MinGW-w64 |
 
-### SystemEra (visual theme)
-Generations 0–4: **PRIMORDIAL** (cyan), 5–14: **EXPANSION** (green), 15–29: **COMPLEXITY** (purple), 30+: **SINGULARITY** (red).
+Binary output: `build/<TARGET>/bootloader` (Linux) or `build/<TARGET>/bootloader.exe` (Windows).
 
-### WASM Kernel (constants.ts)
-`KERNEL_GLOB` is the Base64-encoded seed binary. The WAT source is documented in comments inside `constants.ts`. The binary imports `env.log` (writes output) and `env.grow_memory`, exports `memory` and `run(ptr, len)`.
+## Running Modes
 
-### Evolution Engine (utils/wasmEvolution.ts)
-`evolveBinary(base64, knownInstructions, attemptSeed)` mutates the code section of a WASM binary using one of four strategies (MODIFY/INSERT/DELETE/ADD) chosen by `attemptSeed % 4`. It generates safe instruction sequences (const-drop, math, local.tee, if-true) and validates the result is ≤ 32 KB.
+### Terminal / Headless Server Mode (default)
+Running `./bootloader` (or via `scripts/run.sh`) without `--gui` renders all output to the terminal using ANSI escape sequences. The display refreshes in-place (like the `top` command) showing system panels, log output, memory state, and generation counters.
 
-### WASM Service (services/wasmService.ts)
-`WasmKernel.bootDynamic(base64, logCallback, growCallback)` decodes the Base64 binary, instantiates it with `WebAssembly.instantiate`, and wires up `env.log` and `env.grow_memory`. `runDynamic(sourceGlob)` writes the source into WASM memory at offset 0 and calls the exported `run` function.
+### GUI Mode
+Running `./bootloader --gui` opens an SDL3 window:
+- Background is black by default, windowed mode on launch.
+- **F11** toggles between windowed and fullscreen. A second press returns to windowed.
+- All panels rendered to the SDL3 surface mirror the terminal mode layout.
 
 ## Coding Conventions
 
-- **TypeScript strict mode** – always type function parameters and return values.
-- **React functional components** with hooks only; no class components.
-- **`useCallback`** for all event handlers and callbacks passed as props.
-- **`useRef`** for mutable state that must not trigger re-renders (abort flags, refs to intervals, etc.).
-- **Tailwind utility classes** for all styling. Use `transition-*`, `animate-*`, and `duration-*` for animations.
-- **Log types**: use `'info' | 'success' | 'warning' | 'error' | 'system' | 'mutation'` from `LogEntry`.
-- **No external UI libraries** – all components are custom-built.
-- **Base64 WASM binaries** are stored as plain strings; decode with `atob()`.
+- **C++17** – use `std::string_view`, structured bindings, `[[nodiscard]]`, etc. where appropriate.
+- **wasm3 host functions** must use the `m3ApiRawFunction` macro (returns `const void*`). Read args with `m3ApiGetArg`. Link with `m3_LinkRawFunction`. Access user data via `m3_GetUserData(runtime)`.
+- **SDL3 rendering**: all drawing goes through the `Gui` class (`src/gui.h`). Do not call SDL functions directly from `main.cpp` or `wasm_kernel.cpp`.
+- **Utilities**: string helpers live in `src/util.h`; add new general-purpose helpers there.
+- **Header guards**: use `#pragma once` in all headers.
+- **Error handling**: prefer returning `bool` / `std::optional` over throwing exceptions in low-level code.
+- **Tests**: one `test_<module>.cpp` file per module; each test function is named `test_<feature>`.
 
 ## Build & Run
 
 ```bash
-npm install           # Install dependencies
-npm run dev           # Start Vite dev server (default: http://localhost:5173)
-npm run build         # Production build to dist/
-npm run preview       # Serve the production build locally
-```
+# One-time setup
+bash scripts/setup.sh
 
-There are no automated tests in this project.
+# Build (default: linux-debug)
+bash scripts/build.sh
+
+# Build a specific target
+bash scripts/build.sh linux-release
+
+# Run in terminal (headless) mode
+bash scripts/run.sh
+
+# Run with SDL3 GUI window
+bash scripts/run.sh --gui
+
+# Build and run all unit tests
+bash scripts/test.sh
+```
 
 ## Important Constraints
 
-- The WASM binary must stay structurally valid at all times – always validate mutations with `new WebAssembly.Module(bytes)` before accepting them.
-- Do not introduce division opcodes (e.g. `i32.div_s`) in mutations – they can trap on zero.
-- The `run` function must maintain a balanced operand stack; all generated instruction sequences should be stack-neutral (push then drop).
+- The WASM binary must stay structurally valid — always validate mutations with wasm3 `ParseModule` before accepting them.
+- Do not introduce division opcodes (`i32.div_s`, `i32.div_u`, `i32.rem_s`, `i32.rem_u`) in the evolution engine — they trap on divide-by-zero.
+- The kernel `run(ptr, len)` function must maintain a balanced operand stack; all generated instruction sequences must be stack-neutral.
 - Evolution limits the function body to 32 KB to prevent runaway growth.
-- The `KERNEL_GLOB` constant in `constants.ts` is the canonical seed; do not change it unless you also update the WAT comment above it.
+- The seed kernel binary constant is defined in `src/wasm_kernel.cpp`; do not change it without also updating the WAT comment alongside it.
