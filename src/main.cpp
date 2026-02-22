@@ -38,7 +38,6 @@ int main(int argc, char** argv) {
         if (opts.fullscreen)
             winFlags |= SDL_WINDOW_MAXIMIZED;
 
-        // SDL3's SDL_CreateWindow takes width/height only (no x/y).
         int w = opts.fullscreen ? 0 : 1400;
         int h = opts.fullscreen ? 0 : 900;
         window = SDL_CreateWindow("WASM Quine Bootloader", w, h, winFlags);
