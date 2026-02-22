@@ -56,11 +56,6 @@ target_link_libraries(wasm_quine_bootloader PRIVATE
     SDL3::SDL3
 )
 
-# wasm3 configuration
-target_compile_definitions(wasm_quine_bootloader PRIVATE
-    d_m3HasWASI=0          # disable WASI so we only provide our own imports
-)
-
 # Compiler warnings (optional but helpful for development)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     target_compile_options(wasm_quine_bootloader PRIVATE

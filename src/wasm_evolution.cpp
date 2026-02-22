@@ -7,33 +7,46 @@
 #include <iomanip>
 #include <stdexcept>
 #include <algorithm>
+#include <random>
 
-static float randF() { return (float)rand() / (float)RAND_MAX; }
+// Thread-local Mersenne Twister for determinism-free mutations
+static std::mt19937& rng() {
+    static thread_local std::mt19937 gen(std::random_device{}());
+    return gen;
+}
+
+static float randF() {
+    return std::uniform_real_distribution<float>(0.0f, 1.0f)(rng());
+}
+
+static int randInt(int n) {
+    return (int)std::uniform_int_distribution<int>(0, n - 1)(rng());
+}
 
 static std::vector<uint8_t> generateRandomConstDrop() {
-    return { 0x41, (uint8_t)(rand() % 128), 0x1A };
+    return { 0x41, (uint8_t)(randInt(128)), 0x1A };
 }
 
 static std::vector<uint8_t> generateSafeMath() {
     static const uint8_t ops[] = { 0x6A, 0x6B, 0x71, 0x72, 0x73 };
-    uint8_t op = ops[rand() % 5];
+    uint8_t op = ops[randInt(5)];
     return {
-        0x41, (uint8_t)(rand() % 128),
-        0x41, (uint8_t)(rand() % 128),
+        0x41, (uint8_t)(randInt(128)),
+        0x41, (uint8_t)(randInt(128)),
         op,
         0x1A
     };
 }
 
 static std::vector<uint8_t> generateLocalTee() {
-    return { 0x41, (uint8_t)(rand() % 255), 0x22, 0x00, 0x1A };
+    return { 0x41, (uint8_t)(randInt(255)), 0x22, 0x00, 0x1A };
 }
 
 static std::vector<uint8_t> generateIfTrue() {
     return {
         0x41, 0x01,
         0x04, 0x40,
-        0x41, (uint8_t)(rand() % 64),
+        0x41, (uint8_t)(randInt(64)),
         0x1A,
         0x0B
     };
@@ -76,14 +89,14 @@ static std::vector<uint8_t> getGenome(
 {
     float r = randF();
     if (known.size() > 2 && r < 0.7f)
-        return known[rand() % known.size()];
+        return known[randInt((int)known.size())];
 
     float s = randF();
     if (s < 0.30f) return generateRandomConstDrop();
     if (s < 0.60f) return generateSafeMath();
     if (s < 0.80f) return generateLocalTee();
     if (s < 0.95f) return generateIfTrue();
-    return BASE_SAFE_GENOMES[rand() % BASE_SAFE_GENOMES.size()];
+    return BASE_SAFE_GENOMES[randInt((int)BASE_SAFE_GENOMES.size())];
 }
 
 EvolutionResult evolveBinary(

@@ -15,6 +15,9 @@ typedef M3Runtime*     IM3Runtime;
 typedef M3Module*      IM3Module;
 typedef M3Function*    IM3Function;
 
+// Per-runtime user data (defined in wasm_kernel.cpp)
+struct KernelUserData;
+
 // Callback types matching the original TypeScript interface
 using LogCallback       = std::function<void(uint32_t ptr, uint32_t len,
                                               const uint8_t* mem, uint32_t memSize)>;
@@ -49,5 +52,5 @@ private:
     LogCallback     m_logCb;
     GrowMemCallback m_growCb;
 
-
+    KernelUserData* m_userData = nullptr; // owned; deleted in terminate()
 };

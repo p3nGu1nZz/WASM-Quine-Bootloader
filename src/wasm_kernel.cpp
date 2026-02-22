@@ -56,6 +56,8 @@ void WasmKernel::terminate() {
     m_module   = nullptr;
     if (m_runtime) { m3_FreeRuntime(m_runtime);     m_runtime = nullptr; }
     if (m_env)     { m3_FreeEnvironment(m_env);     m_env     = nullptr; }
+    delete m_userData;
+    m_userData = nullptr;
     m_wasmBytes.clear();
     m_logCb  = {};
     m_growCb = {};
@@ -74,11 +76,11 @@ void WasmKernel::bootDynamic(const std::string& glob,
     m_env = m3_NewEnvironment();
     if (!m_env) throw std::runtime_error("wasm3: failed to create environment");
 
-    // Allocate user-data on the heap; lifetime managed alongside m_runtime
-    auto* ud    = new KernelUserData{ this, &m_logCb, &m_growCb };
-    m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, ud);
+    // Allocate user-data; lifetime managed by this WasmKernel instance
+    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb };
+    m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, m_userData);
     if (!m_runtime) {
-        delete ud;
+        delete m_userData; m_userData = nullptr;
         m3_FreeEnvironment(m_env); m_env = nullptr;
         throw std::runtime_error("wasm3: failed to create runtime");
     }
