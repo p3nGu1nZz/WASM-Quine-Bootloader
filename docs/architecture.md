@@ -60,12 +60,12 @@ main.cpp
 ---
 
 ### `src/base64.h`
-**Role:** Header-only Base64 encode/decode utilities.
+**Role:** Base64 encoding utilities (decode logic moved to `base64.cpp`).
 
 | Function | Signature | Description |
 |---|---|---|
 | `base64_encode` | `(const std::vector<uint8_t>&) → std::string` | Encode raw bytes |
-| `base64_decode` | `(const std::string&) → std::vector<uint8_t>` | Decode base64 string |
+| `base64_decode` | `(const std::string&) → std::vector<uint8_t>` | Decode base64 string; implementation in companion cpp file |
 
 **Dependencies:** `<string>`, `<vector>`, `<cstdint>` — no project headers.
 

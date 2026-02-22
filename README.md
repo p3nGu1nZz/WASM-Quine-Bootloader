@@ -60,7 +60,7 @@ instructions are maintained by the `update-skills`/`improve-skills` tools.
 │   ├── exporter.h / exporter.cpp # buildReport(): telemetry text report
 │   ├── types.h               # SystemState, LogEntry, HistoryEntry, BootConfig
 │   ├── constants.h           # KERNEL_GLOB (base64 WASM), DEFAULT_BOOT_CONFIG
-│   ├── base64.h              # Inline base64 encode / decode
+│   ├── base64.h              # Base64 encode utilities (decode implementation in base64.cpp)
 │   ├── wasm/                  # subdirectory for WASM-related modules
 │   │   ├── parser.h/.cpp    # WASM binary parser (LEB-128, code section)
 │   │   ├── evolution.h/.cpp # WASM mutation engine

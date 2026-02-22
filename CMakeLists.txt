@@ -55,6 +55,7 @@ set(IMGUI_SOURCES
 ## Core library containing non-UI application logic
 set(CORE_SOURCES
     src/util.cpp
+    src/base64.cpp
     src/log.cpp
     src/fsm.cpp
     src/exporter.cpp

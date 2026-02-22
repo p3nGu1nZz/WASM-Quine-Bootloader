@@ -16,6 +16,9 @@ float computeDpiScale(SDL_Window* window);
 // Generate a short random alphanumeric ID (9 chars)
 std::string randomId();
 
+// Decode a base64 string with an internal cache to avoid repeated work.
+const std::vector<uint8_t>& decodeBase64Cached(const std::string& b64);
+
 // Return current UTC time as ISO-8601 string (e.g. "2026-01-02T03:04:05.678Z")
 std::string nowIso();
 

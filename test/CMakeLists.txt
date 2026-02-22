@@ -15,6 +15,17 @@ target_link_libraries(test_state PRIVATE
 )
 add_test(NAME state_test COMMAND test_state)
 
+# basic base64 encode/decode checks
+add_executable(test_base64 test_base64.cpp)
+target_include_directories(test_base64 PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_base64 PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME base64_test COMMAND test_base64)
+
 # additional tests
 add_executable(test_util_dpi test_util_dpi.cpp)
 # Include ImGui implementation sources so that Gui methods (which call ImGui)

@@ -1,4 +1,5 @@
 #include "util.h"
+#include "base64.h"
 
 #include <chrono>
 #include <iomanip>
@@ -6,6 +7,7 @@
 #include <sstream>
 #include <ctime>
 #include <filesystem>
+#include <unordered_map>
 
 std::string stateStr(SystemState s) {
     switch (s) {
@@ -45,6 +47,14 @@ float computeDpiScale(SDL_Window* window) {
     return scale < 1.0f ? 1.0f : scale;
 }
 
+const std::vector<uint8_t>& decodeBase64Cached(const std::string& b64) {
+    static std::unordered_map<std::string, std::vector<uint8_t>> cache;
+    auto it = cache.find(b64);
+    if (it != cache.end()) return it->second;
+    auto decoded = base64_decode(b64);
+    auto res = cache.emplace(b64, std::move(decoded));
+    return res.first->second;
+}
 
 std::string randomId() {
     static std::mt19937 rng(std::random_device{}());
@@ -98,7 +108,14 @@ std::string executableDir() {
 }
 
 std::filesystem::path sequenceDir(const std::string& runId) {
+    // keep only alphanumeric characters to avoid traversal/escaping
+    std::string cleaned;
+    for (char c : runId) {
+        if (std::isalnum(static_cast<unsigned char>(c)))
+            cleaned.push_back(c);
+    }
+    if (cleaned.empty()) cleaned = "run";
     std::filesystem::path exe = executableDir();
-    std::filesystem::path p = exe / "bin" / "seq" / runId;
+    std::filesystem::path p = exe / "bin" / "seq" / cleaned;
     return p;
 }

@@ -87,3 +87,14 @@ TEST_CASE("executableDir returns non-empty string", "[util]") {
     // should be absolute path
     REQUIRE(ed[0] == '/');
 }
+
+TEST_CASE("sequenceDir sanitizes runId", "[util]") {
+    auto p1 = sequenceDir("normal123");
+    auto p2 = sequenceDir("..\\evil");
+    REQUIRE(p1 != p2);
+    // the *basename* should contain only alphanumeric characters
+    std::string base = p2.filename().string();
+    for (char c : base) {
+        REQUIRE(std::isalnum(static_cast<unsigned char>(c)));
+    }
+}
