@@ -10,14 +10,19 @@ and memory: merge overlaps, remove outdated guidance, and make each skill
 succinct but actionable.
 
 Run after major repo changes or periodically for maintenance.  Steps:
-1. List skill dirs.
-2. For each, read the current `SKILL.md` and consult memory/chat for
-   context.  Merge or cross‑reference overlaps, remove legacy details,
-   and rewrite succinctly.  Keep YAML frontmatter correct.
-3. Optionally add TODO comments.
-4. Save changes and log a memory entry (e.g. "skills refreshed on …").
+1. List skill directories and identify candidates for consolidation.
+2. For each, read the current `SKILL.md`, then query the memory store or the
+   chat history for relevant contextual notes.  Update or rephrase
+   procedures to reflect real usage patterns.
+3. Add concrete examples or shell snippets where they would help agents
+   execute the skill (e.g. build/test commands, grep patterns).
+4. Remove any obsolete steps or references (e.g., old build flags) and add
+   TODO comments if future work is anticipated.
+5. Save changes, commit them, and optionally record a memory entry such as
+   "skills refreshed on 2026-02-22 with better examples".
 
-Notes:
+**Notes**
 - This skill is meta; you may run it on itself.
-- When unsure, mark text as deprecated rather than deleting.
-- It may call `search-memory` or other skills as helpers.
+- When unsure, mark text as deprecated rather than deleting outright.
+- It can call `search-memory` or other skills during the review to avoid
+  duplicating knowledge.
