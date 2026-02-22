@@ -88,3 +88,14 @@ target_link_libraries(test_evolution PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME evolution_test COMMAND test_evolution)
+
+# Telemetry/advisor tests
+add_executable(test_advisor test_advisor.cpp)
+target_include_directories(test_advisor PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_advisor PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME advisor_test COMMAND test_advisor)
