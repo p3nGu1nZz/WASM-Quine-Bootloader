@@ -1,5 +1,5 @@
 #include "gui.h"
-#include "gui_colors.h"
+#include "colors.h"
 #include "util.h"
 #include "wasm_parser.h"
 

@@ -34,7 +34,7 @@ set(IMGUI_SOURCES
 set(APP_SOURCES
     src/main.cpp
     src/gui.cpp
-    src/gui_heatmap.cpp
+    src/heatmap.cpp
     src/util.cpp
     src/logger.cpp
     src/fsm.cpp

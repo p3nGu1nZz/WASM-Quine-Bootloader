@@ -5,8 +5,8 @@
 ```
 main.cpp
  └── Gui          (gui.h / gui.cpp)
- │    ├── GuiHeatmap    (gui_heatmap.h / gui_heatmap.cpp)
- │    └── [uses] gui_colors.h, util.h, wasm_parser.h
+ │    ├── GuiHeatmap    (heatmap.h / heatmap.cpp)
+ │    └── [uses] colors.h, util.h, wasm_parser.h
  └── App          (app.h / app.cpp)
       ├── BootFsm       (fsm.h / fsm.cpp)
       ├── AppLogger     (logger.h / logger.cpp)
@@ -211,11 +211,11 @@ Panel helpers:
 
 Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.
 
-**Dependencies:** `app.h`, `gui_heatmap.h`, `gui_colors.h`, `util.h`, `wasm_parser.h`
+**Dependencies:** `app.h`, `heatmap.h`, `colors.h`, `util.h`, `wasm_parser.h`
 
 ---
 
-### `src/gui_colors.h`
+### `src/colors.h`
 **Role:** Header-only colour lookup table.
 
 Inline functions mapping `SystemState`, `SystemEra`, and log-type strings to
@@ -232,7 +232,7 @@ Inline functions mapping `SystemState`, `SystemEra`, and log-type strings to
 
 ---
 
-### `src/gui_heatmap.h` / `src/gui_heatmap.cpp`
+### `src/heatmap.h` / `src/heatmap.cpp`
 **Role:** Memory heatmap visualizer.
 
 `GuiHeatmap` maintains a `std::vector<float>` of per-block heat values that
@@ -247,7 +247,7 @@ Block geometry scales automatically with kernel size:
 | < 1 KB | 5 | 4 |
 | ≥ 1 KB | 3 | 16 |
 
-**Dependencies:** `app.h`, `gui_colors.h`, `util.h`, `imgui.h`
+**Dependencies:** `app.h`, `colors.h`, `util.h`, `imgui.h`
 
 ---
 
@@ -268,7 +268,7 @@ logger.h     exporter.h          fsm.h
    └───────────────┴──── app.h ───────┘
                               ▲
                               │
-             gui_colors.h ─── gui.h ─── gui_heatmap.h
+             colors.h ─── gui.h ─── heatmap.h
                               ▲
                               │
                           main.cpp

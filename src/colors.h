@@ -5,10 +5,10 @@
 #include <imgui.h>
 #include <string>
 
-// ── gui_colors.h ──────────────────────────────────────────────────────────────
+// ── colors.h ──────────────────────────────────────────────────────────────────
 //
 // Small, header-only helpers that map simulation states / eras / log types
-// to Dear ImGui color values.  Included by gui.cpp and gui_heatmap.cpp.
+// to Dear ImGui color values.  Included by gui.cpp and heatmap.cpp.
 // ─────────────────────────────────────────────────────────────────────────────
 
 inline ImVec4 colorForLogType(const std::string& t) {
