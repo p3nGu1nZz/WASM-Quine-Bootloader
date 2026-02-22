@@ -15,10 +15,21 @@
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
-App::App() {
+App::App()
+    : App(CliOptions{})
+{
+}
+
+App::App(const CliOptions& opts)
+    : m_opts(opts)
+{
     m_stableKernel   = KERNEL_GLOB;
     m_currentKernel  = KERNEL_GLOB;
     m_lastFrameTicks = now();
+
+    // initialise telemetry bounds
+    m_kernelSizeMin = INT_MAX;
+    m_kernelSizeMax = 0;
 
     // session identifier used to group exports
     m_runId = nowFileStamp();
@@ -68,6 +79,8 @@ void App::transitionTo(SystemState s) {
 // ─── Main update (called every frame) ────────────────────────────────────────
 
 bool App::update() {
+    if (m_shouldExit) return false;
+
     uint64_t t  = now();
     uint64_t dt = t - m_lastFrameTicks;
     m_lastFrameTicks = t;
@@ -252,13 +265,17 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
         // Evolve
         try {
             int seed = m_generation + 1;
-            auto evo = evolveBinary(m_currentKernel, m_knownInstructions, seed);
-            // if the mutation is blacklisted, retry a few times
+            auto evo = evolveBinary(m_currentKernel, m_knownInstructions, seed,
+                                        m_opts.mutationStrategy);
+            // if the mutation is blacklisted and heuristic enabled, retry a few times
             int tries = 0;
-            while (!evo.mutationSequence.empty() && isBlacklisted(evo.mutationSequence) && tries < 8) {
+            while (m_opts.heuristic != HeuristicMode::NONE &&
+                   !evo.mutationSequence.empty() &&
+                   isBlacklisted(evo.mutationSequence) && tries < 8) {
                 m_logger.log("EVOLUTION: mutation sequence blacklisted, reroll", "warning");
                 seed++;
-                evo = evolveBinary(m_currentKernel, m_knownInstructions, seed);
+                evo = evolveBinary(m_currentKernel, m_knownInstructions, seed,
+                                        m_opts.mutationStrategy);
                 tries++;
             }
             auto evolved = base64_decode(evo.binary);
@@ -301,16 +318,31 @@ void App::onGrowMemory(uint32_t /*pages*/) {
 }
 
 bool App::isBlacklisted(const std::vector<uint8_t>& seq) const {
-    for (const auto& b : m_blacklist) {
-        if (b == seq) return true;
-    }
-    return false;
+    auto it = m_blacklist.find(seq);
+    return it != m_blacklist.end() && it->second > 0;
 }
 
 void App::addToBlacklist(const std::vector<uint8_t>& seq) {
     if (seq.empty()) return;
-    if (!isBlacklisted(seq))
-        m_blacklist.push_back(seq);
+    if (m_opts.heuristic == HeuristicMode::NONE) return;
+    // assign initial weight if not present, otherwise bump
+    auto it = m_blacklist.find(seq);
+    if (it == m_blacklist.end()) {
+        // choose starting weight; a few generations should elapse before retry
+        m_blacklist[seq] = 3;
+    } else {
+        it->second = std::max(it->second, 3);
+    }
+}
+
+void App::decayBlacklist() {
+    for (auto it = m_blacklist.begin(); it != m_blacklist.end();) {
+        if (--(it->second) <= 0) {
+            it = m_blacklist.erase(it);
+        } else {
+            ++it;
+        }
+    }
 }
 
 // ─── Failure / Repair ────────────────────────────────────────────────────────
@@ -323,7 +355,7 @@ void App::handleBootFailure(const std::string& reason) {
     // record trap reason for telemetry
     m_lastTrapReason = reason;
     // add the mutation that just produced the failing kernel to blacklist
-    if (!m_pendingMutation.empty()) {
+    if (!m_pendingMutation.empty() && m_opts.heuristic != HeuristicMode::NONE) {
         addToBlacklist(m_pendingMutation);
         m_logger.log("HEURISTIC: blacklisted mutation sequence", "warning");
     }
@@ -331,7 +363,8 @@ void App::handleBootFailure(const std::string& reason) {
     m_retryCount++;
 
     try {
-        auto evo      = evolveBinary(m_stableKernel, m_knownInstructions, m_retryCount);
+        auto evo      = evolveBinary(m_stableKernel, m_knownInstructions,
+                                       m_retryCount, m_opts.mutationStrategy);
         m_currentKernel  = evo.binary;
         m_nextKernel.clear();
         m_pendingMutation = evo.mutationSequence;
@@ -364,12 +397,24 @@ void App::doReboot(bool success) {
         // compute duration for previous generation
         uint64_t nowTicks = now();
         m_lastGenDurationMs = (nowTicks - m_genStartTime) / 1000.0; // ticks are us?
+        if (m_opts.profile) {
+            m_logger.log("PROFILE: gen " + std::to_string(m_generation) +
+                          " took " + std::to_string(m_lastGenDurationMs) + " ms", "info");
+        }
     }
 
     if (success) {
         m_generation++;
         // record generation start time
         m_genStartTime = now();
+        if (m_opts.maxGen > 0 && m_generation >= m_opts.maxGen) {
+            m_shouldExit = true;
+        }
+
+        // decay blacklist entries if requested
+        if (m_opts.heuristic == HeuristicMode::DECAY) {
+            decayBlacklist();
+        }
 
         if (!m_nextKernel.empty()) {
             m_currentKernel = m_nextKernel;
@@ -426,6 +471,8 @@ std::string App::exportHistory() const {
     d.genDurationMs      = m_lastGenDurationMs;
     d.kernelSizeMin      = m_kernelSizeMin;
     d.kernelSizeMax      = m_kernelSizeMax;
+    // heuristic summary
+    d.heuristicBlacklistCount = (int)m_blacklist.size();
     return buildReport(d);
 }
 
@@ -433,16 +480,36 @@ std::string App::exportHistory() const {
 void App::autoExport() {
     namespace fs = std::filesystem;
     try {
-        fs::path base = fs::path("bin") / "seq" / m_runId;
+        fs::path base;
+        if (!m_opts.telemetryDir.empty()) {
+            base = fs::path(m_opts.telemetryDir) / m_runId;
+        } else {
+            base = fs::path("bin") / "seq" / m_runId;
+        }
         fs::create_directories(base);
-        // export full report
+
+        if (m_opts.telemetryLevel == TelemetryLevel::NONE) {
+            return;
+        }
+
+        // export header or full report
         fs::path reportFile = base / ("gen_" + std::to_string(m_generation) + ".txt");
         std::ofstream r(reportFile);
-        if (r) r << exportHistory();
-        // also dump raw kernel base64 for easier consumption
-        fs::path kernelFile = base / ("kernel_" + std::to_string(m_generation) + ".b64");
-        std::ofstream k(kernelFile);
-        if (k) k << m_currentKernel;
+        if (r) {
+            if (m_opts.telemetryLevel == TelemetryLevel::BASIC) {
+                r << "WASM QUINE BOOTLOADER - SYSTEM HISTORY EXPORT\n";
+                r << "Generated: " << nowIso() << "\n";
+                r << "Final Generation: " << m_generation << "\n";
+            } else {
+                r << exportHistory();
+            }
+        }
+        // also dump raw kernel base64 for easier consumption if full
+        if (m_opts.telemetryLevel == TelemetryLevel::FULL) {
+            fs::path kernelFile = base / ("kernel_" + std::to_string(m_generation) + ".b64");
+            std::ofstream k(kernelFile);
+            if (k) k << m_currentKernel;
+        }
     } catch (const std::exception& e) {
         // logging may not be initialized yet
         m_logger.log(std::string("autoExport failed: ") + e.what(), "error");

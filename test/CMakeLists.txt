@@ -66,3 +66,25 @@ target_link_libraries(test_app_logic PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME app_logic_test COMMAND test_app_logic)
+
+# CLI and behavior tests
+add_executable(test_cli_behavior test_cli_behavior.cpp)
+target_include_directories(test_cli_behavior PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_cli_behavior PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME cli_behavior_test COMMAND test_cli_behavior)
+
+# Evolution strategy tests
+add_executable(test_evolution test_evolution.cpp)
+target_include_directories(test_evolution PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_evolution PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME evolution_test COMMAND test_evolution)

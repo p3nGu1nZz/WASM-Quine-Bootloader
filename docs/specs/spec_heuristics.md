@@ -22,13 +22,19 @@ improve long-term survival rate of mutated kernels.
    out of range).
 2. After each generation:
    - If execution succeeded, optionally decay the blacklist entries
-     (allowing them to be retried later).
+     (allowing them to be retried later).  This behaviour is enabled when
+     the CLI `--heuristic` flag is set to `decay` rather than plain
+     `blacklist`.
    - If execution trapped, record the mutation that preceded the failure
-     and add it to the blacklist.
+     and add it to the blacklist (unless the heuristic is disabled).
 3. When selecting a random mutation for the next generation, consult the
-   blacklist and reroll if the candidate matches a forbidden pattern.
-4. Expose a CLI flag such as `--heuristic=<none|blacklist|decay>` to
-   control whether the heuristic is active and its aggressiveness.
+   blacklist and reroll if the candidate matches a forbidden pattern.  The
+   reroll logic is only active when any heuristic mode besides `none` is
+   chosen; the `--mutation-strategy` flag itself is orthogonal and merely
+   selects between `random`, `blacklist`, or `smart` sampling of the
+   known-instruction pool.
+4. Expose CLI flag `--heuristic=<none|blacklist|decay>` to control
+   whether the heuristic is active and whether its entries decay over time.
 5. The heuristic is local to a run; it is not persisted between program
    invocations (although export reports may record blacklist contents for
    offline analysis).

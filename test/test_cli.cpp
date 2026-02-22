@@ -52,6 +52,12 @@ TEST_CASE("CLI accepts mutation-strategy and heuristic") {
     REQUIRE(opts.heuristic == HeuristicMode::BLACKLIST);
 }
 
+TEST_CASE("CLI recognizes heuristic=decay", "[cli]") {
+    const char* argv[] = {"bootloader", "--heuristic=decay"};
+    CliOptions opts = parseCli(2, const_cast<char**>(argv));
+    REQUIRE(opts.heuristic == HeuristicMode::DECAY);
+}
+
 TEST_CASE("CLI ignores unknown options but still records others") {
     const char* argv[] = {"bootloader", "--foo", "--windowed", "--bar"};
     CliOptions opts = parseCli(4, const_cast<char**>(argv));

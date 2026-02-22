@@ -16,6 +16,7 @@ static MutationStrategy parseMutationStrategy(const char* v) {
 
 static HeuristicMode parseHeuristicMode(const char* v) {
     if (std::strcmp(v, "blacklist") == 0) return HeuristicMode::BLACKLIST;
+    if (std::strcmp(v, "decay") == 0) return HeuristicMode::DECAY;
     return HeuristicMode::NONE;
 }
 

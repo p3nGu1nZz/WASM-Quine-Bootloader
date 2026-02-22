@@ -182,7 +182,7 @@ deleted in `terminate()`.
 | Symbol | Description |
 |---|---|
 | `EvolutionResult` | `{ binary (base64), mutationSequence, description }` |
-| `evolveBinary(b64, knownInstructions, seed)` | Apply one mutation to the code section; return a new base64 binary |
+| `evolveBinary(b64, knownInstructions, seed, strategy)` | Apply one mutation to the code section; return a new base64 binary. `strategy` may be RANDOM, BLACKLIST or SMART to bias selection. |
 | `BASE_SAFE_GENOMES` | Hard-coded fallback safe instruction sequences |
 
 Uses `std::mt19937` seeded from `std::random_device` for all random choices.

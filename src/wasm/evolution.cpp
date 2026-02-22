@@ -85,10 +85,12 @@ static std::vector<uint8_t> flatten(const std::vector<Instruction>& instrs) {
 }
 
 static std::vector<uint8_t> getGenome(
-    const std::vector<std::vector<uint8_t>>& known)
+    const std::vector<std::vector<uint8_t>>& known,
+    bool smart)
 {
     float r = randF();
-    if (known.size() > 2 && r < 0.7f)
+    float threshold = smart ? 0.95f : 0.7f;
+    if (known.size() > 2 && r < threshold)
         return known[randInt((int)known.size())];
 
     float s = randF();
@@ -102,7 +104,8 @@ static std::vector<uint8_t> getGenome(
 EvolutionResult evolveBinary(
     const std::string&                       currentBase64,
     const std::vector<std::vector<uint8_t>>& knownInstructions,
-    int                                      attemptSeed)
+    int                                      attemptSeed,
+    MutationStrategy                         strategy)
 {
     std::vector<uint8_t> bytes = base64_decode(currentBase64);
 
@@ -156,7 +159,7 @@ EvolutionResult evolveBinary(
     switch (action) {
         case (int)EvolutionAction::MODIFY:
         case (int)EvolutionAction::INSERT: {
-            auto seq = getGenome(knownInstructions);
+            auto seq = getGenome(knownInstructions, strategy == MutationStrategy::SMART);
             mutationSequence = seq;
             int  idx    = (int)(randF() * (float)(parsedInstructions.size() + 1));
             auto before = flatten(std::vector<Instruction>(
@@ -252,7 +255,7 @@ EvolutionResult evolveBinary(
             break;
         }
         case (int)EvolutionAction::ADD: {
-            auto seq = getGenome(knownInstructions);
+            auto seq = getGenome(knownInstructions, strategy == MutationStrategy::SMART);
             mutationSequence = seq;
             newInstructionsBytes = flatten(parsedInstructions);
             newInstructionsBytes.insert(newInstructionsBytes.end(), seq.begin(), seq.end());

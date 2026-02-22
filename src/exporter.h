@@ -29,6 +29,8 @@ struct ExportData {
     double genDurationMs   = 0.0;
     int kernelSizeMin      = 0;
     int kernelSizeMax      = 0;
+    // number of entries currently held in the heuristic blacklist
+    int heuristicBlacklistCount = 0;
 };
 
 // Build a full text report (hex dump, disassembly, history) from the given data.

@@ -5,7 +5,9 @@
 #include "log.h"
 #include "wasm/kernel.h"
 #include "wasm/parser.h"
+#include "cli.h"
 #include <climits>
+#include <map>
 
 #include <string>
 #include <vector>
@@ -20,6 +22,7 @@
 class App {
 public:
     App();
+    explicit App(const CliOptions& opts);
 
     // Drive the state machine.  Returns false when the app should exit.
     bool update();
@@ -53,6 +56,9 @@ public:
     // Unique identifier for this run; used to organise exported data.
     const std::string& runId() const { return m_runId; }
 
+    // access CLI options
+    const CliOptions& options() const { return m_opts; }
+
     // expose reboot helper for tests
     void doReboot(bool success);
 
@@ -68,6 +74,8 @@ public:
     // Blacklist management
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);
+    // decay all weights by one; entries reaching zero are removed
+    void decayBlacklist();
 
     // telemetry accessors (for tests or GUI)
     int mutationsApplied() const { return m_mutationsApplied; }
@@ -120,8 +128,9 @@ private:
     int    m_mutationDelete   = 0;
     int    m_mutationModify   = 0;
     int    m_mutationAdd      = 0;
-    // heuristic blacklist: sequences that previously caused traps
-    std::vector<std::vector<uint8_t>> m_blacklist;
+    // heuristic blacklist: sequences that previously caused traps, mapped to decay weight
+    // weight >0 means entry is still blacklisted; DECAY mode will decrement after each success
+    std::map<std::vector<uint8_t>, int> m_blacklist;
     // profiling / telemetry timing
     uint64_t m_genStartTime   = 0; // steady ticks at generation start
     double   m_lastGenDurationMs = 0.0;
@@ -154,6 +163,12 @@ private:
     std::string m_runId;
 
     uint64_t m_memGrowFlashUntil = 0;
+
+    // CLI options supplied at startup
+    CliOptions m_opts;
+
+    // requester to exit after max generation reached
+    bool m_shouldExit = false;
 
     uint64_t now() const;
 };

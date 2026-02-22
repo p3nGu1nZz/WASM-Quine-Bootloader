@@ -59,8 +59,10 @@ Frame N
 
 ## 3. Mutation Strategy
 
-On each successful quine execution `evolveBinary()` is called.  It operates
-exclusively on the **code section** of the WASM binary and applies one of four
+On each successful quine execution `evolveBinary()` is called (now with a
+`strategy` parameter that selects `RANDOM`, `BLACKLIST` or `SMART` behaviour).
+It operates exclusively on the **code section** of the WASM binary and applies
+one of four
 mutation types, chosen probabilistically:
 
 | Mutation type | Probability | Description |

@@ -23,7 +23,9 @@ Unrecognised flags are ignored by `parseCli()`; `scripts/run.sh` may pass additi
 - `--mutation-strategy=<random|blacklist|smart>` – select evolution
   behaviour.  `blacklist` enables the heuristic outlined in
   `docs/specs/spec_heuristics.md`.
-- `--heuristic=<none|blacklist>` – shorthand to toggle only the heuristic
+- `--heuristic=<none|blacklist|decay>` – shorthand to toggle only the heuristic
+  without changing the underlying mutation policy; `decay` mode removes
+  blacklist entries after each successful generation.
   without changing the underlying mutation policy.
 - `--profile` – print per-generation timing and memory usage to the log.
 - `--max-gen=<n>` – stop the run after `n` successful generations.  Useful

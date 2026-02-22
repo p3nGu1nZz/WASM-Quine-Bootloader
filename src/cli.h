@@ -9,7 +9,7 @@
 
 enum class TelemetryLevel { NONE, BASIC, FULL };
 enum class MutationStrategy { RANDOM, BLACKLIST, SMART };
-enum class HeuristicMode { NONE, BLACKLIST };
+enum class HeuristicMode { NONE, BLACKLIST, DECAY };
 
 struct CliOptions {
     bool useGui      = true;   // false would eventually enable headless mode
@@ -18,7 +18,7 @@ struct CliOptions {
     TelemetryLevel telemetryLevel = TelemetryLevel::BASIC;
     std::string telemetryDir;    // override export path
     MutationStrategy mutationStrategy = MutationStrategy::RANDOM;
-    HeuristicMode heuristic = HeuristicMode::NONE;
+    HeuristicMode heuristic = HeuristicMode::NONE; // NONE=no blacklist, BLACKLIST=block repeats, DECAY=block then slowly forget
     bool profile = false;
     int maxGen = 0;             // 0 = unlimited
 };

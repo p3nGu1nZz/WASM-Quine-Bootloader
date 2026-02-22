@@ -134,7 +134,9 @@ The launcher supports several new command‑line options (see
 - `--telemetry-dir=<path>` – change output directory for reports.
 - `--mutation-strategy=<random|blacklist|smart>` – choose evolution
   policy; `blacklist` enables the adaptive heuristic.
-- `--heuristic=<none|blacklist>` – shorthand toggle for the heuristic.
+- `--heuristic=<none|blacklist|decay>` – shorthand toggle for the heuristic;
+  `decay` mode will gradually forget entries after each successful
+  generation.
 - `--profile` – log per-generation timing and memory usage.
 - `--max-gen=<n>` – stop after `n` successful generations (handy for CI).
 

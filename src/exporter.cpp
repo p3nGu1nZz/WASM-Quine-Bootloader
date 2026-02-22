@@ -86,6 +86,9 @@ std::string buildReport(const ExportData& d) {
         out << "Kernel Size Min/Max: " << d.kernelSizeMin
             << "/" << d.kernelSizeMax << "\n";
     }
+    if (d.heuristicBlacklistCount) {
+        out << "Heuristic Blacklist Entries: " << d.heuristicBlacklistCount << "\n";
+    }
     out << "\n"
         << "CURRENT KERNEL (BASE64):\n"
         << std::string(80, '-') << '\n'

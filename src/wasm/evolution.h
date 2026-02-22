@@ -1,6 +1,7 @@
 #pragma once
 
 #include "wasm/parser.h"
+#include "../cli.h"  // for MutationStrategy
 #include <string>
 #include <vector>
 
@@ -17,7 +18,8 @@ struct EvolutionResult {
 // knownInstructions: previously seen instruction byte sequences for guided mutation.
 // attemptSeed: determines which action to try (cycles through 0-3).
 EvolutionResult evolveBinary(
-    const std::string&              currentBase64,
-    const std::vector<std::vector<uint8_t>>& knownInstructions,
-    int                             attemptSeed
+    const std::string&                             currentBase64,
+    const std::vector<std::vector<uint8_t>>&       knownInstructions,
+    int                                            attemptSeed,
+    MutationStrategy                               strategy = MutationStrategy::RANDOM
 );
