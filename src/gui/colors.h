@@ -32,20 +32,5 @@ inline ImVec4 colorForState(SystemState s) {
     }
 }
 
-inline ImVec4 colorForEra(SystemEra e) {
-    switch (e) {
-        case SystemEra::EXPANSION:   return { 0.24f, 0.87f, 0.56f, 1.0f };
-        case SystemEra::COMPLEXITY:  return { 0.78f, 0.50f, 0.98f, 1.0f };
-        case SystemEra::SINGULARITY: return { 0.96f, 0.26f, 0.21f, 1.0f };
-        default:                     return { 0.50f, 0.50f, 0.50f, 1.0f };
-    }
-}
+// Era-based theming removed — use neutral defaults for background and accents.
 
-inline ImVec4 bgColorForEra(SystemEra e) {
-    switch (e) {
-        case SystemEra::EXPANSION:   return { 0.01f, 0.10f, 0.06f, 1.0f };
-        case SystemEra::COMPLEXITY:  return { 0.06f, 0.02f, 0.12f, 1.0f };
-        case SystemEra::SINGULARITY: return { 0.10f, 0.02f, 0.02f, 1.0f };
-        default:                     return { 0.01f, 0.03f, 0.10f, 1.0f };
-    }
-}

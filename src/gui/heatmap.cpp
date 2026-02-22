@@ -28,25 +28,9 @@ void GuiHeatmap::draw(const App& app, ImDrawList* dl, ImVec2 pos, ImVec2 size) {
     if (static_cast<int>(m_heatMap.size()) != BLOCKS)
         m_heatMap.assign(BLOCKS, 0.0f);
 
-    ImVec4 theme, activeC;
-    switch (app.era()) {
-        case SystemEra::EXPANSION:
-            theme   = { 0.02f, 0.31f, 0.24f, 1 };
-            activeC = { 0.20f, 0.83f, 0.60f, 1 };
-            break;
-        case SystemEra::COMPLEXITY:
-            theme   = { 0.23f, 0.03f, 0.39f, 1 };
-            activeC = { 0.75f, 0.52f, 0.99f, 1 };
-            break;
-        case SystemEra::SINGULARITY:
-            theme   = { 0.27f, 0.04f, 0.04f, 1 };
-            activeC = { 0.93f, 0.27f, 0.27f, 1 };
-            break;
-        default:
-            theme   = { 0.07f, 0.16f, 0.23f, 1 };
-            activeC = { 0.13f, 0.83f, 0.93f, 1 };
-            break;
-    }
+    // Era-based theming removed — use neutral theme and active color
+    ImVec4 theme   = { 0.07f, 0.16f, 0.23f, 1 };
+    ImVec4 activeC = { 0.13f, 0.83f, 0.93f, 1 };
 
     bool isActive = (app.state() == SystemState::LOADING_KERNEL ||
                      app.state() == SystemState::EXECUTING);

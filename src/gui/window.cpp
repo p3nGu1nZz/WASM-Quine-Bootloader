@@ -105,7 +105,8 @@ void Gui::renderFrame(App& app) {
     if (m_monoFont) ImGui::PopFont();
     ImGui::End();
 
-    auto bg = bgColorForEra(app.era());
+    // Use a neutral background color (era theming removed)
+    ImVec4 bg = { 0.01f, 0.03f, 0.10f, 1.0f };
     SDL_SetRenderDrawColorFloat(m_renderer, bg.x, bg.y, bg.z, 1.0f);
     SDL_RenderClear(m_renderer);
     ImGui::Render();
@@ -119,7 +120,6 @@ void Gui::renderTopBar(App& app, int winW) {
     ImGui::Separator();
     ImGui::Text("QUINEOS v2.0.4");
     ImGui::SameLine(0, 30);
-    ImGui::TextColored(colorForEra(app.era()), "ERA: %s", eraStr(app.era()).c_str());
     ImGui::SameLine(0, 20);
     ImGui::Text("GEN: %04d", app.generation());
     ImGui::SameLine(0, 20);
@@ -296,8 +296,6 @@ void Gui::renderKernelPanel(const App& app, float w, float h) {
 
 void Gui::renderStatusBar(const App& app) {
     ImGui::Separator();
-    ImGui::TextDisabled(
-        "WASM-QUINE-BOOTLOADER_SYS v2.4 // PHASE: %s // STATUS: %s",
-        eraStr(app.era()).c_str(),
-        app.isPaused() ? "PAUSED" : "RUNNING");
+    ImGui::TextDisabled("WASM-QUINE-BOOTLOADER_SYS v2.4 // STATUS: %s",
+                        app.isPaused() ? "PAUSED" : "RUNNING");
 }

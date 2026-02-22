@@ -82,17 +82,6 @@ is used instead.
 
 ---
 
-## 4. Era Progression
-
-The **era** controls the visual theme of the HUD and indicates evolutionary maturity:
-
-| Era | Generations | Background | Accent |
-|---|---|---|---|
-| PRIMORDIAL | 0 – 4 | Deep blue | Cyan |
-| EXPANSION | 5 – 14 | Dark green | Green |
-| COMPLEXITY | 15 – 29 | Deep purple | Purple |
-| SINGULARITY | 30+ | Dark red | Red |
-
 ---
 
 ## 5. WASM Host Imports
@@ -110,7 +99,7 @@ The kernel module imports two host functions from the `env` namespace:
 
 Pressing **EXPORT** writes `quine_telemetry_gen<N>.txt` containing:
 
-- Header (generation, kernel size, era, timestamp)
+- Header (generation, kernel size, timestamp)
 - Current kernel in base64
 - Full hex dump of the raw WASM bytes
 - Disassembly listing (index, address, opcode, args)

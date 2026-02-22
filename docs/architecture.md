@@ -39,7 +39,6 @@ main.cpp
 | Symbol | Kind | Description |
 |---|---|---|
 | `SystemState` | enum class | FSM states: IDLE, BOOTING, LOADING_KERNEL, EXECUTING, VERIFYING_QUINE, SYSTEM_HALT, REPAIRING |
-| `SystemEra` | enum class | Visual era: PRIMORDIAL, EXPANSION, COMPLEXITY, SINGULARITY |
 | `LogEntry` | struct | id, timestamp (ms), message, type string |
 | `HistoryEntry` | struct | generation, ISO timestamp, size, action, details, success flag |
 | `BootConfig` | struct | memorySizePages, autoReboot, rebootDelayMs |
@@ -78,7 +77,6 @@ main.cpp
 | Function | Description |
 |---|---|
 | `stateStr(SystemState)` | Human-readable state name |
-| `eraStr(SystemEra)` | Human-readable era name |
 | `randomId()` | Generate a 9-character alphanumeric ID |
 | `nowIso()` | Current UTC time as ISO-8601 string |
 
@@ -122,7 +120,7 @@ Transition history is not recorded here; that is the responsibility of `AppLogge
 
 | Symbol | Description |
 |---|---|
-| `ExportData` | POD aggregate: generation, era, kernel, instructions, logs, history |
+| `ExportData` | POD aggregate: generation, kernel, instructions, logs, history |
 | `buildReport(data)` | Returns a multi-section text string (header, hex dump, disassembly, history log) |
 
 **Dependencies:** `types.h`, `wasm/parser.h`, `base64.h`, `util.h`
@@ -203,7 +201,7 @@ Panel helpers:
 
 | Method | Panel |
 |---|---|
-| `renderTopBar` | ERA / GEN / STATE / UPTIME / control buttons |
+| `renderTopBar` | GEN / STATE / UPTIME / control buttons |
 | `renderLogPanel` | System log ring-buffer |
 | `renderInstrPanel` | WASM instruction list with IP highlight |
 | `renderKernelPanel` | Base64 kernel diff viewer |
@@ -218,15 +216,13 @@ Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.
 ### `src/colors.h`
 **Role:** Header-only colour lookup table.
 
-Inline functions mapping `SystemState`, `SystemEra`, and log-type strings to
+Inline functions mapping `SystemState` and log-type strings to
 `ImVec4` RGBA colours.  No `.cpp` companion needed.
 
 | Function | Description |
 |---|---|
 | `colorForLogType(type)` | Log entry accent colour |
 | `colorForState(state)` | State badge colour |
-| `colorForEra(era)` | Era badge colour |
-| `bgColorForEra(era)` | SDL3 renderer clear colour (background) |
 
 **Dependencies:** `types.h`, `imgui.h`
 

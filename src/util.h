@@ -5,7 +5,6 @@
 
 // Convert enum values to display strings
 std::string stateStr(SystemState s);
-std::string eraStr(SystemEra e);
 
 // Generate a short random alphanumeric ID (9 chars)
 std::string randomId();

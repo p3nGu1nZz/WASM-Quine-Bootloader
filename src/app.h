@@ -25,7 +25,6 @@ public:
 
     // ── Accessors for the renderer ────────────────────────────────────────────
     SystemState  state()               const { return m_fsm.current(); }
-    SystemEra    era()                 const { return m_era; }
     int          generation()          const { return m_generation; }
     double       uptimeSec()           const { return m_uptimeMs / 1000.0; }
     int          retryCount()          const { return m_retryCount; }
@@ -53,7 +52,6 @@ public:
 private:
     // FSM helpers
     void transitionTo(SystemState s);
-    void updateEra();
 
     // Boot sequence steps (called from update())
     void startBoot();
@@ -76,7 +74,7 @@ private:
     WasmKernel m_kernel;
 
     // ── State ─────────────────────────────────────────────────────────────────
-    SystemEra m_era    = SystemEra::PRIMORDIAL;
+    // era tracking removed; visual themes not required
     bool      m_paused = false;
 
     int    m_generation        = 0;

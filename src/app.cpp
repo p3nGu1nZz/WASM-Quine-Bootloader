@@ -41,12 +41,6 @@ void App::transitionTo(SystemState s) {
     m_fsm.transition(s);
 }
 
-void App::updateEra() {
-    if      (m_generation < 5)  m_era = SystemEra::PRIMORDIAL;
-    else if (m_generation < 15) m_era = SystemEra::EXPANSION;
-    else if (m_generation < 30) m_era = SystemEra::COMPLEXITY;
-    else                        m_era = SystemEra::SINGULARITY;
-}
 
 // ─── Main update (called every frame) ────────────────────────────────────────
 
@@ -306,7 +300,7 @@ void App::doReboot(bool success) {
 
     if (success) {
         m_generation++;
-        updateEra();
+
 
         if (!m_nextKernel.empty()) {
             m_currentKernel = m_nextKernel;
@@ -338,7 +332,6 @@ void App::doReboot(bool success) {
 std::string App::exportHistory() const {
     ExportData d;
     d.generation    = m_generation;
-    d.era           = m_era;
     d.currentKernel = m_currentKernel;
     d.instructions  = m_instructions;
     d.logs          = m_logger.logs();

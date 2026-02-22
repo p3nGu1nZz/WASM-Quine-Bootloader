@@ -19,15 +19,6 @@ std::string stateStr(SystemState s) {
     return "UNKNOWN";
 }
 
-std::string eraStr(SystemEra e) {
-    switch (e) {
-        case SystemEra::PRIMORDIAL:  return "PRIMORDIAL";
-        case SystemEra::EXPANSION:   return "EXPANSION";
-        case SystemEra::COMPLEXITY:  return "COMPLEXITY";
-        case SystemEra::SINGULARITY: return "SINGULARITY";
-    }
-    return "UNKNOWN";
-}
 
 std::string randomId() {
     static std::mt19937 rng(std::random_device{}());

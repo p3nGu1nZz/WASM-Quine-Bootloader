@@ -61,15 +61,13 @@ std::string buildReport(const ExportData& d) {
     }
 
     // ── Era name ──────────────────────────────────────────────────────────────
-    std::string eraName = eraStr(d.era);
 
     // ── Assemble report ───────────────────────────────────────────────────────
     std::ostringstream out;
     out << "WASM QUINE BOOTLOADER - SYSTEM HISTORY EXPORT\n"
         << "Generated: " << nowIso() << '\n'
         << "Final Generation: " << d.generation << '\n'
-        << "Kernel Size: " << raw.size() << " bytes\n"
-        << "System Era: " << eraName << "\n\n"
+        << "Kernel Size: " << raw.size() << " bytes\n\n"
         << "CURRENT KERNEL (BASE64):\n"
         << std::string(80, '-') << '\n'
         << d.currentKernel << '\n'

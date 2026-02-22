@@ -13,12 +13,7 @@ enum class SystemState {
     REPAIRING,
 };
 
-enum class SystemEra {
-    PRIMORDIAL,
-    EXPANSION,
-    COMPLEXITY,
-    SINGULARITY,
-};
+
 
 struct LogEntry {
     std::string id;

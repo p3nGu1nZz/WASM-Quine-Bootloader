@@ -13,7 +13,6 @@
 
 struct ExportData {
     int                        generation;
-    SystemEra                  era;
     std::string                currentKernel;   // base64
     std::vector<Instruction>   instructions;
     std::deque<LogEntry>       logs;
