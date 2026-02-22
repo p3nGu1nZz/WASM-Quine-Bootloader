@@ -32,7 +32,10 @@ if [[ "${TARGET}" == "--clean" ]]; then
     rm -f  "${REPO_ROOT}/cmake_install.cmake"
     rm -f  "${REPO_ROOT}/compile_commands.json"
     rm -f  "${REPO_ROOT}/install_manifest.txt"
-    # Remove telemetry exports left by the binary
+    # Remove any leftover telemetry, logs, or sequence directories that might
+    # have been created during earlier runs or tests.
+    rm -rf "${REPO_ROOT}/bin"
+    # Remove telemetry exports left by the binary (old behaviour)
     rm -f  "${REPO_ROOT}"/quine_telemetry_*.txt
     echo "[build] Clean done."
     exit 0

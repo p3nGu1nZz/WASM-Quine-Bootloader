@@ -9,6 +9,7 @@ Tests live in the top‑level `test/` directory. Each file typically exercises a
 | File | Description |
 |------|-------------|
 | `test_state.cpp` | smoke check for `stateStr` (example Catch2 test)
+| `test_util_dpi.cpp` | verifies DPI helpers, that `Gui` applies both the raw DPI and boosted UI scales during init, and checks automatic export file generation
 
 Additional tests (e.g. `test_wasm_kernel.cpp`, `test_util.cpp`, `test_evolution.cpp`) can be added as needed; see the companion test-app skill and guidelines for writing new tests.
 

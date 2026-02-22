@@ -49,6 +49,12 @@ public:
     // Build and return a telemetry report string.
     std::string exportHistory() const;
 
+    // Unique identifier for this run; used to organise exported data.
+    const std::string& runId() const { return m_runId; }
+
+    // expose reboot helper for tests
+    void doReboot(bool success);
+
 private:
     // FSM helpers
     void transitionTo(SystemState s);
@@ -60,7 +66,9 @@ private:
     void tickExecuting();
     void tickVerifying();
     void tickRepairing();
-    void doReboot(bool success);
+
+    // Export helpers
+    void autoExport();
 
     // WASM host callbacks
     void onWasmLog(uint32_t ptr, uint32_t len, const uint8_t* mem, uint32_t memSize);
@@ -102,6 +110,9 @@ private:
     int      m_instrIndex      = 0;
     bool     m_callExecuted    = false;
     bool     m_quineSuccess    = false;
+
+    // Identifier for this session; created at startup
+    std::string m_runId;
 
     uint64_t m_memGrowFlashUntil = 0;
 

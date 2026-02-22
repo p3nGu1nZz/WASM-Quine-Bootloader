@@ -43,14 +43,23 @@ set(CORE_SOURCES
     src/wasm/kernel.cpp
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
+    # wasm3 runtime objects are added to the core target below instead of
+    # being inlined here; this avoids potential caching issues with the
+    # CORE_SOURCES variable itself.
 )
 
 add_library(core STATIC ${CORE_SOURCES})
+# wasm3 provides the runtime; compile its C sources into the core library so
+# both the bootloader executable and unit tests resolve those symbols.
+target_sources(core PRIVATE ${WASM3_SOURCES})
 target_include_directories(core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     "${WASM3_DIR}/source"
 )
-target_link_libraries(core PRIVATE SDL3::SDL3)
+# SDL3 headers are needed by util.h and other core sources.  Export them so
+# dependents (tests, executables) automatically inherit the include path and
+# link library.
+target_link_libraries(core PUBLIC SDL3::SDL3)
 
 # Application executable (UI + platform glue)
 set(APP_SOURCES
@@ -62,7 +71,7 @@ set(APP_SOURCES
 add_executable(bootloader
     ${APP_SOURCES}
     ${IMGUI_SOURCES}
-    ${WASM3_SOURCES}
+    # wasm3 sources are now compiled into core
 )
 
 target_include_directories(bootloader PRIVATE

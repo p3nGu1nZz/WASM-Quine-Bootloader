@@ -11,6 +11,7 @@
 #include <sstream>
 #include <iomanip>
 #include <stdexcept>
+#include <filesystem>
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
@@ -19,8 +20,30 @@ App::App() {
     m_currentKernel  = KERNEL_GLOB;
     m_lastFrameTicks = now();
 
+    // session identifier used to group exports
+    m_runId = nowFileStamp();
+
+    // remove any stray files left in the working directory by older versions
+    // (bootloader_*.log, quine_telemetry_gen*.txt)
+    {
+        namespace fs = std::filesystem;
+        for (auto& entry : fs::directory_iterator(fs::current_path())) {
+            if (!entry.is_regular_file()) continue;
+            auto name = entry.path().filename().string();
+            if ((name.rfind("bootloader_", 0) == 0 && name.find(".log") != std::string::npos) ||
+                (name.rfind("quine_telemetry_gen", 0) == 0 && name.find(".txt") != std::string::npos)) {
+                fs::remove(entry.path());
+            }
+        }
+    }
+
+    // Ensure necessary directories exist (relative to cwd, typically build/<target>)
+    namespace fs = std::filesystem;
+    fs::create_directories("bin/logs");
+    fs::create_directories(fs::path("bin/seq") / m_runId);
+
     // Open buffered log file (flushes every ~1 s; always flushed on exit/signal)
-    m_logger.init("bootloader_" + nowFileStamp() + ".log");
+    m_logger.init("bin/logs/bootloader_" + nowFileStamp() + ".log");
 
     // Parse initial kernel
     auto bytes = base64_decode(m_currentKernel);
@@ -324,10 +347,16 @@ void App::doReboot(bool success) {
         m_pendingMutation.clear();
     }
 
+    // automatically export telemetry for this generation/session
+    autoExport();
+
     transitionTo(SystemState::IDLE);
 }
 
 // ─── Export ──────────────────────────────────────────────────────────────────
+
+#include <filesystem>  // for auto-export
+
 
 std::string App::exportHistory() const {
     ExportData d;
@@ -337,4 +366,24 @@ std::string App::exportHistory() const {
     d.logs          = m_logger.logs();
     d.history       = m_logger.history();
     return buildReport(d);
+}
+
+// Write the current telemetry and kernel blob to the session directory.
+void App::autoExport() {
+    namespace fs = std::filesystem;
+    try {
+        fs::path base = fs::path("bin") / "seq" / m_runId;
+        fs::create_directories(base);
+        // export full report
+        fs::path reportFile = base / ("gen_" + std::to_string(m_generation) + ".txt");
+        std::ofstream r(reportFile);
+        if (r) r << exportHistory();
+        // also dump raw kernel base64 for easier consumption
+        fs::path kernelFile = base / ("kernel_" + std::to_string(m_generation) + ".b64");
+        std::ofstream k(kernelFile);
+        if (k) k << m_currentKernel;
+    } catch (const std::exception& e) {
+        // logging may not be initialized yet
+        m_logger.log(std::string("autoExport failed: ") + e.what(), "error");
+    }
 }

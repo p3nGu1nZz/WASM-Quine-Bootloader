@@ -21,13 +21,35 @@ void Gui::init(SDL_Window* window, SDL_Renderer* renderer) {
     ImGuiIO& io = ImGui::GetIO();
     io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
 
+    // Apply DPI scaling before loading fonts so the chosen font size is scaled
+    // appropriately.  We also expose the raw DPI scale and the final UI scale
+    // via members for testing and layout decisions.
+    m_dpiScale = computeDpiScale(window);
+    // Boost the raw scale to make fonts/buttons large enough for touch screens
+    // and to evoke a 'cyberpunk' sci-fi interface.  Minimum 1.0 ensures we
+    // never shrink below normal size.
+    const float UI_BOOST = 1.5f;
+    m_uiScale = std::max(1.0f, m_dpiScale * UI_BOOST);
+    io.FontGlobalScale = m_uiScale;
+
+    // Customize styling for a darker, neon-accented 'cyberpunk' look.
     ImGui::StyleColorsDark();
     ImGuiStyle& style = ImGui::GetStyle();
+    style.FramePadding = { 8.0f * m_uiScale, 6.0f * m_uiScale };
+    style.ItemSpacing  = { 8.0f * m_uiScale, 6.0f * m_uiScale };
     style.WindowBorderSize  = 0.0f;
     style.FrameBorderSize   = 1.0f;
     style.WindowRounding    = 0.0f;
     style.FrameRounding     = 2.0f;
     style.ScrollbarRounding = 0.0f;
+    style.Colors[ImGuiCol_Button]          = {0.15f, 0.00f, 0.25f, 1.0f};
+    style.Colors[ImGuiCol_ButtonHovered]   = {0.45f, 0.10f, 0.80f, 1.0f};
+    style.Colors[ImGuiCol_ButtonActive]    = {0.60f, 0.20f, 1.00f, 1.0f};
+    style.Colors[ImGuiCol_Header]          = {0.00f, 0.40f, 0.90f, 0.8f};
+    style.Colors[ImGuiCol_HeaderHovered]   = {0.00f, 0.55f, 1.00f, 0.8f};
+    style.Colors[ImGuiCol_HeaderActive]    = {0.00f, 0.70f, 1.00f, 0.8f};
+    style.Colors[ImGuiCol_Text]            = {0.80f, 0.80f, 0.85f, 1.0f};
+    style.Colors[ImGuiCol_WindowBg]        = {0.02f, 0.02f, 0.05f, 1.0f};
 
     // Load a monospace font; fall back to ImGui default if none found
     const char* fontPaths[] = {
@@ -38,7 +60,7 @@ void Gui::init(SDL_Window* window, SDL_Renderer* renderer) {
     };
     m_monoFont = nullptr;
     for (int i = 0; fontPaths[i]; i++) {
-        m_monoFont = io.Fonts->AddFontFromFileTTF(fontPaths[i], 13.0f);
+        m_monoFont = io.Fonts->AddFontFromFileTTF(fontPaths[i], 13.0f * m_uiScale);
         if (m_monoFont) break;
     }
     if (!m_monoFont)
@@ -87,10 +109,10 @@ void Gui::renderFrame(App& app) {
     renderTopBar(app, winW);
 
     float headerH = ImGui::GetCursorPosY();
-    float footerH = 130.0f;
+    float footerH = 130.0f * m_uiScale;
     float panelH  = (float)winH - headerH - footerH;
     float logW    = (float)winW * 0.40f;
-    float instrW  = 240.0f;
+    float instrW  = 240.0f * m_uiScale;
     float kernelW = (float)winW - logW - instrW;
 
     renderLogPanel(app, logW, panelH);
@@ -133,7 +155,7 @@ void Gui::renderTopBar(App& app, int winW) {
                            app.retryCount());
 
     ImGui::SameLine();
-    float btnW = 140.0f;
+    float btnW = 140.0f * m_uiScale;
     ImGui::SetCursorPosX((float)winW - btnW - 110);
     if (app.isPaused()) {
         ImGui::PushStyleColor(ImGuiCol_Button, {0.4f, 0.3f, 0.0f, 1});
@@ -143,13 +165,8 @@ void Gui::renderTopBar(App& app, int winW) {
         if (ImGui::Button("PAUSE  SYSTEM", {btnW, 0})) app.togglePause();
     }
     ImGui::SameLine();
-    if (ImGui::Button("EXPORT", {60, 0})) {
-        std::string report = app.exportHistory();
-        std::string fname  = "quine_telemetry_gen" +
-                             std::to_string(app.generation()) + ".txt";
-        std::ofstream f(fname);
-        if (f) f << report;
-    }
+    // EXPORT button removed – telemetry is now saved automatically every
+    // generation under bin/seq/<runid>/gen_<n>.txt (see App autoExport()).
     ImGui::Separator();
 }
 

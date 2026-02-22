@@ -21,4 +21,24 @@ if [[ ! -f "$BINARY" ]]; then
     bash "$SCRIPT_DIR/build.sh" "$TARGET"
 fi
 
-exec "$BINARY" "$@"
+# change into the build directory so logs/seq folders are created there
+BUILD_DIR="$REPO_ROOT/build/$TARGET"
+cd "$BUILD_DIR"
+# ensure bin directories exist
+mkdir -p bin/logs
+mkdir -p bin/seq
+
+# monitoring support: if --monitor passed, run in background and tail logs
+if [[ "$1" == "--monitor" ]]; then
+    shift
+    ./bootloader "$@" &
+    pid=$!
+    # tail all existing/future log files
+    tail -F bin/logs/*.log &
+    tailpid=$!
+    wait $pid
+    kill $tailpid 2>/dev/null || true
+    exit 0
+fi
+
+exec "./bootloader" "$@"

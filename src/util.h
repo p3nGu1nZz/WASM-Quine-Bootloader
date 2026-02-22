@@ -2,9 +2,15 @@
 
 #include "types.h"
 #include <string>
+#include <SDL3/SDL.h>
 
 // Convert enum values to display strings
 std::string stateStr(SystemState s);
+
+// DPI scaling helpers (scale factor relative to 96 DPI)
+float dpiScaleFromDpi(float ddpi);
+// compute scale using an SDL_Window handle
+float computeDpiScale(SDL_Window* window);
 
 // Generate a short random alphanumeric ID (9 chars)
 std::string randomId();

@@ -197,6 +197,25 @@ Uses `std::mt19937` seeded from `std::random_device` for all random choices.
 `Gui` creates the ImGui context in `init()`, renders all panels in
 `renderFrame()`, and tears everything down in `shutdown()`.
 
+The application writes runtime logs via `AppLogger` to a file; the path is
+relative to the current working directory, which `run.sh` sets to the
+build target folder.  Logs therefore appear under `bin/logs/`.  `run.sh`
+also provides a `--monitor` mode to tail these files while the program
+runs.
+
+A DPI scaling factor is computed during `init()` based on the SDL window
+resolution using `computeDpiScale(SDL_Window*)` from `util.cpp`.  The raw scale
+is stored in `m_dpiScale` and then multiplied by an additional UI boost factor
+(≈1.5) to yield `m_uiScale`, which is the value actually applied to
+`io.FontGlobalScale` and used when sizing buttons and panels.  This ensures a
+large, touch‑friendly interface even on modest displays.  The boosted value is
+exposed via `uiScale()`, while the raw DPI value is still accessible via
+`dpiScale()`; both are tested.
+
+The ImGui style is also modified at init to favour dark backgrounds with neon
+accents (purples, cyans) and increased frame padding/item spacing, giving the
+application a sci‑fi / cyberpunk visual feel without becoming gimmicky.
+
 Panel helpers:
 
 | Method | Panel |

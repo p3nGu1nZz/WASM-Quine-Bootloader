@@ -19,6 +19,31 @@ std::string stateStr(SystemState s) {
     return "UNKNOWN";
 }
 
+// -----------------------------------------------------------------------------
+// DPI scaling utilities
+// -----------------------------------------------------------------------------
+
+// simple helper calculating scale factor relative to 96 dpi (unused now)
+float dpiScaleFromDpi(float ddpi) {
+    if (ddpi <= 0.0f) return 1.0f;
+    return ddpi / 96.0f;
+}
+
+// compute a font/UI scale based purely on window size
+float computeDpiScale(SDL_Window* window) {
+    if (!window) return 1.0f;
+    int w = 0, h = 0;
+    SDL_GetWindowSize(window, &w, &h);
+    if (w <= 0 || h <= 0) return 1.0f;
+    // baseline resolution (chosen empirically)
+    const float baseW = 1400.0f;
+    const float baseH = 900.0f;
+    float sx = (float)w / baseW;
+    float sy = (float)h / baseH;
+    float scale = std::max(sx, sy);
+    return scale < 1.0f ? 1.0f : scale;
+}
+
 
 std::string randomId() {
     static std::mt19937 rng(std::random_device{}());

@@ -17,6 +17,7 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 | Terminal Log | Colour-coded system event log (info / success / warning / error / mutation) |
 | Era System | *removed; terminal-only app no longer uses eras* |
 | Telemetry Export | Dump full hex / disassembly / history report to a `.txt` file |
+| DPI Scaling & Touch UI | UI text and widgets automatically scale with window size for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
 
 ---
 
@@ -95,10 +96,26 @@ This script will:
 ### Step 2 — Run
 
 ```bash
-bash scripts/run.sh
-# or directly:
-./build/linux-debug/bootloader
+bash scripts/run.sh           # headless mode
+bash scripts/run.sh --gui      # SDL3 GUI
+bash scripts/run.sh --monitor  # launch and tail runtime log
 ```
+
+By default the executable is started with its working directory set to the
+build target (e.g. `build/linux-debug`).  Runtime log files are written to
+`bin/logs/` inside that directory, and automatic telemetry exports live under
+`bin/seq/<runid>/` (generation reports, kernel blobs, etc.).
+
+The `--monitor` option runs the bootloader in the background and tails
+`bin/logs/*.log` in real time so you can watch system messages as evolution
+proceeds.
+
+### Cleanup
+
+`bash scripts/build.sh --clean` removes the entire `build/` directory along
+with CMake/Ninja caches.  It also deletes any generated `bin/` hierarchy at the
+repo root, wiping old logs, sequence exports or temporary files produced by
+runs or tests.  This leaves the source tree pristine.
 
 ---
 

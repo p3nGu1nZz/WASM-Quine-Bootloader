@@ -84,7 +84,38 @@ is used instead.
 
 ---
 
-## 5. WASM Host Imports
+## 5. GUI Rendering and DPI Scaling
+
+The desktop UI is built with Dear ImGui running on top of an SDL3 window.
+To ensure text and widgets remain legible on high‑resolution displays, the
+code computes a simple scale factor at startup that is proportional to the
+window's pixel area (larger windows → bigger DPI).  The helper
+`computeDpiScale(SDL_Window*)` lives in `src/util.cpp` and defaults to 1.0.
+
+The `Gui` class calls this helper during `init()` and applies the result to
+`ImGui::GetIO().FontGlobalScale`.  For a more touch‑friendly interface we
+further boost the raw DPI value by a constant (currently **×1.5**, clamped
+>=1) and store this as `m_uiScale`; `Gui::uiScale()` returns the boosted value
+which is also used when sizing buttons and panels.
+
+Telemetry exports are saved automatically each generation to
+`bin/seq/<runid>/gen_<n>.txt` (plus `kernel_<n>.b64`) in the working
+directory.  Runtime logs are written to `bin/logs/` and can be monitored live
+using `bash scripts/run.sh --monitor`.
+
+Colors and padding are customised in `Gui::init()` to give a dark,
+neon‑accented “cyberpunk” aesthetic: deep purples/teals for buttons and headers
+on a near‑black background, with generous padding and item spacing.  The
+goal is a snappy, readable, sci‑fi style UI that works well with fingers or a
+mouse.
+
+Scaling is intentionally coarse — the goal is readable fonts and big targets,
+not pixel‑perfect retina support — which keeps the implementation simple and
+avoids the need to recompute metrics on every frame.
+
+---
+
+## 6. WASM Host Imports
 
 The kernel module imports two host functions from the `env` namespace:
 
