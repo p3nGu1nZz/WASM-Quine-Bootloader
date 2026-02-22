@@ -33,7 +33,32 @@ info "Building project and tests (target: $TARGET)..."
 bash "$SCRIPT_DIR/build.sh" "$TARGET"
 
 info "Running tests..."
-cd "$BUILD_DIR"
-ctest --output-on-failure
-
-info "All tests passed."
+# If build directory already has test executables, execute them directly
+cd "$BUILD_DIR" || exit 1
+if [[ -d "test" ]]; then
+    cd test
+    total_tests=0
+    total_assertions=0
+    for exe in *; do
+        if [[ -x "$exe" && ! -d "$exe" ]]; then
+            info "Executing $exe"
+            # capture output to parse assertion summary
+            output=$("./$exe" 2>&1)
+            echo "$output"
+            # extract number of assertions from the Catch2 summary
+            if [[ $output =~ ([0-9]+)[[:space:]]+assertions ]]; then
+                total_assertions=$((total_assertions + ${BASH_REMATCH[1]}))
+            fi
+            rc=$?
+            if [[ $rc -ne 0 ]]; then
+                error "Test $exe failed (exit $rc)"
+            fi
+            total_tests=$((total_tests + 1))
+        fi
+    done
+    info "Ran $total_tests test executables with $total_assertions assertions."
+else
+    # fall back to ctest if no tests dir present
+    ctest --output-on-failure
+    info "All tests passed."
+fi
