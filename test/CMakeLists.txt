@@ -110,3 +110,14 @@ target_link_libraries(test_feature PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME feature_test COMMAND test_feature)
+
+# Policy network tests
+add_executable(test_policy test_policy.cpp)
+target_include_directories(test_policy PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_policy PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME policy_test COMMAND test_policy)
