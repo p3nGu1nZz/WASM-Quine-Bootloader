@@ -25,6 +25,9 @@ struct CliOptions {
     // model persistence paths
     std::string saveModelPath;
     std::string loadModelPath;
+
+    // flag set if any parsing error/warning occurred
+    bool parseError = false;
 };
 
 // Parse arguments from main() argc/argv; unrecognised options are ignored

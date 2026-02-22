@@ -62,6 +62,24 @@ TEST_CASE("CLI ignores unknown options but still records others") {
     const char* argv[] = {"bootloader", "--foo", "--windowed", "--bar"};
     CliOptions opts = parseCli(4, const_cast<char**>(argv));
     REQUIRE(opts.fullscreen == false);
+    REQUIRE(opts.parseError == true);
+}
+
+TEST_CASE("CLI parseError is set on invalid numeric and enum values") {
+    const char* argv1[] = {"bootloader", "--max-gen=xyz"};
+    CliOptions o1 = parseCli(2, const_cast<char**>(argv1));
+    REQUIRE(o1.parseError == true);
+
+    const char* argv2[] = {"bootloader", "--telemetry-level=bad"};
+    CliOptions o2 = parseCli(2, const_cast<char**>(argv2));
+    REQUIRE(o2.parseError == true);
+}
+
+TEST_CASE("CLI telemetry-dir is accepted but not validated") {
+    const char* argv[] = {"bootloader", "--telemetry-dir", "///not/a/real/path"};
+    CliOptions o = parseCli(3, const_cast<char**>(argv));
+    REQUIRE(o.telemetryDir == "///not/a/real/path");
+    REQUIRE(!o.parseError);
 }
 
 TEST_CASE("CLI parses save-model and load-model paths") {

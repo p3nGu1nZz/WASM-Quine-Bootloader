@@ -80,3 +80,10 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     fs::current_path(orig);
     fs::remove_all(tmp);
 }
+
+TEST_CASE("executableDir returns non-empty string", "[util]") {
+    std::string ed = executableDir();
+    REQUIRE(!ed.empty());
+    // should be absolute path
+    REQUIRE(ed[0] == '/');
+}

@@ -1,6 +1,7 @@
 #include "cli.h"
 #include <cstring>
 #include <cstdlib>
+#include <iostream>
 
 static TelemetryLevel parseTelemetryLevel(const char* v) {
     if (std::strcmp(v, "none") == 0) return TelemetryLevel::NONE;
@@ -38,7 +39,16 @@ CliOptions parseCli(int argc, char** argv) {
             auto pos = argstr.find('=');
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
-            if (val) opts.telemetryLevel = parseTelemetryLevel(val);
+            if (val) {
+                opts.telemetryLevel = parseTelemetryLevel(val);
+                if ((opts.telemetryLevel == TelemetryLevel::BASIC &&
+                     std::strcmp(val, "basic") != 0) &&
+                    std::strcmp(val, "none") != 0 &&
+                    std::strcmp(val, "full") != 0) {
+                    std::cerr << "Warning: unknown telemetry-level '" << val << "'\n";
+                    opts.parseError = true;
+                }
+            }
         } else if (argstr.rfind("--telemetry-dir", 0) == 0) {
             const char* val = nullptr;
             auto pos = argstr.find('=');
@@ -50,13 +60,27 @@ CliOptions parseCli(int argc, char** argv) {
             auto pos = argstr.find('=');
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
-            if (val) opts.mutationStrategy = parseMutationStrategy(val);
+            if (val) {
+                opts.mutationStrategy = parseMutationStrategy(val);
+                if (opts.mutationStrategy == MutationStrategy::RANDOM &&
+                    std::strcmp(val, "random") != 0) {
+                    std::cerr << "Warning: unknown mutation-strategy '" << val << "'\n";
+                    opts.parseError = true;
+                }
+            }
         } else if (argstr.rfind("--heuristic", 0) == 0) {
             const char* val = nullptr;
             auto pos = argstr.find('=');
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
-            if (val) opts.heuristic = parseHeuristicMode(val);
+            if (val) {
+                opts.heuristic = parseHeuristicMode(val);
+                if (opts.heuristic == HeuristicMode::NONE &&
+                    std::strcmp(val, "none") != 0) {
+                    std::cerr << "Warning: unknown heuristic '" << val << "'\n";
+                    opts.parseError = true;
+                }
+            }
         } else if (argstr == "--profile") {
             opts.profile = true;
         } else if (argstr.rfind("--max-gen", 0) == 0) {
@@ -64,7 +88,16 @@ CliOptions parseCli(int argc, char** argv) {
             auto pos = argstr.find('=');
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
-            if (val) opts.maxGen = std::atoi(val);
+            if (val) {
+                char* end;
+                long v = std::strtol(val, &end, 10);
+                if (*end != '\0' || v < 0) {
+                    std::cerr << "Warning: invalid max-gen '" << val << "'\n";
+                    opts.parseError = true;
+                } else {
+                    opts.maxGen = static_cast<int>(v);
+                }
+            }
         } else if (argstr.rfind("--save-model", 0) == 0) {
             const char* val = nullptr;
             auto pos = argstr.find('=');
@@ -77,6 +110,9 @@ CliOptions parseCli(int argc, char** argv) {
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
             if (val) opts.loadModelPath = val;
+        } else {
+            std::cerr << "Warning: unrecognised option '" << argstr << "'\n";
+            opts.parseError = true;
         }
         // unrecognised args are silently ignored; the run.sh script
         // forwards remaining arguments to the executable so they can be

@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+using Catch::Approx;
 #include "advisor.h"
 #include <filesystem>
 #include <fstream>
@@ -55,6 +57,11 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     float sc = adv.score(seq);
     REQUIRE(sc >= 0.0f);
     REQUIRE(sc <= 1.0f);
+
+    // empty advisor returns top score
+    Advisor emptyAdv(root.string() + "/nonexistent");
+    REQUIRE(emptyAdv.size() == 0);
+    REQUIRE(emptyAdv.score(seq) == Approx(1.0f));
 
     fs::remove_all(root);
 }
