@@ -65,6 +65,18 @@ CliOptions parseCli(int argc, char** argv) {
             if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
             else if (i + 1 < argc) val = argv[++i];
             if (val) opts.maxGen = std::atoi(val);
+        } else if (argstr.rfind("--save-model", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.saveModelPath = val;
+        } else if (argstr.rfind("--load-model", 0) == 0) {
+            const char* val = nullptr;
+            auto pos = argstr.find('=');
+            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
+            else if (i + 1 < argc) val = argv[++i];
+            if (val) opts.loadModelPath = val;
         }
         // unrecognised args are silently ignored; the run.sh script
         // forwards remaining arguments to the executable so they can be

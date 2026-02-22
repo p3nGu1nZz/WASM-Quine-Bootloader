@@ -63,3 +63,10 @@ TEST_CASE("CLI ignores unknown options but still records others") {
     CliOptions opts = parseCli(4, const_cast<char**>(argv));
     REQUIRE(opts.fullscreen == false);
 }
+
+TEST_CASE("CLI parses save-model and load-model paths") {
+    const char* argv[] = {"bootloader", "--save-model", "model.dat", "--load-model=prev.bin"};
+    CliOptions opts = parseCli(4, const_cast<char**>(argv));
+    REQUIRE(opts.saveModelPath == "model.dat");
+    REQUIRE(opts.loadModelPath == "prev.bin");
+}

@@ -1,4 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+using Catch::Approx;
 #include "app.h"
 
 TEST_CASE("Blacklist helper methods behave correctly", "[app]") {
@@ -47,5 +49,25 @@ TEST_CASE("heuristic decay reduces blacklist over generations", "[app][heuristic
     REQUIRE(a.isBlacklisted(seq));
     a.doReboot(true);
     REQUIRE(!a.isBlacklisted(seq));
+}
+
+TEST_CASE("App loads trainer state from CLI option", "[app][trainer]") {
+    // prepare a trainer state file
+    Trainer t;
+    TelemetryEntry e; e.generation = 1;
+    t.observe(e);
+    std::string tmp = "app_trainer.tmp";
+    REQUIRE(t.save(tmp));
+
+    CliOptions opts;
+    opts.loadModelPath = tmp;
+    App a(opts);
+    // the app's trainer should have the same forward value as t
+    auto orig = t.policy().forward(std::vector<float>(256,0));
+    auto loaded = a.trainer().policy().forward(std::vector<float>(256,0));
+    REQUIRE(loaded.size() == orig.size());
+    REQUIRE(loaded[0] == Approx(orig[0]));
+
+    std::remove(tmp.c_str());
 }
 

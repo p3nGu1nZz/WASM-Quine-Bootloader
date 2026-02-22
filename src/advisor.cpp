@@ -57,3 +57,15 @@ void Advisor::parseFile(const std::string& path) {
         m_entries.push_back(std::move(te));
     }
 }
+
+float Advisor::score(const std::vector<uint8_t>& /*seq*/) const {
+    // simple heuristic: use average generation number mapped into (0,1]
+    if (m_entries.empty()) return 1.0f;
+    float total = 0.0f;
+    for (auto& e : m_entries) total += static_cast<float>(e.generation);
+    float avg = total / m_entries.size();
+    float s = avg <= 0.0f ? 0.1f : avg / (avg + 10.0f);
+    if (s < 0.0f) s = 0.0f;
+    if (s > 1.0f) s = 1.0f;
+    return s;
+}

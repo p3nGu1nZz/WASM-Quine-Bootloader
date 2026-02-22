@@ -21,6 +21,10 @@ struct CliOptions {
     HeuristicMode heuristic = HeuristicMode::NONE; // NONE=no blacklist, BLACKLIST=block repeats, DECAY=block then slowly forget
     bool profile = false;
     int maxGen = 0;             // 0 = unlimited
+
+    // model persistence paths
+    std::string saveModelPath;
+    std::string loadModelPath;
 };
 
 // Parse arguments from main() argc/argv; unrecognised options are ignored

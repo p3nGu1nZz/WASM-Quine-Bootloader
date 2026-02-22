@@ -34,6 +34,20 @@ App::App(const CliOptions& opts)
     // session identifier used to group exports
     m_runId = nowFileStamp();
 
+    // create advisor using telemetry directory (allow override via CLI)
+    {
+        std::string baseDir = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
+        m_advisor = Advisor(baseDir);
+    }
+    // load model if requested
+    if (!m_opts.loadModelPath.empty()) {
+        if (!m_trainer.load(m_opts.loadModelPath)) {
+            m_logger.log("WARNING: failed to load model from " + m_opts.loadModelPath, "warning");
+        } else {
+            m_logger.log("Loaded model from " + m_opts.loadModelPath, "info");
+        }
+    }
+
     // remove any stray files left in the working directory by older versions
     // (bootloader_*.log, quine_telemetry_gen*.txt)
     {
@@ -267,6 +281,17 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
             int seed = m_generation + 1;
             auto evo = evolveBinary(m_currentKernel, m_knownInstructions, seed,
                                         m_opts.mutationStrategy);
+            // ask the advisor to score the candidate sequence
+            {
+                float sc = m_advisor.score(evo.mutationSequence);
+                m_logger.log("ADVISOR SCORE: " + std::to_string(sc), "info");
+                if (sc < 0.05f) {
+                    m_logger.log("ADVISOR: extremely low score, rerolling", "warning");
+                    seed++;
+                    evo = evolveBinary(m_currentKernel, m_knownInstructions, seed,
+                                        m_opts.mutationStrategy);
+                }
+            }
             // if the mutation is blacklisted and heuristic enabled, retry a few times
             int tries = 0;
             while (m_opts.heuristic != HeuristicMode::NONE &&
@@ -299,6 +324,17 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
             m_logger.log("EVOLUTION: " + evo.description, "mutation");
             m_logger.addHistory({ m_generation, nowIso(), (int)kernelBytes(),
                                    "EVOLVE", evo.description, true });
+            // train on this generation
+            {
+                TelemetryEntry te;
+                te.generation = m_generation;
+                te.kernelBase64 = m_currentKernel;
+                te.trapCode = m_lastTrapReason;
+                m_trainer.observe(te);
+                if (!m_opts.saveModelPath.empty()) {
+                    m_trainer.save(m_opts.saveModelPath);
+                }
+            }
         } catch (const std::exception& e) {
             m_logger.log(std::string("EVOLUTION REJECTED: ") + e.what(), "warning");
             m_nextKernel.clear();

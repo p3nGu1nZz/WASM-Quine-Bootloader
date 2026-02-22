@@ -6,6 +6,8 @@
 #include "wasm/kernel.h"
 #include "wasm/parser.h"
 #include "cli.h"
+#include "advisor.h"
+#include "train.h"
 #include <climits>
 #include <map>
 
@@ -58,6 +60,9 @@ public:
 
     // access CLI options
     const CliOptions& options() const { return m_opts; }
+
+    // expose trainer for tests
+    const Trainer& trainer() const { return m_trainer; }
 
     // expose reboot helper for tests
     void doReboot(bool success);
@@ -113,6 +118,10 @@ private:
     BootFsm   m_fsm;
     AppLogger m_logger;
     WasmKernel m_kernel;
+
+    // for learning & advice
+    Advisor m_advisor;
+    Trainer m_trainer;
 
     // ── State ─────────────────────────────────────────────────────────────────
     // era tracking removed; visual themes not required

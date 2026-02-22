@@ -2,6 +2,7 @@
 
 #include <string>
 #include <vector>
+#include <cstdint>
 
 // simple record extracted from a telemetry export
 struct TelemetryEntry {
@@ -20,6 +21,9 @@ public:
     size_t size() const { return m_entries.size(); }
 
     const std::vector<TelemetryEntry>& entries() const { return m_entries; }
+
+    // return a safety score in [0,1] for a candidate mutation sequence
+    float score(const std::vector<uint8_t>& seq) const;
 
 private:
     void scanDirectory(const std::string& runDir);

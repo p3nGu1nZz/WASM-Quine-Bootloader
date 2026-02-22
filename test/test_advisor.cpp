@@ -50,5 +50,11 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     REQUIRE(saw2);
     REQUIRE(saw5);
 
+    // any sequence should yield a score between 0 and 1
+    std::vector<uint8_t> seq{1,2,3};
+    float sc = adv.score(seq);
+    REQUIRE(sc >= 0.0f);
+    REQUIRE(sc <= 1.0f);
+
     fs::remove_all(root);
 }
