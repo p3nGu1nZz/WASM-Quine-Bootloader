@@ -45,6 +45,12 @@ mkdir -p bin/seq
 
 # monitoring support: if --monitor passed, run in background and tail logs
 info "Working directory: $BUILD_DIR"
+info "Invoking bootloader: $BINARY $*"
+
+# display where logs/telemetry will be written for clarity
+info "Logs directory: $BUILD_DIR/bin/logs"
+info "Telemetry directory: $BUILD_DIR/bin/seq"
+
 if [[ "$1" == "--monitor" ]]; then
     shift
     ./bootloader "$@" &
@@ -57,4 +63,18 @@ if [[ "$1" == "--monitor" ]]; then
     exit 0
 fi
 
-exec "./bootloader" "$@"
+# run bootloader normally and report exit status
+./bootloader "$@"
+rc=$?
+info "Bootloader exited with code $rc"
+
+# if logs were produced, show the last few lines to give immediate feedback
+if ls bin/logs/*.log >/dev/null 2>&1; then
+    info "Recent log output (last 20 lines of each file):"
+    for f in bin/logs/*.log; do
+        echo -e "\n--- $f ---"
+        tail -n 20 "$f" || true
+    done
+fi
+
+exit $rc

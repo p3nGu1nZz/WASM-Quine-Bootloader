@@ -35,6 +35,7 @@ bash "$SCRIPT_DIR/build.sh" "$TARGET"
 info "Running tests..."
 # If build directory already has test executables, execute them directly
 cd "$BUILD_DIR" || exit 1
+start_time=$(date +%s)
 if [[ -d "test" ]]; then
     cd test
     total_tests=0
@@ -56,7 +57,17 @@ if [[ -d "test" ]]; then
             total_tests=$((total_tests + 1))
         fi
     done
-    info "Ran $total_tests test executables with $total_assertions assertions."
+    end_time=$(date +%s)
+    elapsed=$((end_time - start_time))
+
+    # prettified summary box
+    echo -e "\n${GREEN}========================================${RESET}"
+    echo -e "${GREEN}                 TEST SUMMARY           ${RESET}"
+    echo -e "${GREEN}----------------------------------------${RESET}"
+    echo -e "${GREEN}Tests run:      ${RESET}${total_tests}"
+    echo -e "${GREEN}Assertions:     ${RESET}${total_assertions}"
+    echo -e "${GREEN}Duration:       ${RESET}${elapsed}s"
+    echo -e "${GREEN}========================================${RESET}\n"
 else
     # fall back to ctest if no tests dir present
     ctest --output-on-failure
