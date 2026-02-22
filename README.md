@@ -30,7 +30,7 @@ This repo includes a full suite of Copilot agent skills; see `.github/copilot-in
 - `setup-project`, `build-app`, `run-app`, `test-app`
 - `update-docs`, `update-specs`, `update-skills`, `update-memory`
 - `search-memory`, `telemetry-review`, `introspect-telemetry`
-- `improve-skills`, `generate-report`, `commit-push`
+- `improve-skills`, `commit-push`
 
 Agents can invoke them via natural language prompts; the skills and
 instructions are maintained by the `update-skills`/`improve-skills` tools.
