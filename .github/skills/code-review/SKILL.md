@@ -14,18 +14,37 @@ matter, and suggest concrete fixes or enhancements.
 
 ## Expectations
 
-1. Scan all source, tests, scripts, and build files in the workspace.
-2. Identify areas where the code could be more efficient, simpler, more
-   secure, or more user-friendly.
-3. Propose code changes or new modules, with reasoning and (if
+1. Scan all source (`src/` and `test/`), scripts (`scripts/*.sh`),
+   CMake files and docs under `docs/`.  Use `grep_search`/`semantic_search`
+   to locate patterns such as `parseCli`, `autoExport`, `sequenceDir`,
+   and to ensure the review touches every major subsystem (util, GUI,
+   wasm, training modules, etc.).
+2. Examine the unit tests for coverage gaps and duplications; note
+   missing tests or fragile constructs that would benefit from mocking
+   or additional assertions.
+3. Look at the shell helper scripts (`build.sh`, `run.sh`, `test.sh`) –
+   they are part of the user experience and can harbour portability or
+   usability issues (e.g. temp file handling, error messages).
+4. Consider security aspects: unbounded input parsing, `exec` usage,
+   directory traversal when reading telemetry, and any use of system
+   calls or file I/O that could be misused.
+5. Note performance hotspots (frequent base64 decodes, vector
+   allocations, GUI rendering), and propose lightweight refactors such as
+   caching, preallocation or algorithmic changes.
+6. Search for any outdated conventions or comments (e.g. references to
+   SDL2) and ensure the review recommendations reflect the current
+   architecture (SDL3, `core` library, etc.).
+7. Propose code changes or new modules, with reasoning and (if
    appropriate) code snippets.
-4. Generate **a list of roughly twelve actionable next steps** that
+8. Generate **a list of roughly twelve actionable next steps** that
    translate the review findings into tasks (e.g. "Add argument validation
-   to `parseCli`", "Cache decoded kernels in exporter").  These will
-   become GitHub issue drafts when the user selects them.
-5. Where issues are proposed, clearly mark them so they can be
+   to `parseCli`", "Cache decoded kernels in exporter" or "write spec for
+   neural matrix serialization").  These will become GitHub issue drafts
+   when the user selects them.
+9. Where issues are proposed, clearly mark them so they can be
    programmatically converted to actual GitHub issues by subsequent
-   agent actions.
+   agent actions.  Use a simple format like "[ISSUE] Title: ... Body: ...".
+
 
 ## Usage
 
