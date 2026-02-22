@@ -3,6 +3,7 @@
 #include "types.h"
 #include <string>
 #include <SDL3/SDL.h>
+#include <filesystem>
 
 // Convert enum values to display strings
 std::string stateStr(SystemState s);
@@ -24,3 +25,8 @@ std::string nowFileStamp();
 // Return directory containing the running executable (Linux-specific).
 // Falls back to current_path() if unreadable.
 std::string executableDir();
+
+// Given a run identifier, return the sequence export directory where
+// the telemetry for that run should be written.  The result is
+// "<exe_dir>/bin/seq/<runId>".
+std::filesystem::path sequenceDir(const std::string& runId);

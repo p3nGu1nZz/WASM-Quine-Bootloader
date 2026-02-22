@@ -96,3 +96,9 @@ std::string executableDir() {
     } catch (...) {}
     return std::filesystem::current_path().string();
 }
+
+std::filesystem::path sequenceDir(const std::string& runId) {
+    std::filesystem::path exe = executableDir();
+    std::filesystem::path p = exe / "bin" / "seq" / runId;
+    return p;
+}

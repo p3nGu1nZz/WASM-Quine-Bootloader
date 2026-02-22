@@ -484,9 +484,7 @@ void App::autoExport() {
         if (!m_opts.telemetryDir.empty()) {
             base = fs::path(m_opts.telemetryDir) / m_runId;
         } else {
-            // default relative to executable directory instead of CWD
-            fs::path exeDir = executableDir();
-            base = exeDir / "bin" / "seq" / m_runId;
+            base = sequenceDir(m_runId);
         }
         fs::create_directories(base);
 

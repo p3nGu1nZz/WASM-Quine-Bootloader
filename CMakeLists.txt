@@ -63,6 +63,11 @@ set(CORE_SOURCES
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
     src/cli.cpp
+    src/mutation_advisor.cpp
+    src/feature_extractor.cpp
+    src/policy.cpp
+    src/loss.cpp
+    src/train.cpp
     # wasm3 runtime objects are added to the core target below instead of
     # being inlined here; this avoids potential caching issues with the
     # CORE_SOURCES variable itself.

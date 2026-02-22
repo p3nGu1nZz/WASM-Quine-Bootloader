@@ -59,8 +59,7 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     // simulate one successful reboot/generation
     app.doReboot(true);
     // default path is rooted at executable directory (not current_path)
-    fs::path exeDir = fs::path(executableDir());
-    fs::path seqdir = exeDir / "bin" / "seq" / app.runId();
+    fs::path seqdir = sequenceDir(app.runId());
     REQUIRE(fs::exists(seqdir));
     REQUIRE(fs::exists(seqdir / "gen_1.txt"));
     // default telemetry level is BASIC, which does not write kernel blob
