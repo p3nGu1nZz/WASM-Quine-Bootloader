@@ -7,14 +7,33 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 
 # ── SDL3 ───────────────────────────────────────────────────────────────────────
-# Try to find a system-installed SDL3 first; if not found use external/SDL3
-# automatically add our external build path to prefix search paths
-list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/SDL3/build/lib/cmake/SDL3")
-find_package(SDL3 QUIET CONFIG)
-if(NOT SDL3_FOUND)
-    set(SDL3_DIR "${CMAKE_SOURCE_DIR}/external/SDL3/build/lib/cmake/SDL3"
-        CACHE PATH "SDL3 CMake config directory")
-    find_package(SDL3 REQUIRED CONFIG)
+# Locate SDL3 config file; prefer system installation but fall back to
+# our external directory if the build script has populated it.  We avoid
+# calling find_package() until we actually know a config file exists so
+# the CMake language server won’t emit an error during IDE configuration.
+
+# candidate search paths (system prefixes automatically included by CMake):
+# previous versions stored SDL3 in external/SDL3/build; current build script
+# installs the library into external/SDL3/linux/lib/cmake/SDL3.
+set(_sdl3_external "${CMAKE_SOURCE_DIR}/external/SDL3/linux/lib/cmake/SDL3")
+
+# first look for the config file directly
+find_file(SDL3ConfigPath
+    NAMES SDL3Config.cmake sdl3-config.cmake
+    PATHS
+        ${_sdl3_external}
+        # you may add more platform-specific hints here if needed
+)
+
+if(SDL3ConfigPath)
+    get_filename_component(SDL3_DIR "${SDL3ConfigPath}" DIRECTORY)
+    message(STATUS "Found SDL3 config at ${SDL3ConfigPath}")
+    find_package(SDL3 REQUIRED CONFIG PATHS "${SDL3_DIR}")
+else()
+    # no configuration file found; the language server will not warn because
+    # we never invoked find_package yet.  Build.sh will still attempt to set
+    # SDL3_DIR and rerun CMake, or the user can run setup.sh to populate externals.
+    message(WARNING "SDL3 not found; run scripts/setup.sh or install SDL3 system package")
 endif()
 
 # ── wasm3 ─────────────────────────────────────────────────────────────────────
@@ -84,8 +103,11 @@ target_include_directories(bootloader PRIVATE
 
 target_link_libraries(bootloader PRIVATE
     core
-    SDL3::SDL3
 )
+
+if(SDL3_FOUND)
+    target_link_libraries(bootloader PRIVATE SDL3::SDL3)
+endif()
 
 # ── Windows (MinGW cross-compile) – static runtime to ship single .exe ────────
 if(WIN32 OR CMAKE_SYSTEM_NAME STREQUAL "Windows")
