@@ -84,14 +84,14 @@ Executables run from their build folder; logs/seq created there.
 
 Available skills:
 - `setup-project` – install externals.
-- `build-project` – compile the code.
+- `build-app` – compile the code.
 - `run-app` – launch GUI/headless or tail logs.
 - `test-app` – build and run tests.
 - `update-docs` – refresh README and related docs.
 - `update-specs` – edit specs under `docs/specs/`.
 - `update-skills` – update skill docs and copilot-instructions.
 - `update-memory` – write repository facts to memory.
-- `find-memory` – search the memory store.
+- `search-memory` – search the memory store.
 - `telemetry-review` – inspect logs/seq exports.
 - `generate-report` – create porting/migration reports.
 - `commit-push` – stage changes, craft a commit message, and push to remote.
