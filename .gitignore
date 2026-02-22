@@ -7,6 +7,11 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Temp files
+*.tmp
+.tmp
+tmp
+
 # Node / Web app
 node_modules
 web/node_modules
