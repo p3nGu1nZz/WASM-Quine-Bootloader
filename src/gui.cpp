@@ -1,7 +1,7 @@
 #include "gui.h"
 #include "colors.h"
 #include "util.h"
-#include "wasm_parser.h"
+#include "wasm/wasm_parser.h"
 
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>

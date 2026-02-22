@@ -1,6 +1,6 @@
 #pragma once
 
-#include "wasm_parser.h"
+#include "wasm/wasm_parser.h"
 #include <string>
 #include <vector>
 

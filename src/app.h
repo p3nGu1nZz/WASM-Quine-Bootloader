@@ -3,8 +3,8 @@
 #include "types.h"
 #include "fsm.h"
 #include "logger.h"
-#include "wasm_kernel.h"
-#include "wasm_parser.h"
+#include "wasm/wasm_kernel.h"
+#include "wasm/wasm_parser.h"
 
 #include <string>
 #include <vector>

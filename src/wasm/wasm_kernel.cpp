@@ -1,4 +1,4 @@
-#include "wasm_kernel.h"
+#include "wasm/wasm_kernel.h"
 #include "base64.h"
 
 #include <wasm3.h>
