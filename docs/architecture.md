@@ -62,6 +62,8 @@ main.cpp
 ### `src/base64.h`
 **Role:** Base64 encoding utilities (decode logic moved to `base64.cpp`).
 
+A small companion file `src/base64.cpp` contains the decode implementation and static lookup table to keep the header light.
+
 | Function | Signature | Description |
 |---|---|---|
 | `base64_encode` | `(const std::vector<uint8_t>&) → std::string` | Encode raw bytes |

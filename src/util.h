@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types.h"
+#include <vector>
 #include <string>
 #include <SDL3/SDL.h>
 #include <filesystem>
