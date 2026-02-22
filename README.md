@@ -134,8 +134,8 @@ bash scripts/build.sh linux-release
 bash scripts/build.sh windows-debug     # requires: bash scripts/setup.sh windows
 bash scripts/build.sh windows-release   # requires: bash scripts/setup.sh windows
 bash scripts/build.sh --clean           # remove build/ dir + caches
+bash scripts/build.sh --clean linux-debug   # clean then build linux-debug
 ```
-
 ### Windows cross-compile setup
 
 ```bash

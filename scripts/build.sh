@@ -23,7 +23,22 @@ TARGET="${1:-linux-debug}"
 JOBS="${JOBS:-$(nproc)}"
 
 # ── Clean ─────────────────────────────────────────────────────────────────────
+# allow "--clean" anywhere in args; perform cleaning then continue with
+# remaining arguments (which may specify a target).
+CLEAN_ONLY=false
 if [[ "${TARGET}" == "--clean" ]]; then
+    CLEAN_ONLY=true
+fi
+# also scan additional args if user supplied e.g. --clean linux-release
+for arg in "$@"; do
+    if [[ "$arg" == "--clean" ]]; then
+        CLEAN_ONLY=true
+        # remove it from positional parameters for later
+        set -- "${@/--clean/}"
+    fi
+done
+
+if $CLEAN_ONLY; then
     echo "[build] Cleaning build directory and caches..."
     rm -rf "${REPO_ROOT}/build"
     # Remove CMake / Ninja caches that may live at the repo root
@@ -38,7 +53,13 @@ if [[ "${TARGET}" == "--clean" ]]; then
     # Remove telemetry exports left by the binary (old behaviour)
     rm -f  "${REPO_ROOT}"/quine_telemetry_*.txt
     echo "[build] Clean done."
-    exit 0
+    # if there are no other args, exit; otherwise fall through to build
+    if [[ $# -eq 0 ]]; then
+        exit 0
+    else
+        TARGET="${1:-linux-debug}"
+        shift
+    fi
 fi
 # ── Resolve build type & platform ─────────────────────────────────────────────
 case "${TARGET}" in
