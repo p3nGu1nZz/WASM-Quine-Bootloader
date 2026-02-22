@@ -94,5 +94,8 @@ Available skills:
 - `find-memory` – search the memory store.
 - `telemetry-review` – inspect logs/seq exports.
 - `generate-report` – create porting/migration reports.
+- `commit-push` – stage changes, craft a commit message, and push to remote.
+- `introspect-telemetry` – review logs and sequence exports for anomalies.
+- `improve-skills` – refine and compact all existing skill documents.
 
 Each skill has a `SKILL.md` in `.github/skills/`. Add new skills there with YAML frontmatter and concise instructions; longer references can live elsewhere.
