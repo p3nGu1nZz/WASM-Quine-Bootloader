@@ -1,5 +1,5 @@
 #include "train.h"
-#include "feature_extractor.h"
+#include "feature.h"
 #include "loss.h"
 #include <fstream>
 

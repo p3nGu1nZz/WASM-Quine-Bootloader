@@ -1,7 +1,7 @@
-#include "feature_extractor.h"
+#include "feature.h"
 #include "base64.h"
 
-std::vector<float> FeatureExtractor::extract(const TelemetryEntry& entry) {
+std::vector<float> Feature::extract(const TelemetryEntry& entry) {
     std::vector<float> vec(256, 0.0f);
     if (entry.kernelBase64.empty()) return vec;
 

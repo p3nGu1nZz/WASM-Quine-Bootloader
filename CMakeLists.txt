@@ -64,7 +64,7 @@ set(CORE_SOURCES
     src/wasm/evolution.cpp
     src/cli.cpp
     src/mutation_advisor.cpp
-    src/feature_extractor.cpp
+    src/feature.cpp
     src/policy.cpp
     src/loss.cpp
     src/train.cpp
