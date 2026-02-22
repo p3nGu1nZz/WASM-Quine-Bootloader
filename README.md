@@ -27,7 +27,7 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 
 This repo includes a full suite of Copilot agent skills; see `.github/copilot-instructions.md` for a current list.  Key skills include:
 
-- `setup-project`, `build-project`, `run-app`, `test-app`
+- `setup-project`, `build-app`, `run-app`, `test-app`
 - `update-docs`, `update-specs`, `update-skills`, `update-memory`
 - `search-memory`, `telemetry-review`, `introspect-telemetry`
 - `improve-skills`, `generate-report`, `commit-push`
@@ -258,26 +258,9 @@ IDLE ──▶ BOOTING ──▶ LOADING_KERNEL ──▶ EXECUTING
 
 All three are fetched by `scripts/setup.sh`.
 
----
-
-## Agent Skills
-
-This repo includes a full suite of Copilot agent skills (see
-`.github/copilot-instructions.md` for details).  Key skills are:
-
-- `setup-project`, `build-app`, `run-app`, `test-app`
-- `update-docs`, `update-specs`, `update-skills`, `update-memory`
-- `search-memory`, `telemetry-review`, `introspect-telemetry`
-- `improve-skills`, `generate-report`, `commit-push`
-
-Agents can invoke them via natural language prompts; the skills and
-instructions are maintained by the `update-skills`/`improve-skills` tools.
-
----
 
 ## Original TypeScript Web App
 
 ## Original TypeScript Web App (archived)
 
 The original TypeScript/React reference implementation was previously stored in `web/` but has been removed from this repository after a successful native C++ port. If you need the original prototype, consult the repository history or contact the maintainers.
->>>>>>> b8c4bda (Rename build-project skill to build-app and update references)
