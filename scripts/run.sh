@@ -1,28 +1,24 @@
 #!/usr/bin/env bash
-# run.sh – Build (if needed) and launch the WASM Quine Bootloader.
+# scripts/run.sh
+# Build (if needed) then run the bootloader.
+# All arguments are forwarded to the bootloader executable.
 #
-# Usage:  bash scripts/run.sh [TARGET]
-#
-# TARGET defaults to linux-debug (same as build.sh).
+# Usage:
+#   bash scripts/run.sh              # terminal/headless mode (default)
+#   bash scripts/run.sh --gui        # SDL3 GUI window mode
+#   bash scripts/run.sh --gui --verbose
 
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TARGET="${1:-linux-debug}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+TARGET="${BUILD_TARGET:-linux-debug}"
+BINARY="$REPO_ROOT/build/$TARGET/bootloader"
 
-case "${TARGET}" in
-    windows-debug|windows-release)
-        BIN="${REPO_ROOT}/build/${TARGET}/bootloader.exe"
-        ;;
-    *)
-        BIN="${REPO_ROOT}/build/${TARGET}/bootloader"
-        ;;
-esac
-
-if [[ ! -f "${BIN}" ]]; then
-    echo "[run] Binary not found for target '${TARGET}', building first..."
-    bash "${REPO_ROOT}/scripts/build.sh" "${TARGET}"
+# Build the project automatically if the binary is missing
+if [[ ! -f "$BINARY" ]]; then
+    echo "[run.sh] Binary not found – building ($TARGET) first..."
+    bash "$SCRIPT_DIR/build.sh" "$TARGET"
 fi
 
-echo "[run] Starting WASM Quine Bootloader (${TARGET})..."
-exec "${BIN}" "$@"
+exec "$BINARY" "$@"
