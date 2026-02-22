@@ -45,3 +45,6 @@ external/wasm3/
 
 # Exported telemetry files
 quine_telemetry_*.txt
+
+# CodeQL
+_codeql_detected_source_root
