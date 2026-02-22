@@ -20,6 +20,28 @@ Each export file contains:
 
 Additional sections may be added in the future (disassembly, mutation logs). The parser used by automated tools should be resilient to extra lines and only rely upon the header keywords.
 
+### Planned Extensions
+
+The following fields are expected to be added to each export in future
+revisions:
+
+- `Mutations Attempted: <count>` – total number of mutation trials before
+  a successful quine run.
+- `Mutations Applied: <count>` – number of mutations actually incorporated
+  into the kernel.
+- `Mutation Breakdown: insert=<n>, delete=<n>, modify=<n>, append=<n>` –
+  tally by type.
+- `Traps: <code>` – if the previous generation trapped, record the trap
+  reason (`unreachable`, `div_by_zero`, etc.).
+- `Gen Duration: <ms>` – time taken from start to verification success.
+- `Kernel Size Min/Max: <min>/<max>` – historical min/max size seen so far
+  within the run.
+- `Heuristic Blacklist: <entries>` – optional summary of patterns
+  blacklisted by the mutation heuristic.
+
+Telemetry consumers should ignore unknown labels and continue parsing
+remaining fields.
+
 ## Constraints
 
 - The Base64 payload must match the kernel byte size reported earlier in the file.

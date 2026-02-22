@@ -13,6 +13,25 @@ Define the behaviour of the bootloader executable's command-line arguments. This
 
 Unrecognised flags are ignored by `parseCli()`; `scripts/run.sh` may pass additional arguments through to the bootloader instance for future use.
 
+### New Flags (planned)
+
+- `--telemetry-level=<none|basic|full>` – control verbosity of telemetry
+  exports; `none` disables files entirely, `basic` writes header+size,
+  `full` writes all sections including mutation stats.
+- `--telemetry-dir=<path>` – override default `bin/seq` directory for
+  export files.
+- `--mutation-strategy=<random|blacklist|smart>` – select evolution
+  behaviour.  `blacklist` enables the heuristic outlined in
+  `docs/specs/spec_heuristics.md`.
+- `--heuristic=<none|blacklist>` – shorthand to toggle only the heuristic
+  without changing the underlying mutation policy.
+- `--profile` – print per-generation timing and memory usage to the log.
+- `--max-gen=<n>` – stop the run after `n` successful generations.  Useful
+  for automated tests.
+
+Flags that accept values may also be specified as `--flag value`
+according to typical Unix conventions.
+
 ## Behaviour
 
 1. Parse `argc`/`argv` in `parseCli()`.
