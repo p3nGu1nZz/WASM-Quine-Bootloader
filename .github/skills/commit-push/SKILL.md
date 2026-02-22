@@ -47,10 +47,3 @@ await mcp_github_push_files({
   message: "docs: update skills list and README"
 });
 ```
-
-## Notes
-
-- This skill does not run git itself; it produces the commands a user should
-  execute.  In CI contexts the commands could be executed automatically.
-- Follow the project's commit message conventions (e.g. prefix with `docs:`,
-  `feat:`, `fix:` as appropriate).
