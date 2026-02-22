@@ -60,6 +60,11 @@ info "Directory: ${EXTERNAL_DIR}"
 # ── Helper: clone or update a git repo ────────────────────────────────────────
 clone_or_update() {
     local url="$1" dir="$2" branch="${3:-}"
+    # if directory exists but is not a git repo, remove it so we can clone fresh
+    if [[ -d "${dir}" && ! -d "${dir}/.git" ]]; then
+        warn "Directory ${dir} exists but is not a git repository; removing."
+        rm -rf "${dir}"
+    fi
     if [[ -d "${dir}/.git" ]]; then
         info "Updating $(basename "${dir}") …"
         git -C "${dir}" fetch --quiet
@@ -90,6 +95,10 @@ section "SDL3 (Linux)"
 SDL3_SRC="${EXTERNAL_DIR}/SDL3/src"
 SDL3_LINUX="${EXTERNAL_DIR}/SDL3/linux"
 
+# create Catch2 directory early so CMake can find it later
+CATCH_DIR="${EXTERNAL_DIR}/Catch2"
+mkdir -p "${CATCH_DIR}"
+
 build_sdl3_linux() {
     clone_or_update "https://github.com/libsdl-org/SDL.git" "${SDL3_SRC}" "release-3.2.x"
     local bld="${SDL3_SRC}/build-linux"
@@ -114,6 +123,32 @@ else
     build_sdl3_linux
 fi
 
+# ── 6.5 Catch2 (testing only) ─────────────────────────────────────────────────
+section "Catch2 (unit testing)"
+# Catch2 is header-only but provides a CMake project with install targets.
+clone_or_update "https://github.com/catchorg/Catch2.git" "${CATCH_DIR}" "v3.4.0"
+# build and install Catch2 headers into ${CATCH_DIR}/install
+cmake -S "${CATCH_DIR}" -B "${CATCH_DIR}/build" \
+    -DCMAKE_INSTALL_PREFIX="${CATCH_DIR}/install" \
+    -DCATCH_BUILD_TESTING=OFF \
+    -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -Wno-dev --log-level=WARNING
+cmake --build "${CATCH_DIR}/build" --parallel "$(nproc)" --target install
+info "Catch2 built and installed at ${CATCH_DIR}/install"
+if [[ "$SETUP_WINDOWS" == "true" ]]; then
+    section "Catch2 (Windows cross-compile)"
+    # cross-build Catch2 for Windows using our toolchain
+    cmake -S "${CATCH_DIR}" -B "${CATCH_DIR}/build-windows" \
+        -DCMAKE_INSTALL_PREFIX="${CATCH_DIR}/install-windows" \
+        -DCMAKE_TOOLCHAIN_FILE="${REPO_ROOT}/cmake/toolchain-windows-x64.cmake" \
+        -DCATCH_BUILD_TESTING=OFF \
+        -DCMAKE_POSITION_INDEPENDENT_CODE=ON \
+        -DCMAKE_BUILD_TYPE=Release \
+        -Wno-dev --log-level=WARNING
+    cmake --build "${CATCH_DIR}/build-windows" --parallel "$(nproc)" --target install
+    info "Catch2 Windows build installed at ${CATCH_DIR}/install-windows"
+fi
 # ── 7. SDL3 (Windows cross-compile) ──────────────────────────────────────────
 # Layout:  external/SDL3/src/     – shared source tree (reused from above)
 #          external/SDL3/windows/ – installed headers + libs for Windows
@@ -143,6 +178,23 @@ fi
 
 # ── 8. Verify required files ──────────────────────────────────────────────────
 section "Verification"
+
+# sanity check for catch2 headers (exists after install)
+if [[ -f "${CATCH_DIR}/install/include/catch2/catch_all.hpp" ]]; then
+    info "✔  Catch2 headers"
+else
+    warn "✘  Catch2 headers not found"
+    ALL_OK=false
+fi
+
+if [[ "$SETUP_WINDOWS" == "true" ]]; then
+    if [[ -f "${CATCH_DIR}/install-windows/include/catch2/catch_all.hpp" ]]; then
+        info "✔  Catch2 headers (Windows build)"
+    else
+        warn "✘  Catch2 headers (Windows build) not found"
+        ALL_OK=false
+    fi
+fi
 CHECKS=(
     "${EXTERNAL_DIR}/wasm3/source/wasm3.h"
     "${EXTERNAL_DIR}/wasm3/source/m3_env.h"

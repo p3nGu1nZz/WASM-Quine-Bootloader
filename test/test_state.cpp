@@ -1,13 +1,9 @@
+#define CATCH_CONFIG_MAIN
+#include <catch2/catch_all.hpp>
+
 #include "util.h"
 #include "types.h"
-#include <iostream>
 
-int main() {
-    std::string s = stateStr(SystemState::IDLE);
-    if (s != "IDLE") {
-        std::cerr << "stateStr(SystemState::IDLE) returned '" << s << "'\n";
-        return 1;
-    }
-    std::cout << "stateStr smoke test passed\n";
-    return 0;
+TEST_CASE("stateStr returns correct string", "[util]") {
+    REQUIRE(stateStr(SystemState::IDLE) == "IDLE");
 }

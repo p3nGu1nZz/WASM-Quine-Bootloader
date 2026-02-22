@@ -105,8 +105,18 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
     )
 endif()
 
-# Enable testing and add test directory
+# Enable testing and attempt to locate Catch2 (downloaded by setup.sh)
 enable_testing()
+
+# if Catch2 was installed by setup.sh, add its install dir to prefix path
+list(APPEND CMAKE_PREFIX_PATH "${CMAKE_SOURCE_DIR}/external/Catch2/install")
+find_package(Catch2 3.0.0 QUIET)
+if(Catch2_FOUND)
+    message(STATUS "Catch2 found; test targets will link against Catch2::Catch2")
+else()
+    message(STATUS "Catch2 not found; test targets may fail to configure")
+endif()
+
 add_subdirectory(test)
 
 # ── Install ───────────────────────────────────────────────────────────────────

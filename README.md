@@ -25,7 +25,6 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 ```
 .
 ├── CMakeLists.txt            # CMake build definition (C++17, Ninja)
-├── web/                      # Original TypeScript/React web app (reference only)
 ├── src/                      # C++17 application source
 │   ├── main.cpp              # SDL3 init + main loop
 │   ├── gui/window.h / gui/window.cpp # Gui class: ImGui backend lifecycle, panel orchestration

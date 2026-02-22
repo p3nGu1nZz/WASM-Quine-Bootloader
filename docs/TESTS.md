@@ -1,16 +1,16 @@
 # Unit Tests
 
-This directory contains unit tests for the WASM Quine Bootloader C++ project.
+This directory contains unit tests for the WASM Quine Bootloader C++ project.  Tests are written using **Catch2** (v3) and the `setup.sh` helper will download+build Catch2 into `external/Catch2` when preparing the workspace.
 
 ## Layout
 
-One `.cpp` file per module under test:
+Tests live in the top‑level `test/` directory. Each file typically exercises a single module or feature.
 
-| File | Tests for |
-|------|-----------|
-| `test_wasm_kernel.cpp` | `src/wasm/kernel.cpp` – boot, run, terminate |
-| `test_util.cpp` | `src/util.h` – string helpers, Base64, LEB128 |
-| `test_evolution.cpp` | WASM binary mutation / evolution logic |
+| File | Description |
+|------|-------------|
+| `test_state.cpp` | smoke check for `stateStr` (example Catch2 test)
+
+Additional tests (e.g. `test_wasm_kernel.cpp`, `test_util.cpp`, `test_evolution.cpp`) can be added as needed; see the companion test-app skill and guidelines for writing new tests.
 
 ## Running Tests
 
