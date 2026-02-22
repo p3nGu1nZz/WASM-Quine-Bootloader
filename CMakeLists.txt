@@ -33,10 +33,8 @@ set(IMGUI_SOURCES
 )
 
 # ── Application sources ───────────────────────────────────────────────────────
-set(APP_SOURCES
-    src/main.cpp
-    src/gui/window.cpp
-    src/gui/heatmap.cpp
+## Core library containing non-UI application logic
+set(CORE_SOURCES
     src/util.cpp
     src/log.cpp
     src/fsm.cpp
@@ -47,6 +45,20 @@ set(APP_SOURCES
     src/wasm/evolution.cpp
 )
 
+add_library(core STATIC ${CORE_SOURCES})
+target_include_directories(core PUBLIC
+    ${CMAKE_SOURCE_DIR}/src
+    "${WASM3_DIR}/source"
+)
+target_link_libraries(core PRIVATE SDL3::SDL3)
+
+# Application executable (UI + platform glue)
+set(APP_SOURCES
+    src/main.cpp
+    src/gui/window.cpp
+    src/gui/heatmap.cpp
+)
+
 add_executable(bootloader
     ${APP_SOURCES}
     ${IMGUI_SOURCES}
@@ -54,13 +66,14 @@ add_executable(bootloader
 )
 
 target_include_directories(bootloader PRIVATE
-    src/
+    ${CMAKE_SOURCE_DIR}/src
     "${IMGUI_DIR}"
     "${IMGUI_DIR}/backends"
     "${WASM3_DIR}/source"
 )
 
 target_link_libraries(bootloader PRIVATE
+    core
     SDL3::SDL3
 )
 
@@ -84,10 +97,17 @@ endif()
 
 # ── Compiler warnings ──────────────────────────────────────────────────────────
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+    target_compile_options(core PRIVATE
+        -Wall -Wextra -Wno-unused-parameter
+    )
     target_compile_options(bootloader PRIVATE
         -Wall -Wextra -Wno-unused-parameter
     )
 endif()
+
+# Enable testing and add test directory
+enable_testing()
+add_subdirectory(test)
 
 # ── Install ───────────────────────────────────────────────────────────────────
 install(TARGETS bootloader RUNTIME DESTINATION bin)
