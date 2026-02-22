@@ -23,6 +23,20 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 
 ---
 
+## Agent Skills
+
+This repo includes a full suite of Copilot agent skills; see `.github/copilot-instructions.md` for a current list.  Key skills include:
+
+- `setup-project`, `build-project`, `run-app`, `test-app`
+- `update-docs`, `update-specs`, `update-skills`, `update-memory`
+- `search-memory`, `telemetry-review`, `introspect-telemetry`
+- `improve-skills`, `generate-report`, `commit-push`
+
+Agents can invoke them via natural language prompts; the skills and
+instructions are maintained by the `update-skills`/`improve-skills` tools.
+
+---
+
 ## Project Layout
 
 ```
@@ -62,207 +76,3 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
         ├── linux/            # Built + installed for Linux
         └── windows/          # Built + installed for Windows (optional)
 ```
-
-> **Note:** `external/` is excluded from the repository (`.gitignore: /external/*`).
-> Run `bash scripts/setup.sh` to populate it.
-
----
-
-## Quick Start (Windows WSL2 / Ubuntu)
-
-### Step 1 — Install dependencies and build
-
-The `setup.sh` script can also reset your workspace:
-
-```bash
-bash scripts/setup.sh --clean    # remove external/, bin/ and then run setup
-```
-
-This is useful if you want a completely fresh third-party checkout before
-re-running the normal install steps.
-
-```bash
-bash scripts/setup.sh
-```
-
-By default the build scripts will pick up whatever C and C++ compilers are first on your `PATH` (for example `/usr/bin/gcc`/`/usr/bin/g++`).
-If you are running under WSL and have a non‑default compiler installed (clang, a different gcc version, etc.), you can force the project to use it by exporting the standard environment variables **before** invoking `build.sh`:
-
-```bash
-# use g++-12 instead of the system default
-export CC=/usr/bin/gcc-12
-export CXX=/usr/bin/g++-12
-bash scripts/build.sh
-```
-
-The `build.sh` helper now passes those overrides through to `cmake`; you can also pass them manually via `-DCMAKE_C_COMPILER`/`-DCMAKE_CXX_COMPILER` if you prefer.
-
-This script will:
-1. Install system packages (`build-essential`, `cmake`, `ninja-build`, SDL3 system deps, fonts)
-2. Clone **Dear ImGui** → `external/imgui`
-3. Clone **wasm3** → `external/wasm3`
-4. Install or build **SDL3** for Linux → `external/SDL3/linux`
-5. Build the `linux-debug` target → `build/linux-debug/bootloader`
-
-### Step 2 — Run
-
-```bash
-# GUI is the default; window starts fullscreen
-bash scripts/run.sh            # equivalent to --gui
-
-# force headless/terminal mode (no SDL3 window)
-bash scripts/run.sh --headless  # also --no-gui / --nogui
-
-# request a windowed UI instead of the fullscreen default
-bash scripts/run.sh --windowed
-
-# run and tail logs
-bash scripts/run.sh --monitor
-```
-
-By default the executable is started with its working directory set to the
-build target (e.g. `build/linux-debug`).  Runtime log files are written to
-`bin/logs/` inside that directory, and automatic telemetry exports live under
-`bin/seq/<runid>/` (generation reports, kernel blobs, etc.).
-
-The build script prints colored, prefixed `[build]` messages (green for info,
-yellow for warnings, red for errors) on top of the usual cmake/ninja output to
-make important steps easy to scan.
-
-The `--monitor` option runs the bootloader in the background and tails
-`bin/logs/*.log` in real time so you can watch system messages as evolution
-proceeds.
-
-### Cleanup
-
-`bash scripts/build.sh --clean` removes the entire `build/` directory along
-with CMake/Ninja caches.  It also deletes any generated `bin/` hierarchy at the
-repo root, wiping old logs, sequence exports or temporary files produced by
-runs or tests.  This leaves the source tree pristine.
-
----
-
-## Build Targets
-
-| Target | Platform | Build type | Output binary |
-|---|---|---|---|
-| `linux-debug`    | Linux | Debug   | `build/linux-debug/bootloader` |
-| `linux-release`  | Linux | Release | `build/linux-release/bootloader` |
-| `windows-debug`  | Windows (MinGW) | Debug   | `build/windows-debug/bootloader.exe` |
-| `windows-release`| Windows (MinGW) | Release | `build/windows-release/bootloader.exe` |
-
-```bash
-bash scripts/build.sh                    # linux-debug (default)
-bash scripts/build.sh linux-release
-bash scripts/build.sh windows-debug     # requires: bash scripts/setup.sh windows
-bash scripts/build.sh windows-release   # requires: bash scripts/setup.sh windows
-bash scripts/build.sh --clean           # remove build/ dir + caches
-bash scripts/build.sh --clean linux-debug   # clean then build linux-debug
-```
-### Windows cross-compile setup
-
-```bash
-bash scripts/setup.sh windows   # installs MinGW-w64 + builds SDL3 for Windows
-bash scripts/build.sh windows-release
-```
-
----
-
-## Running the Bootloader
-
-```bash
-# GUI by default (linux-debug)
-bash scripts/run.sh
-
-# Specific build target
-bash scripts/run.sh linux-release
-
-# Headless mode (no window)
-bash scripts/run.sh --headless
-
-# Direct executable (after build)
-./build/linux-debug/bootloader
-```
-
-### Runtime keyboard controls
-
-| Key / Button | Action |
-|---|---|
-| `Space` | Pause / Resume the simulation |
-| `Q` / `Esc` | Quit |
-| **PAUSE SYSTEM** button | Same as Space |
-| **RESUME SYSTEM** button | Same as Space (shown when paused) |
-| **EXPORT** button | Write telemetry report → `quine_telemetry_gen<N>.txt` |
-| **COPY** button | Copy current kernel base64 to clipboard |
-
-### HUD panels
-
-| Panel | Description |
-|---|---|
-| **Top bar** | GEN · STATE · UPTIME · RETRIES – control buttons |
-| **System Log** | Colour-coded ring-buffer of up to 1 000 events; auto-scrolls |
-| **Instruction Stack** | WASM opcode list with live program-counter highlight |
-| **Kernel Source** | Base64 diff view: header (blue), mutation (yellow), expansion (green) |
-| **Memory Map** | Heat-decay block visualizer of WASM linear memory activity |
-| **Status Bar** | RUNNING/PAUSED indicator |
-
----
-
-## Simulation States (FSM)
-
-```
-IDLE ──▶ BOOTING ──▶ LOADING_KERNEL ──▶ EXECUTING
-                                              │          │
-                                       VERIFYING_QUINE  │
-                                              │          ▼
-                                           (reboot)  REPAIRING
-                                              │          │
-                                              └────┬─────┘
-                                                   ▼
-                                                 IDLE
-```
-
-| State | Colour | Description |
-|---|---|---|
-| IDLE | — | Waiting; immediately transitions to BOOTING |
-| BOOTING | 🟡 yellow | Brief delay; scales with generation |
-| LOADING_KERNEL | 🔵 blue | Byte-by-byte kernel loading animation |
-| EXECUTING | 🟢 green | WASM kernel running; instruction-step visualizer active |
-| VERIFYING_QUINE | 🟣 purple | Quine check passed; brief hold before reboot |
-| REPAIRING | 🟠 orange | Quine check failed; adaptive mutation + retry |
-| SYSTEM_HALT | 🔴 red | Unrecoverable error |
-
----
-
-## Dependencies
-
-| Library | Version | Purpose |
-|---|---|---|
-| [SDL3](https://github.com/libsdl-org/SDL) | 3.2.x | Window, renderer, events |
-| [Dear ImGui](https://github.com/ocornut/imgui) | master | Immediate-mode GUI |
-| [wasm3](https://github.com/wasm3/wasm3) | main | WebAssembly interpreter |
-
-All three are fetched by `scripts/setup.sh`.
-
----
-
-## Agent Skills
-
-This repo includes a full suite of Copilot agent skills (see
-`.github/copilot-instructions.md` for details).  Key skills are:
-
-- `setup-project`, `build-project`, `run-app`, `test-app`
-- `update-docs`, `update-specs`, `update-skills`, `update-memory`
-- `find-memory`, `telemetry-review`, `introspect-telemetry`
-- `improve-skills`, `generate-report`, `commit-push`
-
-Agents can invoke them via natural language prompts; the skills and
-instructions are maintained by the `update-skills`/`improve-skills` tools.
-
----
-
-## Original TypeScript Web App
-
-## Original TypeScript Web App (archived)
-
-The original TypeScript/React reference implementation was previously stored in `web/` but has been removed from this repository after a successful native C++ port. If you need the original prototype, consult the repository history or contact the maintainers.

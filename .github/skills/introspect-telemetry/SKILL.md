@@ -15,20 +15,3 @@ Behaviour:
 dump; note missing sections or odd size changes; compare generations for mutation patterns.
 3. Jot down telemetry you’d like added (e.g. mutation stats, ABI version).
 4. Optionally diff logs or export to a tool.
-
-## Example instructions
-
-```
-# prompt the agent:
-"Please inspect the latest telemetry run and tell me if any generations
-failed verification or if the exported kernel sizes are shrinking."
-```
-
-The agent may respond with a summary of anomalies and suggestions for
-what additional fields could be logged.
-
-## Notes
-
-- This skill does not modify data; it only provides inspection guidance.
-- Use in combination with `telemetry-review` when you need to track trends
-  over multiple runs.

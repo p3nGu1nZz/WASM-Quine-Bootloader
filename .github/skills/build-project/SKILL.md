@@ -1,8 +1,3 @@
----
-name: build-and-test
-description: Build the C++ project using the provided scripts and run the unit test suite. Use this skill when needing to compile, verify, or troubleshoot the native application on Linux or Windows targets.
----
-
 # build-project
 
 Quick reference for building the code and running tests.

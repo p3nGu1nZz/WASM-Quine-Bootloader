@@ -18,6 +18,6 @@ Run after major repo changes or periodically for maintenance.  Steps:
 4. Save changes and log a memory entry (e.g. "skills refreshed on …").
 
 Notes:
-- This skill is iterative; you may run it on itself.
+- This skill is meta; you may run it on itself.
 - When unsure, mark text as deprecated rather than deleting.
-- It may call `find-memory` or other skills as helpers.
+- It may call `search-memory` or other skills as helpers.
