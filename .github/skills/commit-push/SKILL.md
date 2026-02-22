@@ -20,13 +20,28 @@ Agents should perform the push themselves rather than deferring to a user.
 
 ## Behaviour
 
-1. Identify modified/added files in the workspace.
-2. Prepare a list of those file paths and their updated contents (read
-   from the filesystem).
-3. Call the `mcp_github_push_files` tool with the branch name, array of
-   `{path,content}` pairs, and the commit message.
-4. Optionally create a pull request using `gh pr create` or the
-   corresponding MCP tool if the branch is not the default.
+1. Run `git status` (or equivalent library call) to determine which files
+   are new/modified/deleted and make sure the working tree is clean after
+   staging.
+2. Read each file’s contents from disk and build a list of
+   `{path, content}` objects; for deletions, include the path with an
+   empty string and later remove it via git.
+3. Attempt to call `mcp_github_push_files` using the current branch and
+   commit message.  Include every changed file so the remote state matches
+   the workspace.
+4. If the push fails because the local branch is behind the remote, run
+   `git pull --rebase` (or perform an equivalent merge) and retry the
+   push.  Agents may also fall back to shell git commands in cases where
+   push_files is unavailable or unsuitable.
+5. When the branch is not the repository default, create a pull request
+   using either `gh pr create` or `mcp_github_create_pull_request`.  The
+   commit description should be clear and reference any related issue or
+   planning note.
+6. If merge conflicts occur during the rebase or pull step, report the
+   conflicting paths back to the user and pause for manual intervention,
+   or attempt to auto-resolve trivial conflicts (e.g. whitespace).
+7. After a successful push (and optional PR creation), log the URL of the
+   remote commit/PR so the user can review it.
 
 ## Example
 
@@ -37,13 +52,17 @@ Agents should perform the push themselves rather than deferring to a user.
 
 The agent would then perform or output something like:
 ```js
+// gather changed paths from `git status` and read files
+const changes = [
+  { path: "README.md", content: "...updated content..." },
+  { path: "src/cli.cpp", content: "..." },
+  // etc.
+];
 await mcp_github_push_files({
-  branch: "main",
-  files: [
-    { path: "README.md", content: "...updated content..." },
-    { path: "src/cli.cpp", content: "..." },
-    // etc.
-  ],
+  branch: currentBranch,
+  files: changes,
   message: "docs: update skills list and README"
 });
+// if push fails due to remote > local, perform git pull --rebase
+// then retry, or use `git push` as fallback
 ```
