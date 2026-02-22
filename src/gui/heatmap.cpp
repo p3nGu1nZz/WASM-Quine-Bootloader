@@ -1,5 +1,5 @@
-#include "heatmap.h"
-#include "colors.h"
+#include "gui/heatmap.h"
+#include "gui/colors.h"
 #include "util.h"
 
 #include <algorithm>

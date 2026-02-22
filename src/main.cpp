@@ -1,5 +1,5 @@
 #include "app.h"
-#include "gui.h"
+#include "gui/window.h"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>

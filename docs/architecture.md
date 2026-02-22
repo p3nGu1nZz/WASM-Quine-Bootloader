@@ -4,9 +4,9 @@
 
 ```
 main.cpp
- └── Gui          (gui.h / gui.cpp)
- │    ├── GuiHeatmap    (heatmap.h / heatmap.cpp)
- │    └── [uses] colors.h, util.h, wasm/parser.h
+ └── Gui          (gui/window.h / gui/window.cpp)
+      ├── GuiHeatmap    (gui/heatmap.h / gui/heatmap.cpp)
+ │    └── [uses] gui/colors.h, util.h, wasm/parser.h
  └── App          (app.h / app.cpp)
       ├── BootFsm       (fsm.h / fsm.cpp)
       ├── AppLogger     (log.h / log.cpp)
@@ -29,7 +29,7 @@ main.cpp
 - Runs the event loop: polls SDL events → `app.update()` → `gui.renderFrame(app)`.
 - Destroys everything in reverse order on exit.
 
-**Dependencies:** `app.h`, `gui.h`, `SDL3/SDL.h`, `backends/imgui_impl_sdl3.h`
+**Dependencies:** `app.h`, `gui/window.h`, `SDL3/SDL.h`, `backends/imgui_impl_sdl3.h`
 
 ---
 
@@ -193,7 +193,7 @@ Uses `std::mt19937` seeded from `std::random_device` for all random choices.
 
 ---
 
-### `src/gui.h` / `src/gui.cpp`
+### `src/gui/window.h` / `src/gui/window.cpp`
 **Role:** Dear ImGui backend lifecycle and panel orchestration.
 
 `Gui` creates the ImGui context in `init()`, renders all panels in
@@ -211,7 +211,7 @@ Panel helpers:
 
 Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.
 
-**Dependencies:** `app.h`, `heatmap.h`, `colors.h`, `util.h`, `wasm_parser.h`
+**Dependencies:** `app.h`, `gui/heatmap.h`, `gui/colors.h`, `util.h`, `wasm_parser.h`
 
 ---
 
@@ -247,7 +247,7 @@ Block geometry scales automatically with kernel size:
 | < 1 KB | 5 | 4 |
 | ≥ 1 KB | 3 | 16 |
 
-**Dependencies:** `app.h`, `colors.h`, `util.h`, `imgui.h`
+**Dependencies:** `app.h`, `gui/colors.h`, `util.h`, `imgui.h`
 
 ---
 
@@ -263,12 +263,12 @@ base64.h    wasm/parser.h ◄── wasm/evolution.h
 util.h ────────────┤           kernel.h
    ▲               │                  ▲
    │               │                  │
-logger.h     exporter.h          fsm.h
+log.h     exporter.h          fsm.h
    ▲               ▲                  ▲
    └───────────────┴──── app.h ───────┘
                               ▲
                               │
-             colors.h ─── gui.h ─── heatmap.h
+             gui/colors.h ─── gui/window.h ─── gui/heatmap.h
                               ▲
                               │
                           main.cpp

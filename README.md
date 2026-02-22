@@ -28,9 +28,9 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 ├── web/                      # Original TypeScript/React web app (reference only)
 ├── src/                      # C++17 application source
 │   ├── main.cpp              # SDL3 init + main loop
-│   ├── gui.h / gui.cpp       # Gui class: ImGui backend lifecycle, panel orchestration
-│   ├── colors.h          # Header-only colour helpers (state/era/log → ImVec4)
-│   ├── heatmap.h/.cpp    # GuiHeatmap: memory heat-decay visualizer
+│   ├── gui/window.h / gui/window.cpp # Gui class: ImGui backend lifecycle, panel orchestration
+│   ├── gui/colors.h          # Header-only colour helpers (state/era/log → ImVec4)
+│   ├── gui/heatmap.h/.cpp    # GuiHeatmap: memory heat-decay visualizer
 │   ├── util.h / util.cpp     # stateStr, eraStr, randomId, nowIso
 │   ├── app.h / app.cpp       # App: top-level orchestrator
 │   ├── fsm.h / fsm.cpp       # BootFsm: finite state machine

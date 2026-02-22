@@ -35,8 +35,8 @@ set(IMGUI_SOURCES
 # ── Application sources ───────────────────────────────────────────────────────
 set(APP_SOURCES
     src/main.cpp
-    src/gui.cpp
-    src/heatmap.cpp
+    src/gui/window.cpp
+    src/gui/heatmap.cpp
     src/util.cpp
     src/log.cpp
     src/fsm.cpp

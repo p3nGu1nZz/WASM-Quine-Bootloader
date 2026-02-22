@@ -1,7 +1,7 @@
 #pragma once
 
 #include "app.h"
-#include "heatmap.h"
+#include "gui/heatmap.h"
 
 #include <SDL3/SDL.h>
 

@@ -21,7 +21,7 @@
 ├── CMakeLists.txt              # Top-level CMake build definition
 ├── src/
 │   ├── main.cpp                # Entry point – parses --gui flag, starts terminal or GUI loop
-│   ├── gui.h / gui.cpp         # Gui class – SDL3 window, panel rendering, F11 fullscreen toggle
+│   ├── gui/window.h / gui/window.cpp # Gui class – SDL3 window, panel rendering, F11 fullscreen toggle
 │   ├── util.h / util.cpp       # String and general utilities
 │   └── wasm/kernel.cpp         # wasm3 host – boots kernel, wires env.log / env.grow_memory
 ├── test/                       # Unit tests (one .cpp file per module under test)
@@ -64,7 +64,7 @@ The original design included an ANSI/terminal renderer (headless mode). If requi
 
 - **C++17** – use `std::string_view`, structured bindings, `[[nodiscard]]`, etc. where appropriate.
 - **wasm3 host functions** must use the `m3ApiRawFunction` macro (returns `const void*`). Read args with `m3ApiGetArg`. Link with `m3_LinkRawFunction`. Access user data via `m3_GetUserData(runtime)`.
-- **SDL3 rendering**: all drawing goes through the `Gui` class (`src/gui.h`). Do not call SDL functions directly from `main.cpp` or `wasm/kernel.cpp`.
+- **SDL3 rendering**: all drawing goes through the `Gui` class (`src/gui/window.h`). Do not call SDL functions directly from `main.cpp` or `wasm/kernel.cpp`.
 - **Utilities**: string helpers live in `src/util.h`; add new general-purpose helpers there.
 - **Header guards**: use `#pragma once` in all headers.
 - **Error handling**: prefer returning `bool` / `std::optional` over throwing exceptions in low-level code.
