@@ -200,6 +200,15 @@ Uses `std::mt19937` seeded from `std::random_device` for all random choices.
 The application writes runtime logs via `AppLogger` to a file; the path is
 relative to the current working directory, which `run.sh` sets to the
 build target folder.  Logs therefore appear under `bin/logs/`.  `run.sh`
+adds a bit of user feedback when invoked: it prints the command line being
+executed, the paths for logs and telemetry, and after a run it reports the
+exit code and tails the end of any log files so the user can see what
+happened without opening them manually.
+
+For any transient artifacts (pipe files, intermediate logs, etc.) the
+agent and scripts should create a `./.tmp` directory at the repo root
+instead of relying on `/tmp`.  This keeps all temporary data scoped to the
+project.
 also provides a `--monitor` mode to tail these files while the program
 runs.
 

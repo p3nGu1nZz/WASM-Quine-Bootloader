@@ -19,6 +19,10 @@ bash scripts/test.sh                    # build & execute all tests
 The harness exercises export/log code; `test_util_dpi` creates temp files
 in `bin/` then cleans them.  Failures are shown with coloured Catch2 output.
 
+When `bash scripts/test.sh` completes it prints a summary box listing
+how many test executables and total assertions were run along with the
+duration, making it easy to see results at a glance.
+
 Behaviour: invokes `build.sh`, builds all `enable_testing()` targets,
 runs `ctest --output-on-failure`, and exits non-zero on failure.
 

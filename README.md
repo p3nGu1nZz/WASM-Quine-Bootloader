@@ -155,6 +155,12 @@ bash scripts/run.sh --windowed
 
 # run and tail logs
 bash scripts/run.sh --monitor
+
+The `run.sh` wrapper now prints the full command line it will execute along
+with the paths where logs and telemetry will be written.  After a
+headless run it also reports the process exit code and shows the last 20
+lines of any generated log files, giving immediate feedback without
+manually opening files.
 ```
 
 By default the executable is started with its working directory set to the
@@ -165,6 +171,11 @@ build target (e.g. `build/linux-debug`).  Runtime log files are written to
 The build script prints colored, prefixed `[build]` messages (green for info,
 yellow for warnings, red for errors) on top of the usual cmake/ninja output to
 make important steps easy to scan.
+
+The test script (`test.sh`) now concludes with a colored summary box
+showing total executables run, cumulative assertions and wall‑clock
+seconds.  This makes it easy to see at a glance whether the test suite
+passed and how long it took.
 
 The `--monitor` option runs the bootloader in the background and tails
 `bin/logs/*.log` in real time so you can watch system messages as evolution

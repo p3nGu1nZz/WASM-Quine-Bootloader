@@ -13,5 +13,8 @@ build first (`bash scripts/build.sh [target]`).
 `bash scripts/run.sh --monitor`  tails logs.
 
 The wrapper ensures `bin/logs` and `bin/seq` exist; logs go in the former and
-telemetry files into the latter.  Requires an X/Wayland display to open the
+telemetry files into the latter.  It also prints the exact command line and
+paths being used, and after a headless run reports the exit code and shows
+the last 20 lines of any log files so you can quickly confirm behaviour
+without manually opening them.  Requires an X/Wayland display to open the
 window.
