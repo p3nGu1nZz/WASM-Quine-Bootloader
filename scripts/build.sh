@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # build.sh – Build the WASM Quine Bootloader.
 #
-# Usage:  bash scripts/build.sh [TARGET]
+# Usage:  bash scripts/build.sh [TARGET | --clean]
 #
 # Targets:
 #   linux-debug     (default) – GCC/Clang, debug symbols
 #   linux-release             – GCC/Clang, optimised
 #   windows-debug             – MinGW-w64 cross-compile, debug symbols
 #   windows-release           – MinGW-w64 cross-compile, optimised
+#
+# Special commands:
+#   --clean         Remove the entire build/ directory and any cached data
 #
 # The binary is placed in:
 #   build/<TARGET>/bootloader         (Linux)
@@ -19,6 +22,21 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TARGET="${1:-linux-debug}"
 JOBS="${JOBS:-$(nproc)}"
 
+# ── Clean ─────────────────────────────────────────────────────────────────────
+if [[ "${TARGET}" == "--clean" ]]; then
+    echo "[build] Cleaning build directory and caches..."
+    rm -rf "${REPO_ROOT}/build"
+    # Remove CMake / Ninja caches that may live at the repo root
+    rm -f  "${REPO_ROOT}/CMakeCache.txt"
+    rm -rf "${REPO_ROOT}/CMakeFiles"
+    rm -f  "${REPO_ROOT}/cmake_install.cmake"
+    rm -f  "${REPO_ROOT}/compile_commands.json"
+    rm -f  "${REPO_ROOT}/install_manifest.txt"
+    # Remove telemetry exports left by the binary
+    rm -f  "${REPO_ROOT}"/quine_telemetry_*.txt
+    echo "[build] Clean done."
+    exit 0
+fi
 # ── Resolve build type & platform ─────────────────────────────────────────────
 case "${TARGET}" in
     linux-debug)    BUILD_TYPE=Debug;   PLATFORM=Linux   ;;

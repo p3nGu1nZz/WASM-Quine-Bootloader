@@ -1,4 +1,5 @@
 #include "gui.h"
+#include "gui_colors.h"
 #include "util.h"
 #include "wasm_parser.h"
 
@@ -9,145 +10,8 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
-#include <random>
-#include <cmath>
-#include <vector>
 
-// Lightweight per-frame random int in [0, n)
-static int guiRandInt(int n) {
-    static thread_local std::mt19937 rng(std::random_device{}());
-    return std::uniform_int_distribution<int>(0, n - 1)(rng);
-}
-
-// ─── Color helpers ────────────────────────────────────────────────────────────
-
-static ImVec4 colorForLogType(const std::string& t) {
-    if (t == "success") return { 0.29f, 0.87f, 0.38f, 1.0f };
-    if (t == "warning") return { 0.98f, 0.82f, 0.10f, 1.0f };
-    if (t == "error")   return { 0.96f, 0.26f, 0.21f, 1.0f };
-    if (t == "system")  return { 0.11f, 0.83f, 0.93f, 1.0f };
-    if (t == "mutation")return { 0.78f, 0.50f, 0.98f, 1.0f };
-    return { 0.63f, 0.63f, 0.63f, 1.0f }; // info
-}
-
-static ImVec4 colorForState(SystemState s) {
-    switch (s) {
-        case SystemState::BOOTING:         return { 0.98f, 0.82f, 0.10f, 1.0f };
-        case SystemState::LOADING_KERNEL:  return { 0.39f, 0.66f, 0.97f, 1.0f };
-        case SystemState::EXECUTING:       return { 0.29f, 0.87f, 0.38f, 1.0f };
-        case SystemState::VERIFYING_QUINE: return { 0.78f, 0.50f, 0.98f, 1.0f };
-        case SystemState::SYSTEM_HALT:     return { 0.96f, 0.26f, 0.21f, 1.0f };
-        case SystemState::REPAIRING:       return { 0.99f, 0.55f, 0.19f, 1.0f };
-        default:                           return { 0.44f, 0.44f, 0.44f, 1.0f };
-    }
-}
-
-static ImVec4 colorForEra(SystemEra e) {
-    switch (e) {
-        case SystemEra::EXPANSION:   return { 0.24f, 0.87f, 0.56f, 1.0f };
-        case SystemEra::COMPLEXITY:  return { 0.78f, 0.50f, 0.98f, 1.0f };
-        case SystemEra::SINGULARITY: return { 0.96f, 0.26f, 0.21f, 1.0f };
-        default:                     return { 0.50f, 0.50f, 0.50f, 1.0f };
-    }
-}
-
-static ImVec4 bgColorForEra(SystemEra e) {
-    switch (e) {
-        case SystemEra::EXPANSION:   return { 0.01f, 0.10f, 0.06f, 1.0f };
-        case SystemEra::COMPLEXITY:  return { 0.06f, 0.02f, 0.12f, 1.0f };
-        case SystemEra::SINGULARITY: return { 0.10f, 0.02f, 0.02f, 1.0f };
-        default:                     return { 0.01f, 0.03f, 0.10f, 1.0f };
-    }
-}
-
-// ─── Memory heatmap state ────────────────────────────────────────────────────
-
-static std::vector<float> s_heatMap;
-
-static void drawMemoryHeatmap(const App& app, ImDrawList* dl,
-                               ImVec2 pos, ImVec2 size) {
-    int kernelSz = (int)app.kernelBytes();
-    if (kernelSz == 0) return;
-
-    const int BLOCK = kernelSz < 256 ? 8 : kernelSz < 1024 ? 5 : 3;
-    const int GAP   = 1;
-    const int STEP  = BLOCK + GAP;
-    const int BPB   = kernelSz < 256 ? 1 : kernelSz < 1024 ? 4 : 16;
-    const int COLS  = std::max(1, (int)(size.x / STEP));
-    const int BLOCKS = (kernelSz + BPB - 1) / BPB;
-
-    if ((int)s_heatMap.size() != BLOCKS)
-        s_heatMap.assign(BLOCKS, 0.0f);
-
-    ImVec4 theme, activeC;
-    switch (app.era()) {
-        case SystemEra::EXPANSION:
-            theme   = { 0.02f, 0.31f, 0.24f, 1 };
-            activeC = { 0.20f, 0.83f, 0.60f, 1 };
-            break;
-        case SystemEra::COMPLEXITY:
-            theme   = { 0.23f, 0.03f, 0.39f, 1 };
-            activeC = { 0.75f, 0.52f, 0.99f, 1 };
-            break;
-        case SystemEra::SINGULARITY:
-            theme   = { 0.27f, 0.04f, 0.04f, 1 };
-            activeC = { 0.93f, 0.27f, 0.27f, 1 };
-            break;
-        default:
-            theme   = { 0.07f, 0.16f, 0.23f, 1 };
-            activeC = { 0.13f, 0.83f, 0.93f, 1 };
-            break;
-    }
-
-    bool isActive = (app.state() == SystemState::LOADING_KERNEL ||
-                     app.state() == SystemState::EXECUTING);
-
-    for (int i = 0; i < BLOCKS; i++) {
-        int   col = i % COLS;
-        int   row = i / COLS;
-        float x   = pos.x + col * STEP;
-        float y   = pos.y + row * STEP;
-        if (y + BLOCK > pos.y + size.y) break;
-
-        int  bStart  = i * BPB;
-        int  bEnd    = bStart + BPB;
-        bool focused = isActive &&
-            (bStart < app.focusAddr() + app.focusLen()) &&
-            (bEnd   > app.focusAddr());
-
-        if (focused)
-            s_heatMap[i] = 1.0f;
-        else if (app.isSystemReading() && (guiRandInt(100) > 98))
-            s_heatMap[i] = std::min(1.0f, s_heatMap[i] + 0.5f);
-
-        s_heatMap[i] *= 0.85f;
-        if (s_heatMap[i] < 0.005f) s_heatMap[i] = 0.0f;
-
-        float heat = s_heatMap[i];
-
-        ImU32 baseCol = IM_COL32(
-            (int)(theme.x * 255), (int)(theme.y * 255),
-            (int)(theme.z * 255), (int)(0.3f * 255));
-        dl->AddRectFilled({ x, y }, { x + BLOCK, y + BLOCK }, baseCol);
-
-        if (heat > 0.01f) {
-            float  sz  = BLOCK * (1.0f + heat * 0.6f);
-            float  off = (sz - BLOCK) / 2.0f;
-            ImVec4 c   = heat > 0.5f
-                ? ImVec4(1, 1, 1, heat)
-                : ImVec4(activeC.x, activeC.y, activeC.z, heat);
-            dl->AddRectFilled(
-                { x - off, y - off }, { x - off + sz, y - off + sz },
-                IM_COL32((int)(c.x*255),(int)(c.y*255),(int)(c.z*255),(int)(c.w*255)));
-        }
-
-        if (app.isMemoryGrowing() && (guiRandInt(100) > 98))
-            dl->AddRectFilled({ x, y }, { x + BLOCK, y + BLOCK },
-                              IM_COL32(255, 255, 255, 100));
-    }
-}
-
-// ─── Gui ─────────────────────────────────────────────────────────────────────
+// ─── Gui lifecycle ────────────────────────────────────────────────────────────
 
 void Gui::init(SDL_Window* window, SDL_Renderer* renderer) {
     m_renderer = renderer;
@@ -190,8 +54,10 @@ void Gui::shutdown() {
     ImGui::DestroyContext();
 }
 
+// ─── Frame ───────────────────────────────────────────────────────────────────
+
 void Gui::renderFrame(App& app) {
-    // ── sync scroll trackers ──────────────────────────────────────────────────
+    // Sync auto-scroll flags
     if (app.programCounter() != m_lastIP) {
         m_scrollInstrs = true;
         m_lastIP       = app.programCounter();
@@ -233,13 +99,12 @@ void Gui::renderFrame(App& app) {
     ImGui::SameLine();
     renderKernelPanel(app, kernelW, panelH);
 
-    renderMemoryVisualizer(app, winW);
+    m_heatmap.renderPanel(app, winW);
     renderStatusBar(app);
 
     if (m_monoFont) ImGui::PopFont();
     ImGui::End();
 
-    // Composite frame
     auto bg = bgColorForEra(app.era());
     SDL_SetRenderDrawColorFloat(m_renderer, bg.x, bg.y, bg.z, 1.0f);
     SDL_RenderClear(m_renderer);
@@ -427,30 +292,6 @@ void Gui::renderKernelPanel(const App& app, float w, float h) {
     }
     ImGui::EndChild();
     ImGui::EndChild();
-}
-
-void Gui::renderMemoryVisualizer(const App& app, int winW) {
-    ImGui::Separator();
-    std::ostringstream hdr;
-    hdr << "SYSTEM_MEMORY_MAP // HEAP_VISUALIZER  PTR:0x"
-        << std::uppercase << std::hex << std::setw(4) << std::setfill('0')
-        << app.focusAddr();
-    if (app.isSystemReading())
-        hdr << "  [READ]";
-    else if (app.state() == SystemState::LOADING_KERNEL ||
-             app.state() == SystemState::EXECUTING)
-        hdr << "  [WRITE]";
-    hdr << "  SIZE:" << std::dec << app.kernelBytes() << "B";
-    ImGui::TextDisabled("%s", hdr.str().c_str());
-
-    ImVec2 visPos = ImGui::GetCursorScreenPos();
-    float  visW   = (float)winW - 20;
-    float  visH   = 80.0f;
-    ImGui::Dummy({ visW, visH });
-    ImDrawList* dl = ImGui::GetWindowDrawList();
-    dl->AddRectFilled(visPos, { visPos.x + visW, visPos.y + visH },
-                      IM_COL32(5, 8, 18, 240));
-    drawMemoryHeatmap(app, dl, visPos, { visW, visH });
 }
 
 void Gui::renderStatusBar(const App& app) {

@@ -34,7 +34,11 @@ set(IMGUI_SOURCES
 set(APP_SOURCES
     src/main.cpp
     src/gui.cpp
+    src/gui_heatmap.cpp
     src/util.cpp
+    src/logger.cpp
+    src/fsm.cpp
+    src/exporter.cpp
     src/app.cpp
     src/wasm_kernel.cpp
     src/wasm_parser.cpp

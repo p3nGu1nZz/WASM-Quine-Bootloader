@@ -1,19 +1,21 @@
 #pragma once
 
 #include "app.h"
+#include "gui_heatmap.h"
 
 #include <SDL3/SDL.h>
 
-// Forward-declare ImGui types to avoid pulling in imgui.h in headers
+// Forward-declare ImGui types to avoid pulling in imgui.h in the header
 struct ImFont;
-struct ImVec4;
 
 // ── Gui ───────────────────────────────────────────────────────────────────────
 //
-// Owns the Dear ImGui SDL3/Renderer backend lifecycle and renders every
-// frame of the WASM Quine Bootloader UI.  Call init() once after the SDL3
-// window and renderer have been created, then renderFrame() each loop
-// iteration, and shutdown() before destroying the renderer.
+// Owns the Dear ImGui SDL3/Renderer backend lifecycle and orchestrates all
+// per-frame rendering.  Created once after the SDL3 window + renderer are up.
+//
+//   gui.init(window, renderer);
+//   while (running) { gui.renderFrame(app); }
+//   gui.shutdown();
 // ─────────────────────────────────────────────────────────────────────────────
 
 class Gui {
@@ -28,20 +30,22 @@ public:
     void shutdown();
 
 private:
-    SDL_Renderer* m_renderer    = nullptr;
-    ImFont*       m_monoFont    = nullptr;
+    SDL_Renderer* m_renderer  = nullptr;
+    ImFont*       m_monoFont  = nullptr;
 
-    // Per-frame scroll / sync state
+    // Sub-module: memory heatmap (owns its own heat-decay state)
+    GuiHeatmap m_heatmap;
+
+    // Per-frame scroll / auto-scroll state
     bool   m_scrollLogs   = true;
     bool   m_scrollInstrs = true;
     int    m_lastIP       = -1;
     size_t m_lastLogSz    = 0;
 
-    // ── Panel helpers ─────────────────────────────────────────────────────────
+    // ── Panel helpers (each renders one independent UI region) ────────────────
     void renderTopBar(App& app, int winW);
     void renderLogPanel(const App& app, float w, float h);
     void renderInstrPanel(const App& app, float w, float h);
     void renderKernelPanel(const App& app, float w, float h);
-    void renderMemoryVisualizer(const App& app, int winW);
     void renderStatusBar(const App& app);
 };
