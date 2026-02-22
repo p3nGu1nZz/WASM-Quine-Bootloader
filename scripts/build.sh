@@ -90,6 +90,16 @@ echo "[build] Target:    ${TARGET}"
 echo "[build] Type:      ${BUILD_TYPE}"
 echo "[build] Output:    ${BUILD_DIR}"
 
+# Allow env vars to override the compiler; CMake understands these flags too.
+if [[ -n "${CC:-}" ]]; then
+    echo "[build] overriding C compiler: ${CC}"
+    TOOLCHAIN_ARG+=" -DCMAKE_C_COMPILER=${CC}"
+fi
+if [[ -n "${CXX:-}" ]]; then
+    echo "[build] overriding C++ compiler: ${CXX}"
+    TOOLCHAIN_ARG+=" -DCMAKE_CXX_COMPILER=${CXX}"
+fi
+
 mkdir -p "${BUILD_DIR}"
 
 # shellcheck disable=SC2086

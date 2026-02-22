@@ -77,6 +77,18 @@ For technical design details see **[docs/design.md](docs/design.md)** and **[doc
 bash scripts/setup.sh
 ```
 
+By default the build scripts will pick up whatever C and C++ compilers are first on your `PATH` (for example `/usr/bin/gcc`/`/usr/bin/g++`).
+If you are running under WSL and have a non‑default compiler installed (clang, a different gcc version, etc.), you can force the project to use it by exporting the standard environment variables **before** invoking `build.sh`:
+
+```bash
+# use g++-12 instead of the system default
+export CC=/usr/bin/gcc-12
+export CXX=/usr/bin/g++-12
+bash scripts/build.sh
+```
+
+The `build.sh` helper now passes those overrides through to `cmake`; you can also pass them manually via `-DCMAKE_C_COMPILER`/`-DCMAKE_CXX_COMPILER` if you prefer.
+
 This script will:
 1. Install system packages (`build-essential`, `cmake`, `ninja-build`, SDL3 system deps, fonts)
 2. Clone **Dear ImGui** → `external/imgui`
