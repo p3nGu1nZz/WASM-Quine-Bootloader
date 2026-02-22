@@ -54,11 +54,14 @@ The project supports two running modes. The C++ port currently implements the SD
 ### GUI Mode (SDL3 + ImGui)
 Run the graphical application (SDL3 window):
 
-- Background is black by default, windowed mode on launch.
-- **F11** should toggle between windowed and fullscreen (implement in `main.cpp` if missing).
+- Background is black by default.  **By design the window now starts fullscreen** using `SDL_WINDOW_FULLSCREEN_DESKTOP`; F11 still toggles between windowed and fullscreen for user control.
+- The CLI accepts `--windowed` and `--fullscreen` flags to override the default; `--headless`/`--no-gui`/`--nogui` will disable UI entirely.
 
-### Headless / Terminal Mode (Planned)
-The original design included an ANSI/terminal renderer (headless mode). If required, implement a terminal rendering path and CLI parsing in `src/main.cpp` to match the docs. See `docs/PORTING_REPORT.md` for details.
+### Headless / Terminal Mode
+The original design included an ANSI/terminal renderer. Headless mode is enabled with `--headless` (or the negated GUI flags) and exercises the bootloader logic without creating an SDL3 window. Use this for automated runs or CI where no display is available. The CLI parsing lives in `src/cli.*`.
+
+### Telemetry & Logs
+The bootloader automatically writes verbose logs under `build/<target>/bin/logs/` and generation exports under `build/<target>/bin/seq/<runid>/`. A new skill `telemetry-review` helps inspect these files for anomalies and evolution trends; update `docs/specs/spec_telemetry.md` whenever you alter the export format.
 
 ## Coding Conventions
 
@@ -124,6 +127,7 @@ This repository includes a small set of agent "skills" used by the Copilot agent
 - `test-app` – builds and executes the unit tests.
 - `update-docs` – refreshes README and other documentation after changes.
 - `update-specs` – edits or adds design specifications in `docs/`.
+- `update-skills` – review and refresh agent skills, copilot-instructions, and memory entries when repository behaviour changes.
 - `generate-report` – produces a migration/porting report from a code review.
 
 Each skill lives in its own directory under `.github/skills/<skill-name>/` and must contain a `SKILL.md` file conforming to the Agent Skills specification (see [https://agentskills.io/specification](https://agentskills.io/specification)).

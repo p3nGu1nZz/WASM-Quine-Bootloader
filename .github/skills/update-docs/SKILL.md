@@ -24,7 +24,8 @@ This skill mirrors the contents of `.github/prompts/update-docs.prompt.md`.
 
 - [ ] README prerequisites accurate?
 - [ ] README reflects cleanup flags, log/seq directories and coloured output?
+- [ ] CLI options and default fullscreen behaviour are documented.
 - [ ] Build steps in README match `scripts/build.sh`?
 - [ ] Public API documented in headers?
-- [ ] `copilot-instructions.md` structure updated?
+- [ ] `copilot-instructions.md` structure updated with new skills and CLI.
 - [ ] New constraints recorded?

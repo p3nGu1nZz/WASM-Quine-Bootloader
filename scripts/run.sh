@@ -30,12 +30,18 @@ if [[ ! -f "$BINARY" ]]; then
     bash "$SCRIPT_DIR/build.sh" "$TARGET"
 fi
 
+# if no args provided default to GUI mode (was previously headless by default)
+if [[ $# -eq 0 ]]; then
+    set -- "--gui"
+fi
+
 # change into the build directory so logs/seq folders are created there
 BUILD_DIR="$REPO_ROOT/build/$TARGET"
 cd "$BUILD_DIR"
 # ensure bin directories exist
 mkdir -p bin/logs
 mkdir -p bin/seq
+
 
 # monitoring support: if --monitor passed, run in background and tail logs
 info "Working directory: $BUILD_DIR"

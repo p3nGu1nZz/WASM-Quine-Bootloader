@@ -13,14 +13,15 @@ This skill corresponds to the instructions in `.github/prompts/update-specs.prom
 - `docs/spec_evolution.md`
 - `docs/spec_terminal_renderer.md`
 - `docs/spec_gui.md`
-- `docs/spec_cli.md`
+- `docs/specs/spec_cli.md`  # updated when CLI flags change (fullscreen/headless)
+- `docs/specs/spec_telemetry.md`  # describe export format and logs
 
 ## Instructions
 
 1. Open the appropriate `docs/spec_*.md` file.
 2. Update the **Behaviour** section for the changed feature.
 3. Add or resolve `## Open Questions` entries as needed.
-4. Add a comment in the code pointing to the spec (e.g. `// Spec: docs/spec_cli.md`).
+4. Add a comment in the code pointing to the spec (e.g. `// Spec: docs/specs/spec_cli.md`).
 5. Run `bash scripts/test.sh` to verify nothing broke.
 
 ## File format reminder

@@ -43,6 +43,7 @@ set(CORE_SOURCES
     src/wasm/kernel.cpp
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
+    src/cli.cpp
     # wasm3 runtime objects are added to the core target below instead of
     # being inlined here; this avoids potential caching issues with the
     # CORE_SOURCES variable itself.

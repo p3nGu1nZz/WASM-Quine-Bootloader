@@ -33,3 +33,14 @@ target_link_libraries(test_util_dpi PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME util_dpi_test COMMAND test_util_dpi)
+
+# CLI parsing tests
+add_executable(test_cli test_cli.cpp)
+target_include_directories(test_cli PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_cli PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME cli_test COMMAND test_cli)

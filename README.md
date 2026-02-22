@@ -4,6 +4,8 @@ A self-replicating, self-evolving WebAssembly kernel visualizer — native **C++
 
 For technical design details see **[docs/design.md](docs/design.md)** and **[docs/architecture.md](docs/architecture.md)**.
 
+Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
+
 ---
 
 ## Features
@@ -105,9 +107,17 @@ This script will:
 ### Step 2 — Run
 
 ```bash
-bash scripts/run.sh           # headless mode
-bash scripts/run.sh --gui      # SDL3 GUI
-bash scripts/run.sh --monitor  # launch and tail runtime log
+# GUI is the default; window starts fullscreen
+bash scripts/run.sh            # equivalent to --gui
+
+# force headless/terminal mode (no SDL3 window)
+bash scripts/run.sh --headless  # also --no-gui / --nogui
+
+# request a windowed UI instead of the fullscreen default
+bash scripts/run.sh --windowed
+
+# run and tail logs
+bash scripts/run.sh --monitor
 ```
 
 By default the executable is started with its working directory set to the
@@ -161,13 +171,16 @@ bash scripts/build.sh windows-release
 ## Running the Bootloader
 
 ```bash
-# Default (linux-debug)
+# GUI by default (linux-debug)
 bash scripts/run.sh
 
-# Specific target
+# Specific build target
 bash scripts/run.sh linux-release
 
-# Direct (after build)
+# Headless mode (no window)
+bash scripts/run.sh --headless
+
+# Direct executable (after build)
 ./build/linux-debug/bootloader
 ```
 

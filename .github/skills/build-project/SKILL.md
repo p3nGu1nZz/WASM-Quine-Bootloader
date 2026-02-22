@@ -17,13 +17,11 @@ bash scripts/setup.sh --clean
 # Build default target (linux-debug)
 bash scripts/build.sh
 
-# Build a specific target
-bash scripts/build.sh linux-release
-bash scripts/build.sh windows-debug
-bash scripts/build.sh windows-release
+# Build a specific target (linux-release, windows-debug, windows-release)
+bash scripts/build.sh <target>
 
-# Clean everything and rebuild a target
-bash scripts/build.sh --clean linux-debug
+# Clean build directory and rebuild a target
+display \"build.sh --clean <target>\"
 ```
 
 The build script prints coloured `[build]` messages and suppresses

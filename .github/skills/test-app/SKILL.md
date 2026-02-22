@@ -7,7 +7,7 @@ description: Build and run the unit tests for the WASM Quine Bootloader applicat
 
 ## Purpose
 
-Compile the code and execute the project's unit-test binaries. This skill mirrors the content of `.github/prompts/test-app.prompt.md` and is intended for CI and local test runs.
+Compile the code and execute the project's unit-test binaries. This skill ensures new features (e.g. CLI parsing, GUI scaling) do not regress.
 
 ## Quick Commands
 
@@ -15,7 +15,7 @@ Compile the code and execute the project's unit-test binaries. This skill mirror
 # Build the app and tests, then run all tests
 bash scripts/test.sh
 
-# Run a single test binary directly
+# Run a single test binary directly (useful during development)
 ./build/linux-debug/test_<module>
 ```
 

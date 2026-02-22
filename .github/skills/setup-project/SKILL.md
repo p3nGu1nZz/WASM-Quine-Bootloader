@@ -61,4 +61,6 @@ The script emits colour-coded `[INFO]/[WARN]/[ERROR]` messages and
 - Running with `--clean` after a build will automatically rebuild dependencies
   so the command behaves like an idempotent install.
 - Designed for Ubuntu/WSL but should work on other Debian-derived systems.
+- This script is safe to rerun frequently; it skips rebuilding externals if
+  the source tree is already present.
 ````
