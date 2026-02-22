@@ -49,14 +49,16 @@ Binary output: `build/<TARGET>/bootloader` (Linux) or `build/<TARGET>/bootloader
 
 ## Running Modes
 
-### Terminal / Headless Server Mode (default)
-Running `./bootloader` (or via `scripts/run.sh`) without `--gui` renders all output to the terminal using ANSI escape sequences. The display refreshes in-place (like the `top` command) showing system panels, log output, memory state, and generation counters.
+The project supports two running modes. The C++ port currently implements the SDL3 GUI path; a headless terminal renderer is planned and documented but may not be fully implemented yet. Use the `--gui` flag to enable the graphical mode.
 
-### GUI Mode
-Running `./bootloader --gui` opens an SDL3 window:
+### GUI Mode (SDL3 + ImGui)
+Run the graphical application (SDL3 window):
+
 - Background is black by default, windowed mode on launch.
-- **F11** toggles between windowed and fullscreen. A second press returns to windowed.
-- All panels rendered to the SDL3 surface mirror the terminal mode layout.
+- **F11** should toggle between windowed and fullscreen (implement in `main.cpp` if missing).
+
+### Headless / Terminal Mode (Planned)
+The original design included an ANSI/terminal renderer (headless mode). If required, implement a terminal rendering path and CLI parsing in `src/main.cpp` to match the docs. See `docs/PORTING_REPORT.md` for details.
 
 ## Coding Conventions
 
@@ -97,3 +99,17 @@ bash scripts/test.sh
 - The kernel `run(ptr, len)` function must maintain a balanced operand stack; all generated instruction sequences must be stack-neutral.
 - Evolution limits the function body to 32 KB to prevent runaway growth.
 - The seed kernel binary constant is defined in `src/wasm_kernel.cpp`; do not change it without also updating the WAT comment alongside it.
+
+## Agent Skills
+
+This repository includes a small set of agent "skills" used by the Copilot agent. The current skills folder contains:
+
+- `build-and-test` – compiles the project and runs unit tests.
+- `run-sdl-gui` – builds and launches the SDL3 GUI version of the bootloader.
+- `generate-report` – produces a migration/porting report from a code review.
+
+Each skill lives in its own directory under `.github/skills/<skill-name>/` and must contain a `SKILL.md` file conforming to the Agent Skills specification (see [https://agentskills.io/specification](https://agentskills.io/specification)).
+
+A valid `SKILL.md` has YAML frontmatter with at least `name` and `description` fields, followed by Markdown instructions. Frontmatter may also include `license`, `compatibility`, `metadata`, and `allowed-tools` if needed. The Markdown body should explain steps, examples, inputs and outputs, and any edge cases.
+
+Example skills are already provided; follow their pattern when adding new ones. Keep skill files concise (roughly <500 lines) and place longer reference content in accompanying `scripts/`, `references/`, or `assets/` subdirectories if necessary.

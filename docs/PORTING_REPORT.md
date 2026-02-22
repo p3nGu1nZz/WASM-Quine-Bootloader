@@ -22,3 +22,6 @@ I reviewed the C++ `src/` files and compared with the original `web/` reference.
 - [ ] Signal handler made safe: no non-async-signal-safe calls from signal handlers; flush occurs on main thread.
 - [ ] CLI parsing added with `--gui` option or docs updated to match implementation.
 - [ ] New issue template added under `.github/ISSUE_TEMPLATE/porting_report.md`.
+
+## How to file the GitHub issue
+Use the contents of this file as the issue body. If you want to create the issue programmatically use the `docs/PULL_REQUEST_DESCRIPTION.md` and `docs/README_PORTING_SUMMARY.md` as reference materials.
