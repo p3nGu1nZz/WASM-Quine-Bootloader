@@ -104,8 +104,11 @@ bash scripts/test.sh
 
 This repository includes a small set of agent "skills" used by the Copilot agent. The current skills folder contains:
 
-- `build-and-test` – compiles the project and runs unit tests.
-- `run-sdl-gui` – builds and launches the SDL3 GUI version of the bootloader.
+- `build-project` – compiles the project for a specified target.
+- `run-app` – launches the bootloader in terminal or GUI mode.
+- `test-app` – builds and executes the unit tests.
+- `update-docs` – refreshes README and other documentation after changes.
+- `update-specs` – edits or adds design specifications in `docs/`.
 - `generate-report` – produces a migration/porting report from a code review.
 
 Each skill lives in its own directory under `.github/skills/<skill-name>/` and must contain a `SKILL.md` file conforming to the Agent Skills specification (see [https://agentskills.io/specification](https://agentskills.io/specification)).

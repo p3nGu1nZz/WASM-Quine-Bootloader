@@ -1,6 +1,9 @@
-# Build the Project
+---
+name: build-and-test
+description: Build the C++ project using the provided scripts and run the unit test suite. Use this skill when needing to compile, verify, or troubleshoot the native application on Linux or Windows targets.
+---
 
-Build the WASM Quine Bootloader C++ project using the CMake + Ninja build system.
+# build-project
 
 ## Quick Commands
 
@@ -17,7 +20,7 @@ bash scripts/build.sh windows-debug
 bash scripts/build.sh windows-release
 ```
 
-## Build Targets
+### Build Targets
 
 | Target | Output binary |
 |--------|---------------|
