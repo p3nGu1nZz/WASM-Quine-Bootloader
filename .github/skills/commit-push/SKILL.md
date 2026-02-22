@@ -7,35 +7,45 @@ description: Stage local changes, create a descriptive commit message, and push 
 
 ## Purpose
 
-Automate the common sequence of git commands used to record and upload
-changes to the source repository.  Although agents cannot run git directly,
-they can generate an appropriate commit message and instruct a human or
-another process to execute the commands.
+Stage local changes, build a commit message, and push the files to GitHub
+using the available `mcp_github_push_files` (or equivalent `gh` CLI) tool.  
+Agents should perform the push themselves rather than deferring to a user.
 
 ## Usage
 
-- Invoke after making code/doc edits you intend to keep.
-- Provide a concise but descriptive commit message summarising the work.
+- Run whenever you've made local changes that should be committed and
+  uploaded.
+- Supply a succinct commit message; the agent will use it with the MCP
+  push tool.
 
 ## Behaviour
 
-1. List unstaged changes (`git status --short`).
-2. Stage all modified/added files: `git add -A` (or allow specifying subset).
-3. Create a commit: `git commit -m "<message>"`.
-4. Push to the current branch (`git push`).
+1. Identify modified/added files in the workspace.
+2. Prepare a list of those file paths and their updated contents (read
+   from the filesystem).
+3. Call the `mcp_github_push_files` tool with the branch name, array of
+   `{path,content}` pairs, and the commit message.
+4. Optionally create a pull request using `gh pr create` or the
+   corresponding MCP tool if the branch is not the default.
 
 ## Example
 
 ```
 # prompt to agent:
-"I updated the README and added a new skill.  Please commit and push."
+"I added new skills and updated docs; commit and push the changes."
 ```
 
-The agent may respond with:
-```
-git add -A
-git commit -m "docs: update README and add commit-push skill"
-git push
+The agent would then perform or output something like:
+```js
+await mcp_github_push_files({
+  branch: "main",
+  files: [
+    { path: "README.md", content: "...updated content..." },
+    { path: "src/cli.cpp", content: "..." },
+    // etc.
+  ],
+  message: "docs: update skills list and README"
+});
 ```
 
 ## Notes

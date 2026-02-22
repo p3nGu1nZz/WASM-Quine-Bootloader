@@ -246,6 +246,21 @@ All three are fetched by `scripts/setup.sh`.
 
 ---
 
+## Agent Skills
+
+This repo includes a full suite of Copilot agent skills (see
+`.github/copilot-instructions.md` for details).  Key skills are:
+
+- `setup-project`, `build-project`, `run-app`, `test-app`
+- `update-docs`, `update-specs`, `update-skills`, `update-memory`
+- `find-memory`, `telemetry-review`, `introspect-telemetry`
+- `improve-skills`, `generate-report`, `commit-push`
+
+Agents can invoke them via natural language prompts; the skills and
+instructions are maintained by the `update-skills`/`improve-skills` tools.
+
+---
+
 ## Original TypeScript Web App
 
 ## Original TypeScript Web App (archived)
