@@ -28,4 +28,5 @@ This skill mirrors the contents of `.github/prompts/update-docs.prompt.md`.
 - [ ] Build steps in README match `scripts/build.sh`?
 - [ ] Public API documented in headers?
 - [ ] `copilot-instructions.md` structure updated with new skills and CLI.
+- [ ] Add any new facts to memory (use update-memory skill) and clean outdated entries.
 - [ ] New constraints recorded?
