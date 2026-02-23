@@ -33,6 +33,7 @@ candidates in `[ISSUE] Title… Body…` format. |
 | `run-app` | Launch the bootloader (GUI or headless) to verify behaviour. |
 | `update-specs` | Edit docs in `docs/specs/` when behaviour or interfaces change. |
 | `improve-tests` | Add or enhance unit tests. |
+| `improve-src` | Clean, refactor and prune source code when appropriate. |
 | `telemetry-review` | Analyse logs/exports and, if needed, create issues with examples. |
 | `commit-push` | Stage local changes, craft a commit message, push & open a PR. |
 | `update-docs` / `update-skills` / `update-memory` | Maintain documentation/agent instructions as code evolves. |
@@ -59,6 +60,8 @@ Each time you are asked to "work" you should:
      (e.g. `issue-123-fix-cli-parsing`).
    * Edit code/tests/docs/specs as required.
    * Run `build-app` and `test-app` frequently – fix any breakage.
+   * Optionally run `improve-src` periodically during long-lived branches to
+     clean up any incidental warnings or dead code.
    * Update or add behaviour to spec files and add comments linking to specs.
    * When telemetry or logs can help, use `telemetry-review`.
 4. **Commit and open PR**
