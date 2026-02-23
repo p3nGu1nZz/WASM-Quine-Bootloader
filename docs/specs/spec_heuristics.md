@@ -11,8 +11,7 @@ improve long-term survival rate of mutated kernels.
 
 - History of generations, including which mutations were applied and
   whether execution resulted in a trap or successful quine verification.
-- Optional external parameters provided via CLI flags (e.g.
-  `--mutation-strategy` or `--heuristic-decay`).
+- Optional external parameters provided via CLI flags (e.g. `--mutation-strategy` or `--heuristic=<none|blacklist|decay>`).
 
 ## Behaviour
 

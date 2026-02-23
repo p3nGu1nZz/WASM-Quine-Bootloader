@@ -11,28 +11,23 @@ Define the behaviour of the bootloader executable's command-line arguments. This
 - `--fullscreen` – request a maximized (borderless) window when GUI is enabled; this is *not* exclusive fullscreen.
 - `--windowed` – request a windowed window when GUI is enabled.
 
-Unrecognised flags are ignored by `parseCli()`; `scripts/run.sh` may pass additional arguments through to the bootloader instance for future use.
+Additional options implemented by `parseCli()`:
 
-### New Flags (planned)
+- `--telemetry-level=<none|basic|full>` – control verbosity of telemetry exports; `none` disables files, `basic` writes header+size, `full` includes all sections (mutations, traps, etc.).
+- `--telemetry-dir=<path>` – override the default `bin/seq` directory used for exports.
+- `--mutation-strategy=<random|blacklist|smart>` – choose the evolution sampling policy.  `blacklist` interacts with the mutation heuristic but does not itself enable it.
+- `--heuristic=<none|blacklist|decay>` – enable the trap-avoidance blacklist, with `decay` allowing entries to expire after successful generations.
+- `--profile` – log per‑generation timing and memory usage.
+- `--max-gen=<n>` – exit after `n` successful generations (0=unlimited); handy for CI tests.
+- `--save-model=<path>` / `--load-model=<path>` – persist or restore the trainer model to/from disk.
 
-- `--telemetry-level=<none|basic|full>` – control verbosity of telemetry
-  exports; `none` disables files entirely, `basic` writes header+size,
-  `full` writes all sections including mutation stats.
-- `--telemetry-dir=<path>` – override default `bin/seq` directory for
-  export files.
-- `--mutation-strategy=<random|blacklist|smart>` – select evolution
-  behaviour.  `blacklist` enables the heuristic outlined in
-  `docs/specs/spec_heuristics.md`.
-- `--heuristic=<none|blacklist|decay>` – shorthand to toggle only the heuristic
-  without changing the underlying mutation policy; `decay` mode removes
-  blacklist entries after each successful generation.
-  without changing the underlying mutation policy.
-- `--profile` – print per-generation timing and memory usage to the log.
-- `--max-gen=<n>` – stop the run after `n` successful generations.  Useful
-  for automated tests.
+Unrecognised flags or malformed values generate a warning on stderr and set the `parseError` field in the returned `CliOptions`.  Completely unknown options are otherwise ignored so that wrapper scripts can forward extra arguments to the bootloader.
 
-Flags that accept values may also be specified as `--flag value`
-according to typical Unix conventions.
+### Warning behaviour
+
+If a flag that expects a finite set of values is given an unrecognised token (e.g. `--telemetry-level=foo` or `--heuristic=bar`), `parseCli()` emits a `Warning:` line to stderr and sets the `parseError` flag in the returned `CliOptions`.  The bootloader then continues with the default for that option; wrapper scripts or tests can check `parseError` and abort if desired.  Completely unknown options likewise produce a warning but are otherwise ignored so that `scripts/run.sh` can transparently forward extra arguments to the executable.
+
+Flags that accept values may be written either as `--flag=value` or the traditional `--flag value`; the parser's `extractValue()` helper handles both forms and advances `argv` appropriately.
 
 ## Behaviour
 

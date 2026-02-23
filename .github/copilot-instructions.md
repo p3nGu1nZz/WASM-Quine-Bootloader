@@ -39,14 +39,14 @@ dependencies first with `bash scripts/setup.sh`.
 Additional CLI flags (see `docs/specs/spec_cli.md`):
 
 - `--telemetry-level` / `--telemetry-dir` – control export verbosity and
-  destination.
+destination.  Unknown values generate stderr warnings but fall back to a
+sane default.
 - `--mutation-strategy` / `--heuristic` – choose evolution policy; blacklist
   heuristic avoids repeated trap-causing edits.
 - `--profile` – record timing and memory stats in the log.
 - `--max-gen` – limit total successful generations, handy for tests.
-
-Telemetry/logs:
-- Logs → `build/<target>/bin/logs/*.log`.
+- `--save-model` / `--load-model` – persist or restore the trainer model
+  between runs.
 - Exports → `build/<target>/bin/seq/<runid>/gen_<n>.txt` plus kernel blobs.
   Use `telemetry-review` skill to analyse; keep `docs/specs/spec_telemetry.md`
   up to date.
@@ -62,6 +62,10 @@ Telemetry/logs:
 - Tests: one `test_<module>.cpp`; functions named `test_<feature>`.
 
 ## Build & run
+
+> **Note:** builds now use `-Werror` for GCC/Clang, so resolve any
+> compilation warnings (or clean the tree) before retrying.  The core
+> targets and unit tests are compiled with the same flags.
 
 ```bash
 # Setup dependencies (one-time or after cleaning)
@@ -98,6 +102,9 @@ Agent/build scripts must use a `./.tmp` directory in the repo root for temporary
 ## Constraints
 
 - Mutated WASMs must parse (`wasm3::ParseModule`).
+- The `App` caches decoded kernel bytes and extracted instruction lists
+  (`m_currentKernelBytes`) to avoid repeated base64 decoding during the
+  main loop.
 - Never add division opcodes (traps on zero).
 - `run(ptr,len)` must leave a balanced operand stack.
 - Code section limited to 32 KB.
@@ -119,8 +126,10 @@ Available skills:
 - `telemetry-review` – inspect logs/seq exports.
 - `update-issues` – synchronise GitHub issues with the codebase (close done items, update descriptions, generate new tasks).
 - `improve-src` – sweep source files fixing errors, refactoring and removing dead code.
+- `improve-tests` – expand and strengthen the unit test suite for greater coverage.
+- `code-review` – perform a thorough adversarial review of code changes and suggest improvements.
 - `commit-push` – stage changes, craft a commit message, and push to remote.
 - `introspect-telemetry` – review logs and sequence exports for anomalies.
 - `improve-skills` – refine and compact all existing skill documents.
 
-Each skill has a `SKILL.md` in `.github/skills/`. Add new skills there with YAML frontmatter and concise instructions; longer references can live elsewhere.
+Each skill has a `SKILL.md` in `.github/skills/`. Add new skills there with YAML frontmatter and concise instructions; longer references can live elsewhere.  Workflow prompts live under `.github/prompts/` and are referenced by the `repo-facts` and `update-issues` skills when following the project workflow.

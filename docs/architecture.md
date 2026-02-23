@@ -139,6 +139,11 @@ host callbacks (`onWasmLog`, `onGrowMemory`).
 
 Exposes read-only accessors for everything the `Gui` needs to render.
 
+- **Kernel cache:** maintains `m_currentKernelBytes` and
+  `m_instructions` via `updateKernelData()` so the same base64 string is
+  only decoded once per change, reducing CPU overhead during tight
+  update loops.
+
 **Dependencies:** `fsm.h`, `logger.h`, `exporter.h`, `wasm/kernel.h`, `wasm/parser.h`,
 `wasm_evolution.h`, `base64.h`, `constants.h`, `util.h`, `types.h`
 

@@ -4,7 +4,11 @@ This project now supports configurable mutation heuristics and richer
 telemetry output.  See `docs/specs/spec_heuristics.md` and
 `docs/specs/spec_telemetry.md` for details.  CLI flags such as
 `--telemetry-level`, `--mutation-strategy`, `--profile` and
-`--max-gen` allow fine‑grained control of runs.
+`--max-gen` allow fine‑grained control of runs.  Under the hood the
+application caches the decoded kernel bytes and instruction stream to
+avoid repeated base64 work, and the build system enforces
+`-Werror` so the codebase must remain warning-free.  The CLI also
+prints stderr warnings when a flag value is unrecognised.
 
 A self-replicating, self-evolving WebAssembly kernel visualizer — native **C++17** desktop application using **SDL3** and **Dear ImGui**.
 
@@ -25,6 +29,8 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | Terminal Log | Colour-coded system event log (info / success / warning / error / mutation) |
 | Era System | *removed; terminal-only app no longer uses eras* |
 | Telemetry Export | Dump full hex / disassembly / history report to a `.txt` file |
+| Kernel Cache | App retains decoded kernel/instruction data between generations to
+  reduce CPU work |
 | DPI Scaling & Touch UI | UI text and widgets automatically scale with window size for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
 
 ---
@@ -42,6 +48,11 @@ This repo includes a full suite of Copilot agent skills; see `.github/copilot-in
 
 Agents can invoke them via natural language prompts; the skills and
 instructions are maintained by the `update-skills`/`improve-skills` tools.
+
+Key skills now also include `code-review` for comprehensive reviews and
+`improve-tests` for expanding the unit test suite.  Workflow prompts are
+stored under `.github/prompts/` and guide agent behaviour for the master
+and development workflows.
 
 ---
 
@@ -94,6 +105,10 @@ instructions are maintained by the `update-skills`/`improve-skills` tools.
 
 ### Step 1 — Install dependencies and build
 
+> **Note:** the CMake project now enables `-Werror` on GCC/Clang so any
+> compiler warnings will be treated as errors.  Fix warnings before
+> building or use `bash scripts/build.sh --clean` to reset.
+
 The `setup.sh` script can also reset your workspace:
 
 ```bash
@@ -141,6 +156,12 @@ The launcher supports several new command‑line options (see
   generation.
 - `--profile` – log per-generation timing and memory usage.
 - `--max-gen=<n>` – stop after `n` successful generations (handy for CI).
+- `--save-model=<path>` / `--load-model=<path>` – persist or restore the
+  trainer model between runs (used by `train` and related utilities).
+
+Unrecognised flag values (e.g. `--telemetry-level=foo`) produce a warning
+on stderr but do not abort execution; the parser sets a `parseError`
+flag that callers may inspect.
 
 These may be passed to `scripts/run.sh` and will be forwarded to the
 binary when launched directly.
