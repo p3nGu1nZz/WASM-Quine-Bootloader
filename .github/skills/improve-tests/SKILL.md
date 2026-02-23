@@ -15,10 +15,13 @@ refactors as part of the review process.
 1. Read all current `test/*.cpp` files and note which modules and
    functions they exercise.  Use `grep_search` or `semantic_search` to
    locate untested symbols in `src/` such as free functions or class
-   methods.
+   methods.  Ensure tests compile cleanly under the same `-Werror` flags
+   as the main code.
 2. Identify missing scenarios, boundary conditions, and failure cases
    (e.g. invalid CLI arguments, empty telemetry entries, file I/O
-   errors, GUI initialization errors) that are not already covered.
+   errors, GUI initialization errors) that are not already covered.  Add
+   tests for new CLI flags like `--heuristic` or `--mutation-strategy`
+   and for telemetry exports containing extra fields or warnings.
 3. For each identified gap, propose a new Catch2 test case (or modify an
    existing one) with a clear description and assertions.  Include code
    snippets where helpful.
@@ -35,7 +38,8 @@ refactors as part of the review process.
    code or adjust the tests accordingly.
 7. Report back a summary of what was done: new/modified tests, any
    uncovered issues, and suggestions for further enhancements.  Mention
-   additional tests that could be added in future.
+   additional tests that could be added in future, such as fuzzing the
+   kernel mutation logic or exercising the heuristic decay mode.
 
 ## Usage
 

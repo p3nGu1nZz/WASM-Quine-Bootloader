@@ -7,7 +7,8 @@ description: Install or reset all third-party dependencies used by the project (
 # setup-project
 
 Install or reset third-party dependencies (SDL3, ImGui, wasm3, Catch2).
-Run when configuring a new machine or after cleaning externals.
+Run when configuring a new machine, after cleaning externals, or when
+pulling the repo for the first time.
 
 Usage examples:
 ```bash
@@ -19,6 +20,8 @@ bash scripts/setup.sh --clean windows
 
 Behaviour:
 - Deletes `external/` and `bin/` if `--clean`.
+- Requires network access to clone repositories and enough disk space
+  for build artifacts; may prompt for `sudo` when installing packages.
 - Installs system packages (cmake, build-essential, fonts, etc.).
 - Optionally installs MinGW-w64 with `windows` arg.
 - Clones/updates wasm3, ImGui, Catch2 and builds SDL3 + Catch2 headers.
