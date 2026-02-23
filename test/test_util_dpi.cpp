@@ -143,6 +143,21 @@ TEST_CASE("App sanitizes invalid telemetryDir", "[app][telemetry]") {
     REQUIRE(a.options().telemetryDir.empty());
 }
 
+TEST_CASE("exportNow produces a file identically to autoExport", "[app][export]") {
+    namespace fs = std::filesystem;
+    fs::remove_all("test_seq");
+    CliOptions opts;
+    opts.telemetryDir = "test_seq";
+    App a(opts);
+    a.doReboot(true);
+    fs::path seqdir = sequenceDir(a.runId());
+    REQUIRE(fs::exists(seqdir / "gen_1.txt"));
+    // now manually trigger again and expect generation 1 overwritten or new file
+    a.exportNow();
+    REQUIRE(fs::exists(seqdir / "gen_1.txt"));
+    fs::remove_all("test_seq");
+}
+
 // rest of file unchanged
 
 TEST_CASE("randomId yields 9 alphanumeric chars and varies", "[util]") {

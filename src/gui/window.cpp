@@ -174,10 +174,19 @@ void Gui::renderLogPanel(const App& app, float w, float h) {
     ImGui::BeginChild("##LogPanel", { w, h }, true,
                       ImGuiWindowFlags_NoScrollbar);
     ImGui::TextDisabled("SYSTEM LOG  BUF:%d", (int)app.logs().size());
+    // filter input
+    ImGui::SameLine();
+    ImGui::SetCursorPosX(w - 200.0f * m_uiScale);
+    ImGui::InputText("Filter", &m_logFilter);
+
     ImGui::Separator();
     ImGui::BeginChild("##LogScroll", { 0, 0 }, false,
                       ImGuiWindowFlags_HorizontalScrollbar);
     for (const auto& log : app.logs()) {
+        if (!m_logFilter.empty()) {
+            if (log.message.find(m_logFilter) == std::string::npos)
+                continue;
+        }
         uint64_t t = log.timestamp;
         int ms = (int)(t % 1000);
         int s  = (int)((t / 1000)   % 60);

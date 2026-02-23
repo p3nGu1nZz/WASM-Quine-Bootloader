@@ -578,6 +578,13 @@ void App::saveBlacklist() const {
     }
 }
 
+void App::exportNow() {
+    // same as autoExport but callable directly; ignore exceptions
+    try {
+        autoExport();
+    } catch (...) {}
+}
+
 void App::autoExport() {
     namespace fs = std::filesystem;
     try {

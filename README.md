@@ -148,12 +148,20 @@ This script will:
 
 ### Step 2 — Run
 
-The launcher supports several new command‑line options (see
+Keyboard shortcuts are available when using the GUI version:
+
+- **Spacebar** – pause or resume the current kernel.
+- **E** – export the current kernel/telemetry immediately.
+- **Q** or **Escape** – quit the application.
+
+The launcher also supports several command‑line options (see
 `spec_cli.md` for full semantics):
 
 - `--telemetry-level=<none|basic|full>` – control how much export data is
   written (header only, full report, or disabled).
 - `--telemetry-dir=<path>` – change output directory for reports.
+- `--telemetry-format=<text|json>` – choose the export file format; JSON is
+  easier for scripts to parse.
 - `--mutation-strategy=<random|blacklist|smart>` – choose evolution
   policy; `blacklist` enables the adaptive heuristic.
 - `--heuristic=<none|blacklist|decay>` – shorthand toggle for the heuristic;

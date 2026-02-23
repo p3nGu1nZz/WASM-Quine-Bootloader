@@ -55,6 +55,9 @@ public:
     // Build and return a telemetry report string.
     std::string exportHistory() const;
 
+    // manually trigger telemetry export for the current generation
+    void exportNow();
+
     // Unique identifier for this run; used to organise exported data.
     const std::string& runId() const { return m_runId; }
 

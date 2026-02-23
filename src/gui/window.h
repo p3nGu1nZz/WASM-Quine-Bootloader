@@ -56,6 +56,9 @@ private:
     int    m_lastIP       = -1;
     size_t m_lastLogSz    = 0;
 
+    // filter used in the log panel; matches substring in messages
+    std::string m_logFilter;
+
     // ── Panel helpers (each renders one independent UI region) ────────────────
     void renderTopBar(App& app, int winW);
     void renderLogPanel(const App& app, float w, float h);

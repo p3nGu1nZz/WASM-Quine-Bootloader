@@ -68,6 +68,7 @@ int main(int argc, char** argv) {
                 if (ev.type == SDL_EVENT_QUIT) running = false;
                 if (ev.type == SDL_EVENT_KEY_DOWN) {
                     if (ev.key.key == SDLK_SPACE)  app.togglePause();
+                    if (ev.key.key == SDLK_e || ev.key.key == SDLK_E) app.exportNow();
                     if (ev.key.key == SDLK_Q ||
                         ev.key.key == SDLK_ESCAPE)  running = false;
                 }
