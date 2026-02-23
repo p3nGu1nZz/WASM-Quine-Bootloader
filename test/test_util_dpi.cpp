@@ -58,6 +58,24 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     // default telemetry level is BASIC, which does not write kernel blob
     REQUIRE(!fs::exists(seqdir / "kernel_1.b64"));
 
+    // inspect contents: should start with plain-text header
+    std::ifstream f(seqdir / "gen_1.txt");
+    std::string first;
+    std::getline(f, first);
+    REQUIRE(first.find("WASM QUINE BOOTLOADER") != std::string::npos);
+
+    // now repeat with JSON format
+    fs::remove_all(seqdir);
+    CliOptions opts;
+    opts.telemetryFormat = TelemetryFormat::JSON;
+    App jsonApp(opts);
+    jsonApp.doReboot(true);
+    fs::path jdir = sequenceDir(jsonApp.runId());
+    std::ifstream jf(jdir / "gen_1.txt");
+    std::string line;
+    std::getline(jf, line);
+    REQUIRE(line.find('{') != std::string::npos);
+
     // create stray files at root and confirm constructor cleans them up
     std::ofstream stray1("bootloader_old.log");
     std::ofstream stray2("quine_telemetry_gen999.txt");

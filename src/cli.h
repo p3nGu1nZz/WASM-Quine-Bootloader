@@ -8,6 +8,7 @@
 // (seconds) may be supplied to automatically exit the main loop.
 
 enum class TelemetryLevel { NONE, BASIC, FULL };
+enum class TelemetryFormat { TEXT, JSON };
 enum class MutationStrategy { RANDOM, BLACKLIST, SMART };
 enum class HeuristicMode { NONE, BLACKLIST, DECAY };
 
@@ -16,6 +17,7 @@ struct CliOptions {
     bool fullscreen  = true;   // only meaningful when useGui == true
     // new options
     TelemetryLevel telemetryLevel = TelemetryLevel::BASIC;
+    TelemetryFormat telemetryFormat = TelemetryFormat::TEXT;
     std::string telemetryDir;    // override export path
     MutationStrategy mutationStrategy = MutationStrategy::RANDOM;
     HeuristicMode heuristic = HeuristicMode::NONE; // NONE=no blacklist, BLACKLIST=block repeats, DECAY=block then slowly forget

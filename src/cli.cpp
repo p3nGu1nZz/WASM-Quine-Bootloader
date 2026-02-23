@@ -21,6 +21,11 @@ static HeuristicMode parseHeuristicMode(const char* v) {
     return HeuristicMode::NONE;
 }
 
+static TelemetryFormat parseTelemetryFormat(const char* v) {
+    if (std::strcmp(v, "json") == 0) return TelemetryFormat::JSON;
+    return TelemetryFormat::TEXT;
+}
+
 // small helper to extract an option value either from "--opt=val" or
 // by consuming the next argv element.  `i` is incremented when the value is
 // taken from the following argument so callers don't have to duplicate the
@@ -62,6 +67,16 @@ CliOptions parseCli(int argc, char** argv) {
         } else if (argstr.rfind("--telemetry-dir", 0) == 0) {
             const char* val = extractValue(argstr, i, argc, argv);
             if (val) opts.telemetryDir = val;
+        } else if (argstr.rfind("--telemetry-format", 0) == 0) {
+            const char* val = extractValue(argstr, i, argc, argv);
+            if (val) {
+                opts.telemetryFormat = parseTelemetryFormat(val);
+                if (opts.telemetryFormat == TelemetryFormat::TEXT &&
+                    std::strcmp(val, "text") != 0) {
+                    std::cerr << "Warning: unknown telemetry-format '" << val << "'\n";
+                    opts.parseError = true;
+                }
+            }
         } else if (argstr.rfind("--mutation-strategy", 0) == 0) {
             const char* val = extractValue(argstr, i, argc, argv);
             if (val) {

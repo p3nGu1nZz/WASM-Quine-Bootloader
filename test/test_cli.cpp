@@ -82,6 +82,20 @@ TEST_CASE("CLI telemetry-dir is accepted but not validated") {
     REQUIRE(!o.parseError);
 }
 
+TEST_CASE("CLI telemetry-format parsing") {
+    const char* argv1[] = {"bootloader", "--telemetry-format=json"};
+    CliOptions o1 = parseCli(2, const_cast<char**>(argv1));
+    REQUIRE(o1.telemetryFormat == TelemetryFormat::JSON);
+
+    const char* argv2[] = {"bootloader", "--telemetry-format", "text"};
+    CliOptions o2 = parseCli(3, const_cast<char**>(argv2));
+    REQUIRE(o2.telemetryFormat == TelemetryFormat::TEXT);
+
+    const char* argv3[] = {"bootloader", "--telemetry-format=xml"};
+    CliOptions o3 = parseCli(2, const_cast<char**>(argv3));
+    REQUIRE(o3.parseError == true);
+}
+
 TEST_CASE("CLI parses save-model and load-model paths") {
     const char* argv[] = {"bootloader", "--save-model", "model.dat", "--load-model=prev.bin"};
     CliOptions opts = parseCli(4, const_cast<char**>(argv));

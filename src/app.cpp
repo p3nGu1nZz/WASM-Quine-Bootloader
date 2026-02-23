@@ -593,16 +593,31 @@ void App::autoExport() {
             return;
         }
 
-        // export header or full report
+        // export header/full report or JSON
         fs::path reportFile = base / ("gen_" + std::to_string(m_generation) + ".txt");
         std::ofstream r(reportFile);
         if (r) {
-            if (m_opts.telemetryLevel == TelemetryLevel::BASIC) {
-                r << "WASM QUINE BOOTLOADER - SYSTEM HISTORY EXPORT\n";
-                r << "Generated: " << nowIso() << "\n";
-                r << "Final Generation: " << m_generation << "\n";
+            if (m_opts.telemetryFormat == TelemetryFormat::JSON) {
+                // simple JSON object; callers can parse as needed
+                r << "{\n";
+                r << "  \"generation\": " << m_generation << ",\n";
+                r << "  \"kernel\": \"" << m_currentKernel << "\",\n";
+                r << "  \"mutationsAttempted\": " << m_evolutionAttempts << ",\n";
+                r << "  \"mutationsApplied\": " << m_mutationsApplied << ",\n";
+                r << "  \"trapCode\": \"" << m_lastTrapReason << "\",\n";
+                r << "  \"genDurationMs\": " << m_lastGenDurationMs << ",\n";
+                r << "  \"kernelSizeMin\": " << m_kernelSizeMin << ",\n";
+                r << "  \"kernelSizeMax\": " << m_kernelSizeMax << ",\n";
+                r << "  \"heuristicBlacklistCount\": " << (int)m_blacklist.size() << "\n";
+                r << "}\n";
             } else {
-                r << exportHistory();
+                if (m_opts.telemetryLevel == TelemetryLevel::BASIC) {
+                    r << "WASM QUINE BOOTLOADER - SYSTEM HISTORY EXPORT\n";
+                    r << "Generated: " << nowIso() << "\n";
+                    r << "Final Generation: " << m_generation << "\n";
+                } else {
+                    r << exportHistory();
+                }
             }
         }
         // also dump raw kernel base64 for easier consumption if full

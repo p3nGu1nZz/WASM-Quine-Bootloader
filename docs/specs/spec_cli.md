@@ -15,6 +15,7 @@ Additional options implemented by `parseCli()`:
 
 - `--telemetry-level=<none|basic|full>` – control verbosity of telemetry exports; `none` disables files, `basic` writes header+size, `full` includes all sections (mutations, traps, etc.).
 - `--telemetry-dir=<path>` – override the default `bin/seq` directory used for exports.
+- `--telemetry-format=<text|json>` – choose the export file format.  `text` (the default) produces the traditional plain‑text report; `json` emits a minimal JSON object for easier programmatic parsing.
 - `--mutation-strategy=<random|blacklist|smart>` – choose the evolution sampling policy.  `blacklist` interacts with the mutation heuristic but does not itself enable it.
 - `--heuristic=<none|blacklist|decay>` – enable the trap-avoidance blacklist, with `decay` allowing entries to expire after successful generations.
 - `--profile` – log per‑generation timing and memory usage.
