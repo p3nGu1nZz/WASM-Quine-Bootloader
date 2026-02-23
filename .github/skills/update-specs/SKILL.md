@@ -13,10 +13,16 @@ Most specs live under `docs/` or `docs/specs/` (CLI, telemetry, GUI, wasm kernel
 
 ## Instructions
 
-1. Open the appropriate `docs/spec_*.md` file.
-2. Update the **Behaviour** section for the changed feature.
-3. Add or resolve `## Open Questions` entries as needed.
-4. Add a comment in the code pointing to the spec (e.g. `// Spec: docs/specs/spec_cli.md`).
+1. Open the appropriate `docs/spec_*.md` file.  If no spec exists for the
+   component, create one under `docs/specs/` using the standard file
+   format below.
+2. Update the **Behaviour** section for the changed feature, and add
+   examples or sample exports when applicable (especially for telemetry
+   or CLI behaviour).
+3. Add or resolve `## Open Questions` entries as needed; mark any
+   non-obvious design decisions for later review.
+4. Add a comment in the code pointing to the spec (e.g. `// Spec:
+   docs/specs/spec_cli.md`) so future readers can locate it quickly.
 5. Run `bash scripts/test.sh` to verify nothing broke.
 
 ## File format reminder

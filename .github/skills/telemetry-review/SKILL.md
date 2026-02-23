@@ -9,11 +9,12 @@ Inspect bootloader outputs under `build/<target>/bin/logs/` and
 `build/<target>/bin/seq/<runid>/` after executing the app.  The goal is to:
 
 - validate quine/evolution cycles and kernel integrity across generations
-- spot `[error]`/`[warning]` lines, retries, or unexpected kernel size changes
+- spot `[error]`, `[warning]` or `[telemetry warning]` lines, retries, or unexpected kernel size changes
 - watch for new advisor/exporter messages about file I/O or empty decodes
 - ensure each `gen_<n>.txt` export contains its header, base64 blob, hex dump,
   disassembly section and history entries
-- detect telemetry omissions, serialization glitches, or parse failures
+- detect telemetry omissions, serialization glitches, parse failures, or
+  missing fields indicated by telemetry warnings
 - collect data points useful for performance or mutation analysis
 
 **Workflow**
@@ -44,11 +45,9 @@ head -20 build/linux-debug/bin/seq/$(ls -1 build/linux-debug/bin/seq | tail -1)/
   change; keep specs in `docs/specs/spec_telemetry.md` updated accordingly.
 - When adding new telemetry fields, run this skill to ensure the data is
   serialized properly and the history exports remain parseable.
+- Compliment `introspect-telemetry` for a quicker review or when you
+  need scriptable checks.
 - Consider coupling this skill with `introspect-telemetry` for a deeper
   diagnostic session.
 
-## Notes
-
-- The telemetry export format is defined in `App::exportHistory()` and may change; keep specs in `docs/specs/spec_telemetry.md` updated accordingly.
-- When adding new telemetry fields, run this skill to ensure the data is serialized properly.
 

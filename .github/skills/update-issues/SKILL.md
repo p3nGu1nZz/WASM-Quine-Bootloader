@@ -14,7 +14,9 @@ repository.
 2. For each issue:
    * Determine whether the work has already been merged or otherwise
      implemented on `main` (e.g. by checking for linked PRs, commit
-     messages, or searching for relevant code changes).
+     messages, or searching for relevant code changes).  Pay special
+     attention to issues about warnings or build failures – these may be
+     fixed by the new `-Werror` enforcement or by refactors.
    * If the issue is resolved, close it using `mcp_github_issue_write`.
    * If the issue is still relevant but the codebase has changed,
      update the issue body/labels/comments to reflect the current
