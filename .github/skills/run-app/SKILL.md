@@ -17,4 +17,5 @@ telemetry files into the latter.  It also prints the exact command line and
 paths being used, and after a headless run reports the exit code and shows
 the last 20 lines of any log files so you can quickly confirm behaviour
 without manually opening them.  Requires an X/Wayland display to open the
-window.
+window; for CI or machines without a display, run under Xvfb or set
+`DISPLAY` appropriately when invoking `scripts/run.sh`.
