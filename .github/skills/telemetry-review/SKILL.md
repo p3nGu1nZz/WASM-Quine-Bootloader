@@ -10,6 +10,7 @@ Inspect bootloader outputs under `build/<target>/bin/logs/` and
 
 - validate quine/evolution cycles and kernel integrity across generations
 - spot `[error]`/`[warning]` lines, retries, or unexpected kernel size changes
+- watch for new advisor/exporter messages about file I/O or empty decodes
 - ensure each `gen_<n>.txt` export contains its header, base64 blob, hex dump,
   disassembly section and history entries
 - detect telemetry omissions, serialization glitches, or parse failures
