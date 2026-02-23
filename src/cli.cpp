@@ -21,6 +21,19 @@ static HeuristicMode parseHeuristicMode(const char* v) {
     return HeuristicMode::NONE;
 }
 
+// small helper to extract an option value either from "--opt=val" or
+// by consuming the next argv element.  `i` is incremented when the value is
+// taken from the following argument so callers don't have to duplicate the
+// boilerplate.
+static const char* extractValue(const std::string& arg, int& i, int argc, char** argv) {
+    auto pos = arg.find('=');
+    if (pos != std::string::npos)
+        return arg.c_str() + pos + 1;
+    if (i + 1 < argc)
+        return argv[++i];
+    return nullptr;
+}
+
 CliOptions parseCli(int argc, char** argv) {
     CliOptions opts;
     for (int i = 1; i < argc; ++i) {
@@ -35,10 +48,7 @@ CliOptions parseCli(int argc, char** argv) {
         } else if (argstr == "--windowed") {
             opts.fullscreen = false;
         } else if (argstr.rfind("--telemetry-level", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) {
                 opts.telemetryLevel = parseTelemetryLevel(val);
                 if ((opts.telemetryLevel == TelemetryLevel::BASIC &&
@@ -50,16 +60,10 @@ CliOptions parseCli(int argc, char** argv) {
                 }
             }
         } else if (argstr.rfind("--telemetry-dir", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) opts.telemetryDir = val;
         } else if (argstr.rfind("--mutation-strategy", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) {
                 opts.mutationStrategy = parseMutationStrategy(val);
                 if (opts.mutationStrategy == MutationStrategy::RANDOM &&
@@ -69,10 +73,7 @@ CliOptions parseCli(int argc, char** argv) {
                 }
             }
         } else if (argstr.rfind("--heuristic", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) {
                 opts.heuristic = parseHeuristicMode(val);
                 if (opts.heuristic == HeuristicMode::NONE &&
@@ -84,10 +85,7 @@ CliOptions parseCli(int argc, char** argv) {
         } else if (argstr == "--profile") {
             opts.profile = true;
         } else if (argstr.rfind("--max-gen", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) {
                 char* end;
                 long v = std::strtol(val, &end, 10);
@@ -99,16 +97,10 @@ CliOptions parseCli(int argc, char** argv) {
                 }
             }
         } else if (argstr.rfind("--save-model", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) opts.saveModelPath = val;
         } else if (argstr.rfind("--load-model", 0) == 0) {
-            const char* val = nullptr;
-            auto pos = argstr.find('=');
-            if (pos != std::string::npos) val = argstr.c_str() + pos + 1;
-            else if (i + 1 < argc) val = argv[++i];
+            const char* val = extractValue(argstr, i, argc, argv);
             if (val) opts.loadModelPath = val;
         } else {
             std::cerr << "Warning: unrecognised option '" << argstr << "'\n";

@@ -9,8 +9,10 @@
 // Convert enum values to display strings
 std::string stateStr(SystemState s);
 
-// DPI scaling helpers (scale factor relative to 96 DPI)
-float dpiScaleFromDpi(float ddpi);
+// DPI scaling helpers used by the GUI layer.  The only public
+// helper is computeDpiScale(), which derives a scale factor solely from the
+// resolution of an SDL window; the previously‑exported `dpiScaleFromDpi`
+// helper was removed because it is no longer called by production code.
 // compute scale using an SDL_Window handle
 float computeDpiScale(SDL_Window* window);
 

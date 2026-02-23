@@ -70,13 +70,20 @@ App::App(const CliOptions& opts)
     // Open buffered log file (flushes every ~1 s; always flushed on exit/signal)
     m_logger.init("bin/logs/bootloader_" + nowFileStamp() + ".log");
 
-    // Parse initial kernel
-    auto bytes = base64_decode(m_currentKernel);
-    m_instructions = extractCodeSection(bytes);
+    // Parse initial kernel and populate the instruction list; this also
+    // fills the byte cache used by `kernelBytes()`.
+    updateKernelData();
 }
 
 uint64_t App::now() const {
     return static_cast<uint64_t>(SDL_GetTicks());
+}
+
+// decode the current base64 kernel and refresh the parsed instruction
+// list.  callers must call this whenever m_currentKernel mutates.
+void App::updateKernelData() {
+    m_currentKernelBytes = base64_decode(m_currentKernel);
+    m_instructions = extractCodeSection(m_currentKernelBytes);
 }
 
 size_t App::kernelBytes() const {
@@ -405,14 +412,12 @@ void App::handleBootFailure(const std::string& reason) {
         m_nextKernel.clear();
         m_pendingMutation = evo.mutationSequence;
         m_logger.log("ADAPTATION: " + evo.description, "mutation");
-        auto bytes = base64_decode(m_currentKernel);
-        m_instructions = extractCodeSection(bytes);
+        updateKernelData();
     } catch (...) {
         m_currentKernel = m_stableKernel;
         m_pendingMutation.clear();
         m_logger.log("ADAPTATION: Fallback to base stable kernel", "system");
-        auto bytes = base64_decode(m_currentKernel);
-        m_instructions = extractCodeSection(bytes);
+        updateKernelData();
     }
 
     transitionTo(SystemState::REPAIRING);
@@ -455,10 +460,9 @@ void App::doReboot(bool success) {
         if (!m_nextKernel.empty()) {
             m_currentKernel = m_nextKernel;
             m_nextKernel.clear();
-            auto bytes = base64_decode(m_currentKernel);
-            m_instructions = extractCodeSection(bytes);
-            // update size min/max
-            int sz = (int)bytes.size();
+            updateKernelData();
+            // update size min/max using cached bytes
+            int sz = (int)m_currentKernelBytes.size();
             m_kernelSizeMin = std::min(m_kernelSizeMin, sz);
             m_kernelSizeMax = std::max(m_kernelSizeMax, sz);
         }

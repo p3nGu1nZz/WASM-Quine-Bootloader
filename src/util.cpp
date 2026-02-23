@@ -26,12 +26,6 @@ std::string stateStr(SystemState s) {
 // DPI scaling utilities
 // -----------------------------------------------------------------------------
 
-// simple helper calculating scale factor relative to 96 dpi (unused now)
-float dpiScaleFromDpi(float ddpi) {
-    if (ddpi <= 0.0f) return 1.0f;
-    return ddpi / 96.0f;
-}
-
 // compute a font/UI scale based purely on window size
 float computeDpiScale(SDL_Window* window) {
     if (!window) return 1.0f;

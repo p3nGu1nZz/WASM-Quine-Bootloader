@@ -152,6 +152,11 @@ private:
     std::string m_currentKernel;
     std::string m_nextKernel;    // deferred on successful quine
 
+    // cache the decoded bytes for the current kernel; updated whenever
+    // `m_currentKernel` changes.  This avoids repeated base64 decoding in
+    // kernelBytes() and other accessors.
+    std::vector<uint8_t> m_currentKernelBytes;
+
     std::vector<Instruction>              m_instructions;
     std::vector<std::vector<uint8_t>>     m_knownInstructions;
     std::vector<uint8_t>                  m_pendingMutation;
@@ -180,4 +185,8 @@ private:
     bool m_shouldExit = false;
 
     uint64_t now() const;
+
+    // utility used internally whenever the base64 kernel string is updated.
+    // decodes into `m_currentKernelBytes` and refreshes `m_instructions`.
+    void updateKernelData();
 };

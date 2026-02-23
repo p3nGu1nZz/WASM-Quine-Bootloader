@@ -6,13 +6,6 @@
 #include "app.h"
 #include <filesystem>
 
-TEST_CASE("dpiScaleFromDpi returns 1.0 at 96 dpi", "[dpi]") {
-    REQUIRE(dpiScaleFromDpi(96.0f) == 1.0f);
-}
-
-TEST_CASE("dpiScaleFromDpi doubles at 192 dpi", "[dpi]") {
-    REQUIRE(dpiScaleFromDpi(192.0f) == 2.0f);
-}
 
 TEST_CASE("computeDpiScale handles null window gracefully", "[dpi]") {
     REQUIRE(computeDpiScale(nullptr) == 1.0f);
