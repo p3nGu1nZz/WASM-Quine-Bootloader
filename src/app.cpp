@@ -20,6 +20,11 @@ App::App()
 {
 }
 
+App::~App() {
+    // persist blacklist on shutdown
+    saveBlacklist();
+}
+
 App::App(const CliOptions& opts)
     : m_opts(opts)
 {
@@ -33,6 +38,17 @@ App::App(const CliOptions& opts)
 
     // session identifier used to group exports
     m_runId = nowFileStamp();
+
+    // sanitize telemetry directory override early, warn if invalid
+    if (!m_opts.telemetryDir.empty()) {
+        std::string clean = sanitizeRelativePath(m_opts.telemetryDir);
+        if (clean.empty()) {
+            m_logger.log("WARNING: invalid telemetryDir '" + m_opts.telemetryDir + "', falling back to default", "warning");
+            m_opts.telemetryDir.clear();
+        } else {
+            m_opts.telemetryDir = clean;
+        }
+    }
 
     // create advisor using telemetry directory (allow override via CLI)
     {
@@ -66,6 +82,9 @@ App::App(const CliOptions& opts)
     namespace fs = std::filesystem;
     fs::create_directories("bin/logs");
     fs::create_directories(fs::path("bin/seq") / m_runId);
+
+    // load any persisted heuristic blacklist from previous sessions
+    loadBlacklist();
 
     // Open buffered log file (flushes every ~1 s; always flushed on exit/signal)
     m_logger.init("bin/logs/bootloader_" + nowFileStamp() + ".log");
@@ -517,6 +536,48 @@ std::string App::exportHistory() const {
 }
 
 // Write the current telemetry and kernel blob to the session directory.
+void App::loadBlacklist() {
+    namespace fs = std::filesystem;
+    fs::path base = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
+    fs::path file = base / "blacklist.txt";
+    if (!fs::exists(file)) return;
+    std::ifstream f(file);
+    if (!f) return;
+    while (f) {
+        int weight;
+        std::string hex;
+        if (!(f >> weight >> hex)) break;
+        std::vector<uint8_t> seq;
+        for (size_t i = 0; i + 1 < hex.size(); i += 2) {
+            unsigned int byte;
+            std::stringstream ss;
+            ss << std::hex << hex.substr(i, 2);
+            ss >> byte;
+            seq.push_back((uint8_t)byte);
+        }
+        if (!seq.empty() && weight > 0) {
+            m_blacklist[seq] = weight;
+        }
+    }
+}
+
+void App::saveBlacklist() const {
+    namespace fs = std::filesystem;
+    fs::path base = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
+    fs::create_directories(base);
+    fs::path file = base / "blacklist.txt";
+    std::ofstream f(file);
+    if (!f) return;
+    for (const auto& [seq, weight] : m_blacklist) {
+        if (weight <= 0) continue;
+        f << weight << " ";
+        for (auto b : seq) {
+            f << std::hex << std::setw(2) << std::setfill('0') << (int)b;
+        }
+        f << "\n";
+    }
+}
+
 void App::autoExport() {
     namespace fs = std::filesystem;
     try {

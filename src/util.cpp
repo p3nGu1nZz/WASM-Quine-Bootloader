@@ -113,3 +113,20 @@ std::filesystem::path sequenceDir(const std::string& runId) {
     std::filesystem::path p = exe / "bin" / "seq" / cleaned;
     return p;
 }
+
+std::string sanitizeRelativePath(const std::string& input) {
+    if (input.empty()) return "";
+    namespace fs = std::filesystem;
+    fs::path p = fs::path(input).lexically_normal();
+    // absolute paths are not allowed
+    if (p.is_absolute()) return "";
+    // reject any parent path references
+    for (auto& part : p) {
+        if (part == "..")
+            return "";
+    }
+    // also prohibit paths that begin with a separator or traverse above cwd
+    std::string s = p.string();
+    if (s.find("..") != std::string::npos) return "";
+    return s;
+}

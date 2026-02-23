@@ -92,6 +92,41 @@ TEST_CASE("sequenceDir sanitizes runId", "[util]") {
     }
 }
 
+TEST_CASE("sanitizeRelativePath filters dangerous telemetry dirs", "[util]") {
+    REQUIRE(sanitizeRelativePath("valid/path") == "valid/path");
+    REQUIRE(sanitizeRelativePath("../evil") == "");
+    REQUIRE(sanitizeRelativePath("/absolute") == "");
+    REQUIRE(sanitizeRelativePath("sub/../up") == "");
+}
+
+TEST_CASE("blacklist persistence round-trip", "[app][blacklist]") {
+    namespace fs = std::filesystem;
+    fs::remove_all("test_seq");
+    CliOptions opts;
+    opts.telemetryDir = "test_seq";
+    opts.heuristic = HeuristicMode::BLACKLIST;
+    {
+        App a(opts);
+        std::vector<uint8_t> seq = {0x01, 0x02, 0x03};
+        a.addToBlacklist(seq);
+        REQUIRE(a.isBlacklisted(seq));
+    }
+    {
+        App b(opts);
+        REQUIRE(b.isBlacklisted({0x01, 0x02, 0x03}));
+    }
+    fs::remove_all("test_seq");
+}
+
+TEST_CASE("App sanitizes invalid telemetryDir", "[app][telemetry]") {
+    CliOptions opts;
+    opts.telemetryDir = "../notallowed";
+    App a(opts);
+    REQUIRE(a.options().telemetryDir.empty());
+}
+
+// rest of file unchanged
+
 TEST_CASE("randomId yields 9 alphanumeric chars and varies", "[util]") {
     std::string id1 = randomId();
     std::string id2 = randomId();

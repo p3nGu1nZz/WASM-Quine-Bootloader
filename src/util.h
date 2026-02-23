@@ -36,3 +36,10 @@ std::string executableDir();
 // the telemetry for that run should be written.  The result is
 // "<exe_dir>/bin/seq/<runId>".
 std::filesystem::path sequenceDir(const std::string& runId);
+
+// Ensure a user-supplied directory path is safe to use. The returned
+// string will be empty if the input is absolute, contains ".." segments,
+// or would escape the working directory.  This is used for telemetry
+// directory overrides passed via CLI.  Caller may log a warning on
+// failure.
+std::string sanitizeRelativePath(const std::string& input);

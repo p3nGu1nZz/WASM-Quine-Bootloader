@@ -93,6 +93,11 @@ public:
     int kernelSizeMax() const { return m_kernelSizeMax; }
     const std::string& lastTrapReason() const { return m_lastTrapReason; }
 
+    // Persist blacklist across runs
+    ~App();                             // flush blacklist on destruction
+    void loadBlacklist();
+    void saveBlacklist() const;
+
 private:
     // FSM helpers
     void transitionTo(SystemState s);

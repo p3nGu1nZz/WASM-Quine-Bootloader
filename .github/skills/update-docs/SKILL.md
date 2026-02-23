@@ -26,6 +26,13 @@ This skill mirrors the contents of `.github/prompts/update-docs.prompt.md`.
 - Inline comments in headers and source per conventions.
 - Script usage comments in `scripts/*.sh`.
 
+## Behaviour
+
+This skill does more than outline steps: when invoked the agent itself
+edits the relevant documentation files, stages the changes, and can even
+call `commit-push` automatically if configured by the calling workflow.
+It is **not** merely a descriptive checklist.
+
 ## Checklist
 
 - [ ] README prerequisites accurate?

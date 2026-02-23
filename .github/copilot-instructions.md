@@ -133,3 +133,10 @@ Available skills:
 - `improve-skills` – refine and compact all existing skill documents.
 
 Each skill has a `SKILL.md` in `.github/skills/`. Add new skills there with YAML frontmatter and concise instructions; longer references can live elsewhere.  Workflow prompts live under `.github/prompts/` and are referenced by the `repo-facts` and `update-issues` skills when following the project workflow.
+
+> **Execution note:** when a user asks the agent to run a specific skill
+> (for example, "run `update-docs`" or "improve the skill set"), the
+> agent should carry out the actions described in that skill and make the
+> corresponding edits.  Merely parroting the checklist without performing
+> the work is insufficient; skills are **automated procedures** rather than
+> loose guidelines.
