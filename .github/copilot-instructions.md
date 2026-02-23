@@ -115,6 +115,7 @@ Available skills:
 - `update-skills` – update skill docs and copilot-instructions.
 - `update-memory` – write repository facts to memory.
 - `search-memory` – search the memory store.
+- `repo-facts` – dig through the repository and return a comprehensive technical summary.
 - `telemetry-review` – inspect logs/seq exports.
 - `update-issues` – synchronise GitHub issues with the codebase (close done items, update descriptions, generate new tasks).
 - `improve-src` – sweep source files fixing errors, refactoring and removing dead code.

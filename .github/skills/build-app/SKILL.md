@@ -21,8 +21,13 @@ bash scripts/test.sh              # build + run all tests
 Targets produce `build/<target>/bootloader(.exe)` and link against
 SDL3/wasm3 as needed.  `-Werror` is now enabled for GCC/Clang, so the
 code must compile without any warnings; address them before committing.
-Add sources in `CMakeLists.txt` under `target_sources(bootloader …)` and
-`enable_testing()` for new tests.
+Run `bash scripts/test.sh` after building to catch regressions early.
+`compile_commands.json` is generated in the build directory for
+IDE/autocomplete support.  Add sources in `CMakeLists.txt` under
+`target_sources(bootloader …)` and `enable_testing()` for new tests.
 
-Troubleshooting: missing SDL3? rerun setup; missing wasm3? `git
-submodule update --init`; install Ninja or bump CMake (>3.20) if errors.
+Troubleshooting: missing SDL3? rerun setup; missing wasm3?
+`git submodule update --init`; install Ninja or bump CMake (>3.20) if
+errors.  If you see warnings turned into errors, fix the underlying
+issue or add a proper `#pragma` suppression with a comment explaining
+why it's safe.

@@ -21,9 +21,12 @@ Record important repository facts—conventions, paths, behaviours, new features
    changed since the last invocation of this skill.
 2. From the diff/commit messages, pick out lasting, repo‑wide facts such as
    new directories, renamed components, coding conventions, CLI flags or
-   build requirements.
+   build requirements.  Before adding a new entry, run `search-memory`
+   to ensure the fact isn't already stored; avoid duplication.
 3. For each fact, call the `memory` tool with a concise subject, the fact
-   string, proper citations (file paths/commits), and a detailed reason.
+   string, proper citations (file paths/commits), and a detailed reason.  A
+   good entry is <200 characters and actionable; see other memory entries
+   for examples.
 4. If a previously stored fact is now invalid, either overwrite it with a
    corrected statement or add a new entry explaining the deprecation.
 5. Optionally, invoke `runSubagent` with the `search-memory` agent to verify

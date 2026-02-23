@@ -23,11 +23,16 @@ matter, and suggest concrete fixes or enhancements.
    missing tests or fragile constructs that would benefit from mocking
    or additional assertions.
 3. Look at the shell helper scripts (`build.sh`, `run.sh`, `test.sh`) –
-   they are part of the user experience and can harbour portability or
-   usability issues (e.g. temp file handling, error messages).
+   they are part of the developer experience and can harbour portability or
+   usability issues (e.g. temp file handling, environment variables,
+   argument parsing, log output).  Verify that any new CLI flags are
+   handled consistently, documented in the README/specs, and covered by
+   tests where appropriate.
 4. Consider security aspects: unbounded input parsing, `exec` usage,
-   directory traversal when reading telemetry, and any use of system
-   calls or file I/O that could be misused.
+   directory traversal when reading telemetry or export files, and any use
+   of system calls or file I/O that could be misused (e.g. untrusted
+   paths for log/seq directories).  Ensure CLI input is validated and
+   errors are handled gracefully, avoiding undefined behaviour.
 5. Note performance hotspots (frequent base64 decodes, vector
    allocations, GUI rendering), and propose lightweight refactors such as
    caching, preallocation or algorithmic changes.  Pay attention to new
@@ -41,9 +46,9 @@ matter, and suggest concrete fixes or enhancements.
    appropriate) code snippets.
 8. Generate **a list of roughly twelve actionable next steps** that
    translate the review findings into tasks (e.g. "Add argument validation
-   to `parseCli`", "Cache decoded kernels in exporter" or "write spec for
-   neural matrix serialization").  These will become GitHub issue drafts
-   when the user selects them.
+   to `parseCli`", "Cache decoded kernels in exporter", "add a test for
+   heuristic DECAY behaviour" or "update telemetry spec with new fields").
+   These will become GitHub issue drafts when the user selects them.
 9. Where issues are proposed, clearly mark them so they can be
    programmatically converted to actual GitHub issues by subsequent
    agent actions.  Use a simple format like "[ISSUE] Title: ... Body: ...".

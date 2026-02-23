@@ -13,10 +13,13 @@ Agents should perform the push themselves rather than deferring to a user.
 
 ## Usage
 
-- Run whenever you've made local changes that should be committed and
-  uploaded.
-- Supply a succinct commit message; the agent will use it with the MCP
-  push tool.
+- Invoke after making any local modifications that you want recorded in
+  version control and visible on GitHub.
+- Provide a succinct but descriptive commit message; the agent will use
+  it verbatim with the MCP push tool.  Mention issue numbers or
+  relevant subsystems when appropriate.
+- The skill may also be run automatically by higher‑level workflows like
+  `update-docs` or `improve-src` when they modify files.
 
 ## Behaviour
 
@@ -32,11 +35,16 @@ Agents should perform the push themselves rather than deferring to a user.
 4. If the push fails because the local branch is behind the remote, run
    `git pull --rebase` (or perform an equivalent merge) and retry the
    push.  Agents may also fall back to shell git commands in cases where
-   push_files is unavailable or unsuitable.
+   `push_files` is unavailable or unsuitable.  On merge conflicts the
+   agent should either resolve trivial whitespace/style clashes or report
+   the conflicting paths for manual intervention.  Do **not** force‑push
+   unless explicitly directed by the user.
 5. When the branch is not the repository default, create a pull request
    using either `gh pr create` or `mcp_github_create_pull_request`.  The
    commit description should be clear and reference any related issue or
-   planning note.
+   planning note.  Prefer **squash** or **rebase‑merge** methods for
+   consolidating iterative commits unless the user asks for a merge
+   commit.
 6. If merge conflicts occur during the rebase or pull step, report the
    conflicting paths back to the user and pause for manual intervention,
    or attempt to auto-resolve trivial conflicts (e.g. whitespace).

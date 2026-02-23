@@ -36,6 +36,7 @@ This repo includes a full suite of Copilot agent skills; see `.github/copilot-in
 - `setup-project`, `build-app`, `run-app`, `test-app`
 - `update-docs`, `update-specs`, `update-skills`, `update-memory`
 - `search-memory`, `telemetry-review`, `introspect-telemetry`
+- `repo-facts` – deep dive into the repository and report its architecture, design and blockers.
 - `improve-skills`, `improve-src`, `commit-push`
 - `update-issues`  <!-- handles scanning open issues, closing implemented ones, and generating new tasks from code reviews -->
 

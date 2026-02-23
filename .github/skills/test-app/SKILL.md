@@ -7,7 +7,9 @@ description: Build and run the unit tests for the WASM Quine Bootloader applicat
 
 ## Purpose
 
-Build the project and run unit tests to catch regressions.
+Build the project and run unit tests to catch regressions.  Tests
+are compiled with the same flags as the main project (`-Werror` etc.), so
+new test code must also be warning-free.
 
 ## Quick Commands
 
@@ -25,5 +27,7 @@ test executables, total assertions, and duration for quick overview.
 Behaviour: invokes `build.sh`, builds all `enable_testing()` targets,
 runs `ctest --output-on-failure`, and exits non-zero on failure.
 
-See the `test/` directory for example test files.  For writing new tests or
-troubleshooting consult the prompt file.
+See the `test/` directory for example test files.  New tests should
+follow the naming convention `test_<module>.cpp` and use descriptive
+`TEST_CASE` names.  Keep them fast and deterministic.  For writing new
+tests or troubleshooting consult the prompt file.
