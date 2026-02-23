@@ -116,17 +116,16 @@ std::filesystem::path sequenceDir(const std::string& runId) {
 
 std::string sanitizeRelativePath(const std::string& input) {
     if (input.empty()) return "";
+    // reject any literal parent-traversal tokens in the raw input
+    if (input.find("..") != std::string::npos) return "";
     namespace fs = std::filesystem;
     fs::path p = fs::path(input).lexically_normal();
     // absolute paths are not allowed
     if (p.is_absolute()) return "";
-    // reject any parent path references
+    // reject any parent path references after normalization as a double-check
     for (auto& part : p) {
         if (part == "..")
             return "";
     }
-    // also prohibit paths that begin with a separator or traverse above cwd
-    std::string s = p.string();
-    if (s.find("..") != std::string::npos) return "";
-    return s;
+    return p.string();
 }
