@@ -5,6 +5,12 @@ description: Update the project's documentation files (README, copilot-instructi
 
 # update-docs
 
+## Purpose
+
+Refresh the project's documentation (README, copilot-instructions, docs in
+`docs/` or `docs/specs/`) whenever code or conventions change. Ensures
+users and agents have accurate instructions.
+
 This skill mirrors the contents of `.github/prompts/update-docs.prompt.md`.
 
 ## When to run

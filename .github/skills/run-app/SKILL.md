@@ -5,17 +5,32 @@ description: Run the WASM Quine Bootloader executable in either terminal/headles
 
 # run-app
 
-Launch the bootloader in GUI or headless mode (default GUI).  Ensure
-`external/SDL3` and `external/imgui` exist (`bash scripts/setup.sh`) and
-build first (`bash scripts/build.sh [target]`).
+## Purpose
 
-`bash scripts/run.sh [--headless|--windowed]`  (GUI by default)
-`bash scripts/run.sh --monitor`  tails logs.
+Start the WASM Quine Bootloader executable in either GUI or headless
+mode.  This is the primary way to exercise and debug the application once
+it has been built.
 
-The wrapper ensures `bin/logs` and `bin/seq` exist; logs go in the former and
-telemetry files into the latter.  It also prints the exact command line and
-paths being used, and after a headless run reports the exit code and shows
-the last 20 lines of any log files so you can quickly confirm behaviour
-without manually opening them.  Requires an X/Wayland display to open the
-window; for CI or machines without a display, run under Xvfb or set
-`DISPLAY` appropriately when invoking `scripts/run.sh`.
+## Behaviour
+
+- Ensures required externals (`SDL3`/`ImGui`) exist and that the
+  binary has been built (`bash scripts/build.sh`).
+- Creates `bin/logs` and `bin/seq` directories if absent.
+- Prints the full command line, log/telemetry paths, and after a headless
+  run shows the exit code plus the last 20 log lines for immediate
+  feedback.
+- `--monitor` option runs the app in the background and tails log files.
+- On systems without a display, you can run under Xvfb or set `DISPLAY`
+  appropriately; the GUI requires an X/Wayland server.
+
+## Usage
+
+```bash
+bash scripts/run.sh            # GUI (default)
+bash scripts/run.sh --headless # terminal-only
+bash scripts/run.sh --windowed  # force windowed mode
+bash scripts/run.sh --monitor   # run + tail logs
+```
+
+Run specific build targets by prefixing the command with the directory or
+by invoking the binary directly (e.g. `./build/linux-debug/bootloader`).

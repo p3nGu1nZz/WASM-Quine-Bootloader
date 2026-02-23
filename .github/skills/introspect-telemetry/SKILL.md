@@ -5,11 +5,15 @@ description: Guide agents through inspecting bootloader logs and sequence export
 
 # introspect-telemetry
 
-Use after running the bootloader (GUI or headless) to analyse
-`./bin/logs/*` and `./bin/seq/*` for errors, anomalies or missing data.
-Useful before bug reports, feature planning, or when adding new fields.
+## Purpose
 
-Behaviour:
+Guide agents through a deeper inspection of bootloader logs and sequence
+exports for errors, anomalies, or opportunities for enhancement.  This
+skill complements `telemetry-review` when you need more detailed manual
+analysis and is valuable before writing bug reports or planning features.
+
+## Behaviour
+
 1. Identify the most recent log (`ls -t build/*/bin/logs/*.log | head -1`) and
    grep for `[error]`, `[warning]` or the special `[telemetry warning]`
    messages that indicate missing or invalid export fields.  Note recurring
@@ -27,6 +31,11 @@ Behaviour:
    CSV/JSON for external analysis.
 5. Cross-reference findings with the `telemetry-review` skill for a quick
    sanity check; use this skill when deeper manual inspection is needed.
+
+## Usage
+
+Invoke after a run to thoroughly investigate problems or when the
+telemetry format has changed.  It can be scripted or run interactively.
 
 **Examples**
 ```bash

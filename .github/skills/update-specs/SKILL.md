@@ -5,6 +5,12 @@ description: Edit or add design specification documents in `docs/` to match curr
 
 # update-specs
 
+## Purpose
+
+Edit or add design specification documents to reflect current or planned
+behaviour.  Specs form the authoritative reference for components such as
+CLI, telemetry, GUI, and the WASM kernel.
+
 This skill corresponds to the instructions in `.github/prompts/update-specs.prompt.md`.
 
 ## Spec locations

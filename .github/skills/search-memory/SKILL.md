@@ -5,20 +5,24 @@ description: Search the agent's memory store for facts matching a query. Useful 
 
 # search-memory
 
-Search stored memory entries by keyword or phrase to recall past facts and
-avoid duplication.  The skill returns subjects, facts, citations, and reasons.
+## Purpose
 
-Example prompt:
-```
-Use search-memory to look up facts about "cli behaviour" or "spec path".
-```
+Query the agent’s memory store for facts matching a keyword or phrase. This
+helps recall past decisions, repository conventions, or previously
+recorded details.
 
 ## Behaviour
 
-- The skill performs a substring search over existing memory entries.
-- Returns the subject, fact, citations, and reason for each match.
+- Performs a substring search over all memory entries.
+- Returns a list of matches including subject, fact, citations and reason.
+
+## Usage
+
+Ask the agent to run `search-memory` before adding new facts with
+`update-memory`, e.g. ``Use search-memory to look up facts about "cli
+behaviour" or "spec path".``
 
 ## Notes
 
-- This skill does not modify memory; it is read-only.
-- Use it before running update-memory to avoid redundant facts.
+- Read-only; it never alters memory.
+- Useful for preventing duplicate entries when updating memory.

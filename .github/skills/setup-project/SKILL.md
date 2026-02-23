@@ -6,27 +6,34 @@ description: Install or reset all third-party dependencies used by the project (
 
 # setup-project
 
-Install or reset third-party dependencies (SDL3, ImGui, wasm3, Catch2).
-Run when configuring a new machine, after cleaning externals, or when
-pulling the repo for the first time.
+## Purpose
 
-Usage examples:
+Install or reset all third-party dependencies used by the project:
+SDL3, Dear ImGui, wasm3 and Catch2. This skill is used when setting up a
+new development machine, after cleaning the externals directory, or when
+cloning the repo for the first time.
+
+## Behaviour
+
+- Deletes `external/` and `bin/` when `--clean` is passed.
+- Installs required system packages (`cmake`, `build-essential`, fonts,
+  etc.) and may require `sudo`.
+- Clones or updates the third‑party repositories and builds SDL3 (and
+  Catch2 headers) into `external/`.
+- Optionally installs MinGW‑w64 when invoked with the `windows` arg.
+- Emits coloured `[INFO]/[WARN]/[ERROR]` messages and section headers for
+  readability.
+- Safe to rerun; it skips already-populated directories unless `--clean`.
+
+## Usage
+
 ```bash
 bash scripts/setup.sh              # normal install
 bash scripts/setup.sh --clean      # wipe external/ & bin/ then install
-bash scripts/setup.sh windows      # add Windows cross compile support
+bash scripts/setup.sh windows      # add Windows cross-compile support
 bash scripts/setup.sh --clean windows
 ```
 
-Behaviour:
-- Deletes `external/` and `bin/` if `--clean`.
-- Requires network access to clone repositories and enough disk space
-  for build artifacts; may prompt for `sudo` when installing packages.
-- Installs system packages (cmake, build-essential, fonts, etc.).
-- Optionally installs MinGW-w64 with `windows` arg.
-- Clones/updates wasm3, ImGui, Catch2 and builds SDL3 + Catch2 headers.
-- Emits coloured `[INFO]/[WARN]/[ERROR]` output and section headings.
-
-Outputs populated `external/` and `bin/` dirs; safe to rerun (skips if present).
-Designed for Ubuntu/WSL but works on other Debian-derived systems.
+This script targets Ubuntu/WSL but generally works on Debian-derived
+systems.  It can also be used on macOS with manual adjustments.
 ````

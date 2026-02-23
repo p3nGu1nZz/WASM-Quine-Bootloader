@@ -5,41 +5,38 @@ description: Enhance and expand the repository's unit tests for better coverage 
 
 # improve-tests
 
-This skill instructs the agent to examine the existing test suite and
-identifiy ways to improve coverage, fill gaps, and add new tests for
-recently added code.  It can also generate tests for future features or
-refactors as part of the review process.
+## Purpose
 
-## Expectations
+Enhance and expand the unit-test suite to improve coverage and robustness
+whenever the code changes or new features are added.
 
-1. Read all current `test/*.cpp` files and note which modules and
-   functions they exercise.  Use `grep_search` or `semantic_search` to
-   locate untested symbols in `src/` such as free functions or class
-   methods.  Ensure tests compile cleanly under the same `-Werror` flags
-   as the main code.
-2. Identify missing scenarios, boundary conditions, and failure cases
-   (e.g. invalid CLI arguments, empty telemetry entries, file I/O
-   errors, GUI initialization errors) that are not already covered.  Add
-   tests for new CLI flags like `--heuristic` or `--mutation-strategy`
-   and for telemetry exports containing extra fields or warnings.
-3. For each identified gap, propose a new Catch2 test case (or modify an
-   existing one) with a clear description and assertions.  Include code
-   snippets where helpful.
-4. When new source files are added (e.g. `feature.cpp`, `advisor.cpp`),
-   ensure corresponding tests exist and are reasonably thorough.  If the
-   file contains TODOs or stubs, propose tests that will drive their
-   implementation.
-5. Check the scripts (`scripts/*.sh`) and tools; if they have tricky
-   logic, write a CMake test or shell-based check to verify behaviours
-   like argument parsing or cleanup.  Update `test/test_util_dpi.cpp`
-   or create new helpers as needed.
-6. After proposing tests, run `bash scripts/test.sh` to verify they
-   compile and pass.  If failures arise, document them and either fix the
-   code or adjust the tests accordingly.
-7. Report back a summary of what was done: new/modified tests, any
-   uncovered issues, and suggestions for further enhancements.  Mention
-   additional tests that could be added in future, such as fuzzing the
-   kernel mutation logic or exercising the heuristic decay mode.
+## Behaviour
+
+1. Audit existing `test/*.cpp` files to see which modules and functions
+   are exercised.  Use `grep_search`/`semantic_search` to locate untested
+   symbols in `src/`.  Tests must compile under `-Werror`.
+2. Identify missing scenarios, boundaries and failure cases (invalid CLI
+   args, truncated telemetry, file errors, GUI init failures, etc.).
+   Add tests for any new CLI flags such as `--heuristic` or
+   `--mutation-strategy`.
+3. Propose or write Catch2 test cases for each gap, with clear assertions
+   and comments.  Include code snippets where helpful.
+4. Ensure every new source file has a corresponding `test_<module>.cpp`.
+   For files containing TODOs/stubs, create tests that guide their
+   completion.
+5. Test scripts (`scripts/*.sh`) too; if they contain logic, write
+   CMake tests or small shell helpers verifying their behaviour.
+6. Run `bash scripts/test.sh` to compile and execute the suite; fix any
+   regressions or newly discovered bugs.
+7. Summarise changes, note uncovered issues, and suggest future tests
+   (e.g. fuzzing mutation logic or heuristic decay mode).
+
+## Usage
+
+Run this skill before refactors or when adding features.  The agent
+should report new/modified tests and remaining weak spots.  Adhere to the
+convention: each module has a `test_<module>.cpp` and tests use
+`TEST_CASE("...","[tag]")`.
 
 ## Usage
 

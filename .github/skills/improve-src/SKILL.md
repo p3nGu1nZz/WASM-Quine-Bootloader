@@ -5,9 +5,17 @@ description: Perform bulk code improvements such as fixing compile errors, refac
 
 # improve-src
 
-This skill is intended for automated or semi‑automated source code
-maintenance.  It can be invoked by the development agent when a simple
-pass over the repository’s C++/CMake sources is desired.
+## Purpose
+
+Perform a bulk sweep of the source tree to fix compile errors, refactor
+code, and prune dead or deprecated constructs.  This helps keep the
+C++/CMake codebase clean and warning-free.
+
+## Usage
+
+Run during a development maintenance pass or via the `dev_workflow` when
+no immediate feature work is underway.  The agent should describe any
+changes made and optionally commit them in logical units.
 
 ## Behaviour
 

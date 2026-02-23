@@ -5,16 +5,32 @@ description: Analyse the runtime logs and telemetry exports produced by the boot
 
 # telemetry-review
 
+## Purpose
+
+Analyse runtime logs and telemetry exports produced by the bootloader to
+spot anomalies, performance issues, or evolution trends.  It is useful for
+understanding how the WASM kernel is mutating and when failures occur.
+
+## Behaviour
+
 Inspect bootloader outputs under `build/<target>/bin/logs/` and
 `build/<target>/bin/seq/<runid>/` after executing the app.  The goal is to:
 
 - validate quine/evolution cycles and kernel integrity across generations
-- spot `[error]`, `[warning]` or `[telemetry warning]` lines, retries, or unexpected kernel size changes
+- spot `[error]`, `[warning]` or `[telemetry warning]` lines, retries, or
+  unexpected kernel size changes
 - watch for new advisor/exporter messages about file I/O or empty decodes
 - ensure each `gen_<n>.txt` export contains its header, base64 blob, hex dump,
   disassembly section and history entries
 - detect telemetry omissions, serialization glitches, parse failures, or
   missing fields indicated by telemetry warnings
+
+## Usage
+
+Run this skill after a bootloader session (GUI or headless).  Provide the
+paths to the log/seq directories or let the agent discover them.  If
+issues are found, update the telemetry spec or create an issue with sample
+exports.
 - collect data points useful for performance or mutation analysis
 
 **Workflow**
