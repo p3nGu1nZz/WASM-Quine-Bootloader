@@ -48,6 +48,9 @@ This repo includes a full suite of Copilot agent skills; see `.github/copilot-in
 
 Agents can invoke them via natural language prompts; the skills and
 instructions are maintained by the `update-skills`/`improve-skills` tools.
+When told to "run" a skill the agent should execute its logic and make the
+corresponding edits automatically rather than simply listing what could be
+done.
 
 Key skills now also include `code-review` for comprehensive reviews and
 `improve-tests` for expanding the unit test suite.  Workflow prompts are
