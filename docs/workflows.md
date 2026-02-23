@@ -31,9 +31,15 @@ these skills in order:
 - `update-specs`
 - `update-memory`
 
+As a final optional step it will also perform simple issue triage: if any
+GitHub issues are open the agent can list them and ask which one to
+address next.  When the backlog is empty the workflow will invoke
+`code-review` to produce candidate tasks and present them for user
+selection.
+
 Run this workflow whenever you need a periodic clean‑up pass on the code,
-docs or agent metadata.  It does **not** perform feature development or
-issue work.
+docs or agent metadata; feature development itself is typically driven by
+`master_workflow` but a quiet maintenance run may still generate issues.
 
 ---
 
