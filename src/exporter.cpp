@@ -3,6 +3,7 @@
 #include "util.h"
 #include "wasm/parser.h"
 
+#include <iostream>
 #include <sstream>
 #include <iomanip>
 
@@ -32,6 +33,10 @@ std::string buildReport(const ExportData& d) {
 
     // ── Hex dump ──────────────────────────────────────────────────────────────
     auto raw = base64_decode(d.currentKernel);
+    if (raw.empty() && !d.currentKernel.empty()) {
+        std::cerr << "Exporter: decoded kernel is empty (input base64 length="
+                  << d.currentKernel.size() << ")\n";
+    }
     std::ostringstream hd;
     for (size_t i = 0; i < raw.size(); i += 16) {
         hd << "0x" << std::uppercase << std::hex
@@ -89,6 +94,9 @@ std::string buildReport(const ExportData& d) {
     if (d.heuristicBlacklistCount) {
         out << "Heuristic Blacklist Entries: " << d.heuristicBlacklistCount << "\n";
     }
+    // Note: exporter itself doesn't perform file I/O; caller should handle
+    // errors when writing the string.  This function now warns if decoded
+    // raw bytes are unexpectedly empty.
     out << "\n"
         << "CURRENT KERNEL (BASE64):\n"
         << std::string(80, '-') << '\n'

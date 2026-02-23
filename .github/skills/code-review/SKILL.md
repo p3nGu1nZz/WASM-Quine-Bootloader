@@ -30,7 +30,10 @@ matter, and suggest concrete fixes or enhancements.
    calls or file I/O that could be misused.
 5. Note performance hotspots (frequent base64 decodes, vector
    allocations, GUI rendering), and propose lightweight refactors such as
-   caching, preallocation or algorithmic changes.
+   caching, preallocation or algorithmic changes.  Pay attention to new
+   features like the base64 cache and ensure reviewers understand the
+   importance of `-Werror` builds: warnings are treated as errors and must
+   be addressed.
 6. Search for any outdated conventions or comments (e.g. references to
    SDL2) and ensure the review recommendations reflect the current
    architecture (SDL3, `core` library, etc.).

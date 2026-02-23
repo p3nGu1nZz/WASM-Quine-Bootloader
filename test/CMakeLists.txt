@@ -26,6 +26,17 @@ target_link_libraries(test_base64 PRIVATE
 )
 add_test(NAME base64_test COMMAND test_base64)
 
+# wasm parser & kernel tests
+add_executable(test_wasm test_wasm.cpp)
+target_include_directories(test_wasm PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_wasm PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME wasm_test COMMAND test_wasm)
+
 # additional tests
 add_executable(test_util_dpi test_util_dpi.cpp)
 # Include ImGui implementation sources so that Gui methods (which call ImGui)

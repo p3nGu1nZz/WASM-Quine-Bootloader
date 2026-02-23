@@ -87,6 +87,13 @@ target_include_directories(core PUBLIC
 # link library.
 target_link_libraries(core PUBLIC SDL3::SDL3)
 
+# ── Compiler warnings-as-errors ────────────────────────────────────────────
+# Enable -Werror on GCC/Clang to keep the tree warning free.  The project
+# already sets -Wall -Wextra in build scripts; this adds the error flag.
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+    add_compile_options(-Werror)
+endif()
+
 # Application executable (UI + platform glue)
 set(APP_SOURCES
     src/main.cpp

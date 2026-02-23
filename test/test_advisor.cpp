@@ -58,6 +58,19 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     REQUIRE(sc >= 0.0f);
     REQUIRE(sc <= 1.0f);
 
+    // construct a simple advisor with known generations to check formula
+    fs::path root2 = fs::temp_directory_path() / "advtest2";
+    fs::remove_all(root2);
+    // topology requires a run subdirectory
+    fs::create_directories(root2 / "runX");
+    writeExport(root2 / "runX" / "gen_a.txt", 0, "A");
+    writeExport(root2 / "runX" / "gen_b.txt", 20, "B");
+    Advisor adv2(root2.string());
+    float sc2 = adv2.score(seq);
+    // average = 10 -> score = avg/(avg+10) = 0.5
+    REQUIRE(sc2 == Approx(0.5f));
+    fs::remove_all(root2);
+
     // empty advisor returns top score
     Advisor emptyAdv(root.string() + "/nonexistent");
     REQUIRE(emptyAdv.size() == 0);

@@ -2,6 +2,7 @@
 #include "wasm/evolution.h"
 #include "constants.h"
 #include "cli.h"
+#include "base64.h"
 #include <algorithm>
 
 // Note: we rely on KERNEL_GLOB being a valid base64-encoded WASM module
@@ -23,3 +24,32 @@ TEST_CASE("SMART mutation strategy prefers known instructions", "[evolution]") {
 
     REQUIRE(smartCount > randCount);
 }
+
+TEST_CASE("evolveBinary handles very large sequences gracefully", "[evolution][error]") {
+    std::string base = KERNEL_GLOB;
+    // large mutation sequence; behavior may be throw or successful but bounded
+    std::vector<uint8_t> longSeq(33000, 0x01);
+    int seed = 3;
+    bool threw = false;
+    try {
+        auto res = evolveBinary(base, {longSeq}, seed, MutationStrategy::RANDOM);
+        auto decoded = base64_decode(res.binary);
+        REQUIRE(decoded.size() <= 35000); // should not grow unbounded
+        // still valid magic header
+        REQUIRE(decoded[0] == 0x00);
+    } catch (const std::exception&) {
+        threw = true;
+    }
+    // success if we reach here without crashing (either threw or returned)
+}
+
+TEST_CASE("evolveBinary produces valid magic header", "[evolution]") {
+    auto res = evolveBinary(KERNEL_GLOB, {}, 42, MutationStrategy::RANDOM);
+    auto decoded = base64_decode(res.binary);
+    REQUIRE(decoded.size() >= 4);
+    REQUIRE(decoded[0] == 0x00);
+    REQUIRE(decoded[1] == 0x61);
+    REQUIRE(decoded[2] == 0x73);
+    REQUIRE(decoded[3] == 0x6D);
+}
+

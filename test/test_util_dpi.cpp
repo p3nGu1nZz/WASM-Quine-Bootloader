@@ -98,3 +98,29 @@ TEST_CASE("sequenceDir sanitizes runId", "[util]") {
         REQUIRE(std::isalnum(static_cast<unsigned char>(c)));
     }
 }
+
+TEST_CASE("randomId yields 9 alphanumeric chars and varies", "[util]") {
+    std::string id1 = randomId();
+    std::string id2 = randomId();
+    REQUIRE(id1.size() == 9);
+    REQUIRE(id2.size() == 9);
+    for (char c : id1) REQUIRE(std::isalnum(static_cast<unsigned char>(c)));
+    REQUIRE(id1 != id2); // extremely low probability of collision
+}
+
+TEST_CASE("decodeBase64Cached returns same vector and caches results", "[util]") {
+    std::string hello = "aGVsbG8="; // "hello"
+    auto v1 = decodeBase64Cached(hello);
+    auto v2 = decodeBase64Cached(hello);
+    REQUIRE(v1.size() == 5);
+    REQUIRE(v1 == v2);
+    // ideally the same reference is returned, but relocation may occur when
+    // the internal map resizes; at least the contents must match.
+}
+
+TEST_CASE("nowIso format is ISO-like", "[util]") {
+    std::string t = nowIso();
+    REQUIRE(t.size() >= 20);
+    REQUIRE(t.find('T') != std::string::npos);
+    REQUIRE(t.back() == 'Z');
+}

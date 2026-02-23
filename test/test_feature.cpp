@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "feature.h"
 #include "constants.h"
+#include "base64.h"
 
 TEST_CASE("Feature extractor produces opcode histogram", "[feature]") {
     TelemetryEntry e;
@@ -16,4 +17,7 @@ TEST_CASE("Feature extractor produces opcode histogram", "[feature]") {
     bool saw_nonzero = false;
     for (auto v : vec) if (v > 0.0f) saw_nonzero = true;
     REQUIRE(saw_nonzero);
+    
+    // our only check is that some opcode was seen, the exact opcodes
+    // present may vary between builds so we avoid tying the test to one.
 }

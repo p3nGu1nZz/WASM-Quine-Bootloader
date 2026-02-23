@@ -87,7 +87,9 @@ bash scripts/test.sh                          # build + run all tests
 > **Maintainer tip:** after adding or renaming skills or modifying
 > telemetry/CLI behaviour, run `update-skills` followed by `update-memory`.
 > These ensure the agent documentation and memory stay in sync with the
-> repository state.
+> repository state.  If you also add or change a workflow prompt under
+> `.github/prompts/`, update the README and any docs that reference it so
+> agents know about the new workflow.
 
 Executables run from their build folder; logs/seq created there.
 
@@ -114,6 +116,8 @@ Available skills:
 - `update-memory` – write repository facts to memory.
 - `search-memory` – search the memory store.
 - `telemetry-review` – inspect logs/seq exports.
+- `update-issues` – synchronise GitHub issues with the codebase (close done items, update descriptions, generate new tasks).
+- `improve-src` – sweep source files fixing errors, refactoring and removing dead code.
 - `commit-push` – stage changes, craft a commit message, and push to remote.
 - `introspect-telemetry` – review logs and sequence exports for anomalies.
 - `improve-skills` – refine and compact all existing skill documents.

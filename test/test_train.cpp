@@ -24,3 +24,10 @@ TEST_CASE("Trainer observation increments count and save/load", "[train]") {
     REQUIRE(after[0] == Approx(before[0]));
     std::remove(tmp.c_str());
 }
+
+TEST_CASE("Trainer load/save failures propagate false", "[train]") {
+    Trainer t;
+    REQUIRE(!t.load("nonexistent_file.xyz"));
+    std::string badpath = "/invalid/path/model.dat";
+    REQUIRE(!t.save(badpath));
+}

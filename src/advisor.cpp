@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <regex>
+#include <iostream>
 
 namespace fs = std::filesystem;
 
@@ -19,18 +20,26 @@ Advisor::Advisor(const std::string& baseDir) {
 }
 
 void Advisor::scanDirectory(const std::string& runDir) {
-    for (auto& entry : fs::directory_iterator(runDir)) {
-        if (!entry.is_regular_file()) continue;
-        const auto& name = entry.path().filename().string();
-        if (name.rfind("gen_", 0) == 0 && name.find(".txt") != std::string::npos) {
-            parseFile(entry.path().string());
+    try {
+        for (auto& entry : fs::directory_iterator(runDir)) {
+            if (!entry.is_regular_file()) continue;
+            const auto& name = entry.path().filename().string();
+            if (name.rfind("gen_", 0) == 0 && name.find(".txt") != std::string::npos) {
+                parseFile(entry.path().string());
+            }
         }
+    } catch (const std::exception& e) {
+        std::cerr << "Advisor: unable to scan directory '" << runDir
+                  << "': " << e.what() << "\n";
     }
 }
 
 void Advisor::parseFile(const std::string& path) {
     std::ifstream fin(path);
-    if (!fin) return;
+    if (!fin) {
+        std::cerr << "Advisor: failed to open telemetry file '" << path << "'\n";
+        return;
+    }
 
     TelemetryEntry te;
     std::string line;
