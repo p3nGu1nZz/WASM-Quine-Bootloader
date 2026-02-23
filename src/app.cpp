@@ -153,7 +153,7 @@ void App::tickBooting() {
 }
 
 void App::tickLoading() {
-    static const int LOAD_STEP = 8;
+    static constexpr int LOAD_STEP = 8;
     int kbytes = static_cast<int>(kernelBytes());
 
     if (m_loadingProgress < kbytes) {
