@@ -66,7 +66,8 @@ if [[ "$1" == "--monitor" ]]; then
 fi
 
 # run bootloader normally and report exit status
-./bootloader "$@"
+# use the precomputed BINARY path instead of assuming current dir
+"$BINARY" "$@"
 rc=$?
 info "Bootloader exited with code $rc"
 
