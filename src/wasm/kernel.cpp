@@ -15,6 +15,7 @@ struct KernelUserData {
     LogCallback*    logCb;
     GrowMemCallback* growCb;
     SpawnCallback*  spawnCb;
+    WeightCallback* weightCb;
 };
 
 // ── Host function: env.log(ptr i32, len i32) ─────────────────────────────────
