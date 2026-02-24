@@ -34,7 +34,7 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | Telemetry Export | Dump full hex / disassembly / history report to a `.txt` file |
 | Kernel Cache | App retains decoded kernel/instruction data between generations to
   reduce CPU work |
-| DPI Scaling & Touch UI | UI text and widgets automatically scale with window size (1×–2×) for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
+| DPI Scaling & Touch UI | UI text and widgets automatically scale with window size (1×–2×); a light boost (~0.65× the raw DPI factor) is applied for readability, especially on touch screens. |
 | Multi-Instance Support | Kernels can `env.spawn` siblings; instances are tracked, exported
   in telemetry, and a GUI panel lets you inspect or kill them |
 

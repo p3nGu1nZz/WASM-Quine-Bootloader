@@ -28,9 +28,10 @@ void Gui::init(SDL_Window* window, SDL_Renderer* renderer) {
     m_dpiScale = computeDpiScale(window);
     // Boost the raw scale slightly to make fonts/buttons large enough for
     // touch screens and maintain the sci-fi look, but avoid runaway sizes
-    // on very large monitors.  The scale is clamped to 2.0 to keep text
-    // legible without becoming overwhelming.
-    const float UI_BOOST = 1.25f;
+    // on very large monitors.  Empirically the previous boost was too
+    // aggressive on Linux, so we scale it back by about 35% (="UI_BOOST"
+    // now ≈0.8125).  The final value is still clamped to [1.0, 2.0].
+    const float UI_BOOST = 1.25f * 0.65f; // ~0.8125
     m_uiScale = std::max(1.0f, m_dpiScale * UI_BOOST);
     if (m_uiScale > 2.0f) m_uiScale = 2.0f;
     io.FontGlobalScale = m_uiScale;
