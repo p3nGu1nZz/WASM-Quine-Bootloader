@@ -33,22 +33,17 @@ whenever the code changes or new features are added.
 
 ## Usage
 
-Run this skill before refactors or when adding features.  The agent
-should report new/modified tests and remaining weak spots.  Adhere to the
-convention: each module has a `test_<module>.cpp` and tests use
-`TEST_CASE("...","[tag]")`.
-
-## Usage
-
-Invoke when you want to boost confidence in the codebase or before
-significant refactors.  It is especially useful after adding new
-modules such as the neural network, advisor, or when scripting changes
-could affect behaviour.  The skill is responsible for both auditing
-existing tests and authoring new ones.
+Run this skill before refactors or when adding features. The agent
+should report new or modified tests and remaining weak spots. It is
+especially useful after adding new modules (neural network, advisor,
+etc.) or when scripting changes could affect behaviour. The skill
+covers both auditing existing tests and authoring new ones.
 
 Tests created by this skill should follow the project's naming
-convention: each source module gets a corresponding `test_<module>.cpp`
-file and test functions are named `TEST_CASE("...", "[tag]")`.
+convention: each source module has a corresponding
+`test_<module>.cpp` file and test cases are written as
+`TEST_CASE("...", "[tag]")`.
 
-When the user asks for concrete results, the agent should summarise the
-changes and point out any remaining weak spots or planned future tests.
+When summarising results, the agent should note gaps that still exist
+and suggest future tests (e.g. fuzzing mutation logic or heuristic
+decay behaviour).

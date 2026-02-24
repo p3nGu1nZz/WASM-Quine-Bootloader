@@ -1,4 +1,3 @@
-````skill
 ---
 name: setup-project
 description: Install or reset all third-party dependencies used by the project (SDL3, ImGui, wasm3, Catch2). Use this skill when configuring a new development machine or regenerating externals.
@@ -35,5 +34,6 @@ bash scripts/setup.sh --clean windows
 ```
 
 This script targets Ubuntu/WSL but generally works on Debian-derived
-systems.  It can also be used on macOS with manual adjustments.
-````
+systems. It can also be run on macOS with manual adjustments.  The
+coloured output and section headers make progress easier to scan.  The
+`--clean` variant deletes `external/` and `bin/` before reinstalling.

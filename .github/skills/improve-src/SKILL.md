@@ -14,8 +14,9 @@ C++/CMake codebase clean and warning-free.
 ## Usage
 
 Run during a development maintenance pass or via the `dev_workflow` when
-no immediate feature work is underway.  The agent should describe any
-changes made and optionally commit them in logical units.
+no immediate feature work is underway. The agent should describe any
+changes made, break them into logical commit units if substantial, and
+may call the `commit-push` skill to record the work.
 
 ## Behaviour
 
@@ -42,10 +43,7 @@ changes made and optionally commit them in logical units.
 
 This skill may be run multiple times during a maintenance pass.  It is
 not responsible for adding new features; its goal is to leave the source
-cleaner, simpler and free of obvious defects.
-
-## Usage
-
-Invoke this skill from the development workflow (`dev_workflow.prompt.md`)
-whenever a full codebase sweep is required.  The agent should report the
-changes made or present them for review before committing.
+cleaner, simpler and free of obvious defects.  Invoke it from the
+`dev_workflow` whenever a full codebase sweep is required; the agent
+should report what was changed and present the results for review before
+committing.
