@@ -51,6 +51,13 @@ sane default.
   Use `telemetry-review` skill to analyse; keep `docs/specs/spec_telemetry.md`
   up to date.
 
+## Known limitations (for documentation updates)
+
+* Telemetry JSON files are currently invalid due to a missing comma;
+  update `App::autoExport()` when generating docs or code examples.
+* `Trainer::observe` is a stub; documentation should not claim the network
+  is learning yet.
+
 ## Conventions
 
 - C++17; prefer `string_view`, structured bindings, `[[nodiscard]]`.
@@ -62,6 +69,12 @@ sane default.
 - Tests: one `test_<module>.cpp`; functions named `test_<feature>`.
 
 ## Build & run
+
+> **NOTE for agents:** the `run.sh` script was recently corrected so it now
+> uses the `BINARY` variable after `cd`.  When asked to start the application,
+> you may safely call `scripts/run.sh` with any flags and the working directory
+> need not match the build output.
+
 
 > **Note:** builds now use `-Werror` for GCC/Clang, so resolve any
 > compilation warnings (or clean the tree) before retrying.  The core

@@ -154,6 +154,11 @@ This script will:
 
 ### Step 2 — Run
 
+> **NOTE:** `scripts/run.sh` was recently fixed; it now correctly invokes the
+> `BINARY` variable after changing directories.  Older versions assumed `./bootloader`
+> which could fail if you started the script from a different working directory.
+
+
 Keyboard shortcuts are available when using the GUI version:
 
 - **Spacebar** – pause or resume the current kernel.
@@ -245,7 +250,20 @@ repo root, wiping old logs, sequence exports or temporary files produced by
 runs or tests.  This leaves the source tree pristine.
 
 ---
+---
 
+## Known issues & limitations
+
+* The JSON telemetry exporter currently emits malformed syntax (missing comma)
+  between the `heuristicBlacklistCount` and `advisorEntryCount` fields.  A fix
+  is planned under issue #87.
+* The `Trainer` class is still a stub; no actual learning occurs yet.  Training
+  weights are saved/loaded as simple counters.  See issue #89 for details.
+* Logs are not written to `bin/logs` automatically; all telemetry lives in the
+  `seq` folder and can be parsed by `telemetry_analysis.py`.
+
+These items will be addressed in upcoming releases; they do not prevent basic
+functionality but are worth keeping in mind for long experiments.
 ## Build Targets
 
 | Target | Platform | Build type | Output binary |
