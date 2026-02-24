@@ -31,6 +31,7 @@ struct ExportData {
     int kernelSizeMax      = 0;
     // number of entries currently held in the heuristic blacklist
     int heuristicBlacklistCount = 0;
+    int advisorEntryCount = 0;  // number of entries loaded by Advisor
 };
 
 // Build a full text report (hex dump, disassembly, history) from the given data.

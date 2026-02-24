@@ -25,6 +25,13 @@ public:
     // return a safety score in [0,1] for a candidate mutation sequence
     float score(const std::vector<uint8_t>& seq) const;
 
+    // number of telemetry entries loaded from disk
+    size_t entryCount() const { return m_entries.size(); }
+
+    // write the current advisor entries to disk (simple text format).
+    // Returns true on success.
+    bool dump(const std::string& path) const;
+
 private:
     void scanDirectory(const std::string& runDir);
     void parseFile(const std::string& path);

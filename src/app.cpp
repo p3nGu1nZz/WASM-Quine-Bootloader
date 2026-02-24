@@ -340,6 +340,13 @@ bool App::runWithTimeout(const std::function<void()>& fn) {
 #endif
 }
 
+void App::trainAndMaybeSave(const TelemetryEntry& te) {
+    m_trainer.observe(te);
+    if (!m_opts.saveModelPath.empty()) {
+        m_trainer.save(m_opts.saveModelPath);
+    }
+}
+
 void App::tickVerifying() {
     if (m_fsm.elapsedMs() >= static_cast<uint64_t>(DEFAULT_BOOT_CONFIG.rebootDelayMs))
         doReboot(true);
@@ -433,10 +440,7 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
                 te.generation = m_generation;
                 te.kernelBase64 = m_currentKernel;
                 te.trapCode = m_lastTrapReason;
-                m_trainer.observe(te);
-                if (!m_opts.saveModelPath.empty()) {
-                    m_trainer.save(m_opts.saveModelPath);
-                }
+                trainAndMaybeSave(te);
             }
         } catch (const std::exception& e) {
             m_logger.log(std::string("EVOLUTION REJECTED: ") + e.what(), "warning");
@@ -616,6 +620,7 @@ std::string App::exportHistory() const {
     d.kernelSizeMax      = m_kernelSizeMax;
     // heuristic summary
     d.heuristicBlacklistCount = (int)m_blacklist.size();
+    d.advisorEntryCount       = (int)m_advisor.entryCount();
     return buildReport(d);
 }
 
@@ -705,6 +710,7 @@ void App::autoExport() {
                 r << "  \"kernelSizeMin\": " << m_kernelSizeMin << ",\n";
                 r << "  \"kernelSizeMax\": " << m_kernelSizeMax << ",\n";
                 r << "  \"heuristicBlacklistCount\": " << (int)m_blacklist.size() << "\n";
+                r << "  \"advisorEntryCount\": " << (int)m_advisor.entryCount() << "\n";
                 r << "}\n";
             } else {
                 if (m_opts.telemetryLevel == TelemetryLevel::BASIC) {

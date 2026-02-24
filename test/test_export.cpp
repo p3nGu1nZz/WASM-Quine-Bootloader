@@ -19,6 +19,7 @@ TEST_CASE("buildReport includes telemetry metrics when provided") {
     d.kernelSizeMin = 10;
     d.kernelSizeMax = 20;
     d.heuristicBlacklistCount = 5;
+    d.advisorEntryCount = 3;
 
     std::string report = buildReport(d);
     REQUIRE(report.find("Mutations Attempted: 2") != std::string::npos);
@@ -28,4 +29,5 @@ TEST_CASE("buildReport includes telemetry metrics when provided") {
     REQUIRE(report.find("Gen Duration: 123.4 ms") != std::string::npos);
     REQUIRE(report.find("Kernel Size Min/Max: 10/20") != std::string::npos);
     REQUIRE(report.find("Heuristic Blacklist Entries: 5") != std::string::npos);
+    REQUIRE(report.find("Advisor Entries: 3") != std::string::npos);
 }

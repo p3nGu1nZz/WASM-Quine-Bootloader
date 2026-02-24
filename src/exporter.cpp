@@ -94,6 +94,9 @@ std::string buildReport(const ExportData& d) {
     if (d.heuristicBlacklistCount) {
         out << "Heuristic Blacklist Entries: " << d.heuristicBlacklistCount << "\n";
     }
+    if (d.advisorEntryCount) {
+        out << "Advisor Entries: " << d.advisorEntryCount << "\n";
+    }
     // Note: exporter itself doesn't perform file I/O; caller should handle
     // errors when writing the string.  This function now warns if decoded
     // raw bytes are unexpectedly empty.

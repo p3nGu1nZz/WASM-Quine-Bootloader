@@ -115,26 +115,46 @@ EvolutionResult evolveBinary(
     int codeSectionContentStart = -1;
 
     while (ptr < (int)bytes.size()) {
+        if (ptr + 1 >= (int)bytes.size()) break;
         uint8_t id       = bytes[ptr];
         auto    sizeData = decodeLEB128(bytes.data(), bytes.size(), ptr + 1);
+        if (sizeData.length == 0) {
+            throw std::runtime_error("Malformed LEB128 in section size");
+        }
         if (id == 10) {
             codeSectionStart        = ptr;
             codeSectionContentStart = ptr + 1 + sizeData.length;
             break;
         }
-        ptr = ptr + 1 + sizeData.length + (int)sizeData.value;
+        // advance, but ensure we don't overflow
+        long nextPtr = (long)ptr + 1 + sizeData.length + (long)sizeData.value;
+        if (nextPtr <= ptr || nextPtr > (long)bytes.size()) break;
+        ptr = (int)nextPtr;
     }
     if (codeSectionStart == -1)
         throw std::runtime_error("Code section missing");
 
     // 2. Locate function body
     auto numFuncsData      = decodeLEB128(bytes.data(), bytes.size(), codeSectionContentStart);
+    if (numFuncsData.length == 0)
+        throw std::runtime_error("Malformed num-funcs LEB128");
     int  funcBodySizeOff   = codeSectionContentStart + numFuncsData.length;
+    if (funcBodySizeOff > (int)bytes.size())
+        throw std::runtime_error("Function body size offset out of bounds");
     auto funcBodySizeData  = decodeLEB128(bytes.data(), bytes.size(), funcBodySizeOff);
+    if (funcBodySizeData.length == 0)
+        throw std::runtime_error("Malformed func-body-size LEB128");
     int  funcContentStart  = funcBodySizeOff + funcBodySizeData.length;
+    if (funcContentStart > (int)bytes.size())
+        throw std::runtime_error("Function content start out of bounds");
 
     auto localCountData = decodeLEB128(bytes.data(), bytes.size(), funcContentStart);
+    if (localCountData.length == 0 && funcContentStart < (int)bytes.size()) {
+        // allow zero locals
+    }
     int  instrPtr       = funcContentStart + localCountData.length;
+    if (instrPtr > (int)bytes.size())
+        throw std::runtime_error("Instruction pointer initialized out of bounds");
 
     for (int i = 0; i < (int)localCountData.value; i++) {
         auto countData = decodeLEB128(bytes.data(), bytes.size(), instrPtr);

@@ -78,3 +78,16 @@ float Advisor::score(const std::vector<uint8_t>& /*seq*/) const {
     if (s > 1.0f) s = 1.0f;
     return s;
 }
+
+bool Advisor::dump(const std::string& path) const {
+    try {
+        std::ofstream f(path);
+        if (!f) return false;
+        for (const auto& e : m_entries) {
+            f << "gen=" << e.generation << " trap=" << e.trapCode << " kernel=" << e.kernelBase64 << "\n";
+        }
+        return true;
+    } catch (...) {
+        return false;
+    }
+}

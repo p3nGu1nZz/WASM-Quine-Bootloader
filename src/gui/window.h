@@ -59,10 +59,15 @@ private:
     // filter used in the log panel; matches substring in messages
     std::string m_logFilter;
 
+    // advisor panel state
+    bool   m_showAdvisor    = false;
+    std::string m_lastDumpPath;
+
     // ── Panel helpers (each renders one independent UI region) ────────────────
     void renderTopBar(App& app, int winW);
     void renderLogPanel(const App& app, float w, float h);
     void renderInstrPanel(const App& app, float w, float h);
     void renderKernelPanel(const App& app, float w, float h);
+    void renderAdvisorPanel(const App& app, float w, float h);
     void renderStatusBar(const App& app);
 };

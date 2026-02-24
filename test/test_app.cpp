@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
+#include <filesystem>
 #include "app.h"
 
 TEST_CASE("Blacklist helper methods behave correctly", "[app]") {
@@ -69,5 +70,21 @@ TEST_CASE("App loads trainer state from CLI option", "[app][trainer]") {
     REQUIRE(loaded[0] == Approx(orig[0]));
 
     std::remove(tmp.c_str());
+}
+
+TEST_CASE("App saves trainer state to CLI option", "[app][trainer]") {
+    CliOptions opts;
+    opts.saveModelPath = "trainer_save.tmp";
+    App a(opts);
+    // manually invoke the training/write logic that the app would execute
+    TelemetryEntry te;
+    te.generation = a.generation();
+    te.kernelBase64 = a.currentKernel();
+    te.trapCode = a.lastTrapReason();
+    a.trainAndMaybeSave(te);
+    REQUIRE(std::filesystem::exists("trainer_save.tmp"));
+    Trainer t;
+    REQUIRE(t.load("trainer_save.tmp"));
+    std::remove("trainer_save.tmp");
 }
 

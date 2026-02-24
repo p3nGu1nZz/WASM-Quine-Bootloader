@@ -122,6 +122,12 @@ void Gui::renderFrame(App& app) {
     ImGui::SameLine();
     renderKernelPanel(app, kernelW, panelH);
 
+    if (m_showAdvisor) {
+        // show small advisor panel on right side
+        ImGui::SameLine();
+        renderAdvisorPanel(app, 300.0f * m_uiScale, panelH);
+    }
+
     m_heatmap.renderPanel(app, winW);
     renderStatusBar(app);
 
@@ -164,6 +170,10 @@ void Gui::renderTopBar(App& app, int winW) {
         ImGui::PopStyleColor();
     } else {
         if (ImGui::Button("PAUSE  SYSTEM", {btnW, 0})) app.togglePause();
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Advisor", {btnW, 0})) {
+        m_showAdvisor = !m_showAdvisor;
     }
     ImGui::SameLine();
     // EXPORT button removed – telemetry is now saved automatically every
@@ -323,6 +333,25 @@ void Gui::renderKernelPanel(const App& app, float w, float h) {
         ImGui::TextDisabled("--- END OF FILE ---");
     }
     ImGui::EndChild();
+    ImGui::EndChild();
+}
+
+void Gui::renderAdvisorPanel(const App& app, float w, float h) {
+    ImGui::BeginChild("##AdvisorPanel", { w, h }, true);
+    ImGui::TextDisabled("ADVISOR STATE");
+    ImGui::Separator();
+    ImGui::Text("Entries: %zu", app.advisor().entryCount());
+    if (ImGui::Button("Dump state")) {
+        std::string path = "advisor_dump.txt";
+        if (app.advisor().dump(path)) {
+            m_lastDumpPath = path;
+        } else {
+            m_lastDumpPath = "<error>";
+        }
+    }
+    if (!m_lastDumpPath.empty()) {
+        ImGui::Text("Last dump: %s", m_lastDumpPath.c_str());
+    }
     ImGui::EndChild();
 }
 

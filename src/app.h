@@ -77,6 +77,13 @@ public:
     // expose trainer for tests
     const Trainer& trainer() const { return m_trainer; }
 
+    // expose advisor for GUI or tests
+    const Advisor& advisor() const { return m_advisor; }
+
+    // helper used by tests to apply a telemetry entry and optionally
+    // persist the model via CLI flag.
+    void trainAndMaybeSave(const TelemetryEntry& te);
+
     // expose reboot helper for tests
     void doReboot(bool success);
 

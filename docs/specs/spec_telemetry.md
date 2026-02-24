@@ -20,6 +20,7 @@ Each export file contains a series of labelled sections to aid humans and tools:
 6. (optional) `Gen Duration: <ms>` for timing measurements.
 7. (optional) `Kernel Size Min/Max: <min>/<max>` for run‑wide extremes.
 8. (optional) `Heuristic Blacklist Entries: <count>` summarising the current heuristic state.
+9. (optional) `Advisor Entries: <count>` indicating how many telemetry entries the in‑memory advisor has loaded; useful when the model is involved in decision‑making.
 
 These are followed by the payload sections:
 

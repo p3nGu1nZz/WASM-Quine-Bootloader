@@ -53,3 +53,25 @@ TEST_CASE("evolveBinary produces valid magic header", "[evolution]") {
     REQUIRE(decoded[3] == 0x6D);
 }
 
+TEST_CASE("evolveBinary rejects missing code section", "[evolution][error]") {
+    // base32 of minimal header only (00 61 73 6D 01 00 00 00)
+    std::string bad = "AGFzbQEAAAAB"; // harness may treat as invalid
+    REQUIRE_THROWS_AS(evolveBinary(bad, {}, 0, MutationStrategy::RANDOM), std::runtime_error);
+}
+
+TEST_CASE("evolveBinary handles truncated function body", "[evolution][error]") {
+    // take valid kernel but truncate bytes
+    auto bytes = base64_decode(KERNEL_GLOB);
+    if (bytes.size() > 20) {
+        bytes.resize(20);
+        std::string truncated = base64_encode(bytes);
+        bool threw = false;
+        try {
+            evolveBinary(truncated, {}, 0, MutationStrategy::RANDOM);
+        } catch (const std::exception&) {
+            threw = true;
+        }
+        REQUIRE(threw);
+    }
+}
+
