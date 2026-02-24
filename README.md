@@ -158,7 +158,9 @@ The launcher also supports several command‑line options (see
 `spec_cli.md` for full semantics):
 
 - `--telemetry-level=<none|basic|full>` – control how much export data is
-  written (header only, full report, or disabled).
+  written (header only, full report, or disabled).  The default is now
+  **full** so that every run generates a useful history export without
+  extra flags.
 - `--telemetry-dir=<path>` – change output directory for reports.
 - `--telemetry-format=<text|json>` – choose the export file format; JSON is
   easier for scripts to parse.

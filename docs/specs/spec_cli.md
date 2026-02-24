@@ -13,7 +13,7 @@ Define the behaviour of the bootloader executable's command-line arguments. This
 
 Additional options implemented by `parseCli()`:
 
-- `--telemetry-level=<none|basic|full>` – control verbosity of telemetry exports; `none` disables files, `basic` writes header+size, `full` includes all sections (mutations, traps, etc.).
+- `--telemetry-level=<none|basic|full>` – control verbosity of telemetry exports; `none` disables files, `basic` writes header+size, `full` includes all sections (mutations, traps, etc.).  The default level is now **full** to aid debugging and analysis of evolving kernels.
 - `--telemetry-dir=<path>` – override the default `bin/seq` directory used for exports.
 - `--telemetry-format=<text|json>` – choose the export file format.  `text` (the default) produces the traditional plain‑text report; `json` emits a minimal JSON object for easier programmatic parsing.
 - `--mutation-strategy=<random|blacklist|smart>` – choose the evolution sampling policy.  `blacklist` interacts with the mutation heuristic but does not itself enable it.

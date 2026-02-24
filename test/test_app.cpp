@@ -88,3 +88,23 @@ TEST_CASE("App saves trainer state to CLI option", "[app][trainer]") {
     std::remove("trainer_save.tmp");
 }
 
+TEST_CASE("App.requestExit triggers update to return false", "[app][signal]") {
+    CliOptions opts;
+    App a(opts);
+    // update once to initialise clocks
+    REQUIRE(a.update());
+    // request exit and ensure subsequent update() returns false
+    a.requestExit();
+    REQUIRE(a.update() == false);
+}
+
+TEST_CASE("global requestAppExit helper sets flag and stops app", "[app][signal]") {
+    CliOptions opts;
+    App a(opts);
+    REQUIRE(a.update());
+    // call the externally-visible helper which would normally run from a
+    // signal handler
+    requestAppExit();
+    REQUIRE(a.update() == false);
+}
+

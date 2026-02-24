@@ -16,7 +16,7 @@ struct CliOptions {
     bool useGui      = true;   // false would eventually enable headless mode
     bool fullscreen  = true;   // only meaningful when useGui == true
     // new options
-    TelemetryLevel telemetryLevel = TelemetryLevel::BASIC;
+    TelemetryLevel telemetryLevel = TelemetryLevel::FULL;
     TelemetryFormat telemetryFormat = TelemetryFormat::TEXT;
     std::string telemetryDir;    // override export path
     MutationStrategy mutationStrategy = MutationStrategy::RANDOM;

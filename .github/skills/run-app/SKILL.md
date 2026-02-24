@@ -18,7 +18,10 @@ it has been built.
 - Creates `bin/logs` and `bin/seq` directories if absent.
 - Prints the full command line, log/telemetry paths, and after a headless
   run shows the exit code plus the last 20 log lines for immediate
-  feedback.
+  feedback.  Note that the bootloader now defaults to `--telemetry-level
+  full` so every session generates comprehensive exports, and you can
+  pass `--max-run-ms` to have the application exit automatically after a
+  specified interval (internal watchdog avoids crashes on signals).
 - `--monitor` option runs the app in the background and tails log files.
 - On systems without a display, you can run under Xvfb or set `DISPLAY`
   appropriately; the GUI requires an X/Wayland server.

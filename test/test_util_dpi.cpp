@@ -56,8 +56,8 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     fs::path seqdir = sequenceDir(app.runId());
     REQUIRE(fs::exists(seqdir));
     REQUIRE(fs::exists(seqdir / "gen_1.txt"));
-    // default telemetry level is BASIC, which does not write kernel blob
-    REQUIRE(!fs::exists(seqdir / "kernel_1.b64"));
+    // default telemetry level is FULL, so kernel blob should be written
+    REQUIRE(fs::exists(seqdir / "kernel_1.b64"));
     // concurrency lock file should exist
     REQUIRE(fs::exists(seqdir / "export.lock"));
 

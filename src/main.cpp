@@ -8,12 +8,24 @@
 
 #include <chrono>
 #include <thread>
+#include <signal.h>
 
 #include "cli.h"
+
+// signal handler forwards termination requests to the App singleton
+static void signalHandler(int /*sig*/) {
+    requestAppExit();
+}
 
 int main(int argc, char** argv) {
     // parse CLI options early so we know whether we need video support
     CliOptions opts = parseCli(argc, argv);
+
+    // install a simple signal handler to catch termination requests from
+    // external controllers (e.g. `timeout` or container orchestrators).
+    // The handler will flip a flag that the App observes and cleanly exit.
+    ::signal(SIGTERM, signalHandler);
+    ::signal(SIGINT, signalHandler);
 
     // initialise SDL with video only if GUI is requested; otherwise we
     // skip SDL completely (we only use std::chrono for timing in headless

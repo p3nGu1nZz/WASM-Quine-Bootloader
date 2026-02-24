@@ -1,11 +1,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include "cli.h"
 
-TEST_CASE("CLI defaults to GUI and fullscreen") {
+TEST_CASE("CLI defaults to GUI, fullscreen and full telemetry") {
     const char* argv[] = {"bootloader"};
     CliOptions opts = parseCli(1, const_cast<char**>(argv));
     REQUIRE(opts.useGui == true);
     REQUIRE(opts.fullscreen == true);
+    REQUIRE(opts.telemetryLevel == TelemetryLevel::FULL);
 }
 
 TEST_CASE("CLI --headless disables GUI") {

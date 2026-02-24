@@ -231,8 +231,6 @@ private:
     // clock so that run-time limits can be verified deterministically.
     std::function<uint64_t()> m_nowFn;
 
-    // requester to exit after max generation reached
-    bool m_shouldExit = false;
 
     uint64_t now() const;
 
@@ -240,3 +238,6 @@ private:
     // decodes into `m_currentKernelBytes` and refreshes `m_instructions`.
     void updateKernelData();
 };
+
+// helper invoked by the signal handler or tests to request a graceful shutdown.
+void requestAppExit();

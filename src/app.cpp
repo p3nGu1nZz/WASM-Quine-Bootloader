@@ -13,6 +13,7 @@
 #include <stdexcept>
 #include <filesystem>
 #include <functional>
+#include <atomic>
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
@@ -35,10 +36,6 @@ void requestAppExit() {
     }
 }
 
-// signal handler registered in main(); it simply forwards the request
-static void signalHandler(int /*sig*/) {
-    requestAppExit();
-}
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
@@ -326,6 +323,7 @@ bool App::runWithTimeout(const std::function<void()>& fn) {
         fn();
         return true;
     }
+
 #ifndef _WIN32
     pid_t pid = fork();
     if (pid == 0) {
@@ -362,6 +360,10 @@ bool App::runWithTimeout(const std::function<void()>& fn) {
     fn();
     return true;
 #endif
+}
+
+void App::requestExit() {
+    m_shouldExit = true;
 }
 
 void App::trainAndMaybeSave(const TelemetryEntry& te) {
