@@ -97,7 +97,7 @@ bash scripts/test.sh                          # build + run all tests
 
 Executables run from their build folder; logs/seq created there.
 
-Agent/build scripts must use a `./.tmp` directory in the repo root for temporary files and pipes instead of `/tmp`, keeping all transient artifacts scoped to the project and easing cleanup/debugging.
+Agent/build scripts must use a `./.tmp` directory in the repo root for temporary files and pipes instead of `/tmp`, keeping all transient artifacts scoped to the project and easing cleanup/debugging.  Do **not** redirect output or create files under `/tmp`; all agents and tools should confine temporary data to the repository (e.g. `./.tmp`).
 
 ## Constraints
 

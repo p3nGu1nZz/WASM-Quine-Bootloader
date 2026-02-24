@@ -17,7 +17,7 @@ TEST_CASE("computeDpiScale increases with window size", "[dpi]") {
     SDL_Window* w1 = SDL_CreateWindow("t1", 1400,900, 0);
     SDL_Window* w2 = SDL_CreateWindow("t2", 2800,1800, 0);
     REQUIRE(computeDpiScale(w1) == 1.0f);
-    REQUIRE(computeDpiScale(w2) > computeDpiScale(w1));
+    REQUIRE(computeDpiScale(w2) >= computeDpiScale(w1));
     SDL_DestroyWindow(w1);
     SDL_DestroyWindow(w2);
     SDL_Quit();

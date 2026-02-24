@@ -29,6 +29,23 @@ std::string stateStr(SystemState s) {
 // compute a font/UI scale based purely on window size
 float computeDpiScale(SDL_Window* window) {
     if (!window) return 1.0f;
+
+    // first try to query the display DPI; this gives us a hardware-backed
+    // scale factor that is consistent across desktop environments.  If
+    // this call fails we fall back to our previous window‑size heuristic.
+    int disp = SDL_GetWindowDisplayIndex(window);
+    if (disp >= 0) {
+        float ddpi = 0, hdpi = 0, vdpi = 0;
+        if (SDL_GetDisplayDPI(disp, &ddpi, &hdpi, &vdpi) == 0 && ddpi > 0) {
+            // typical desktop baseline is 96 DPI
+            float scale = ddpi / 96.0f;
+            scale = (scale < 1.0f) ? 1.0f : scale;
+            // avoid absurdly large values (some linux drivers report huge DPI)
+            return std::min(scale, 2.0f);
+        }
+    }
+
+    // fallback to window-size based approximation
     int w = 0, h = 0;
     SDL_GetWindowSize(window, &w, &h);
     if (w <= 0 || h <= 0) return 1.0f;
@@ -38,7 +55,7 @@ float computeDpiScale(SDL_Window* window) {
     float sx = (float)w / baseW;
     float sy = (float)h / baseH;
     float scale = std::max(sx, sy);
-    return scale < 1.0f ? 1.0f : scale;
+    return scale < 1.0f ? 1.0f : std::min(scale, 2.0f);
 }
 
 const std::vector<uint8_t>& decodeBase64Cached(const std::string& b64) {
