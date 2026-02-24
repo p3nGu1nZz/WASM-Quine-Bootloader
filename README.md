@@ -150,7 +150,7 @@ This script will:
 2. Clone **Dear ImGui** → `external/imgui`
 3. Clone **wasm3** → `external/wasm3`
 4. Install or build **SDL3** for Linux → `external/SDL3/linux`
-5. Build the `linux-debug` target → `build/linux-debug/bootloader`
+5. Build the `linux-debug` target → `build/linux-debug/bin/bootloader`
 
 ### Step 2 — Run
 
@@ -250,7 +250,7 @@ runs or tests.  This leaves the source tree pristine.
 
 | Target | Platform | Build type | Output binary |
 |---|---|---|---|
-| `linux-debug`    | Linux | Debug   | `build/linux-debug/bootloader` |
+| `linux-debug`    | Linux | Debug   | `build/linux-debug/bin/bootloader` |
 | `linux-release`  | Linux | Release | `build/linux-release/bootloader` |
 | `windows-debug`  | Windows (MinGW) | Debug   | `build/windows-debug/bootloader.exe` |
 | `windows-release`| Windows (MinGW) | Release | `build/windows-release/bootloader.exe` |
@@ -285,7 +285,7 @@ bash scripts/run.sh linux-release
 bash scripts/run.sh --headless
 
 # Direct executable (after build)
-./build/linux-debug/bootloader
+./build/linux-debug/bin/bootloader
 ```
 
 ### Runtime keyboard controls

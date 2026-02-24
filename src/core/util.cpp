@@ -113,10 +113,12 @@ std::filesystem::path sequenceDir(const std::string& runId) {
     if (cleaned.empty()) cleaned = "run";
     std::filesystem::path exe = executableDir();
     std::filesystem::path root = exe;
-    // match telemetryRoot logic: if the executable resides in a "test"
-    // subdirectory, assume the real base is one level up so telemetry ends
-    // up under build/<target>/bin rather than build/<target>/test/bin.
-    if (exe.filename() == "test")
+    // match telemetryRoot logic: if the executable resides in a "test" or
+    // "bin" subdirectory, assume the real base is one level up so the
+    // final path ends up under build/<target>/bin rather than
+    // build/<target>/bin/bin.
+    auto fname = exe.filename().string();
+    if (fname == "test" || fname == "bin")
         root = exe.parent_path();
     std::filesystem::path p = root / "bin" / "seq" / cleaned;
     return p;

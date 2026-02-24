@@ -95,6 +95,12 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang"
     add_compile_options(-Werror)
 endif()
 
+# place all runtime outputs under a "bin" subdirectory to match
+# the install layout and the user's expectations (see issue #...)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG ${CMAKE_BINARY_DIR}/bin)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
+
 # Application executable (UI + platform glue)
 set(APP_SOURCES
     src/main.cpp

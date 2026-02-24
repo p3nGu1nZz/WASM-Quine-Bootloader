@@ -17,8 +17,8 @@
 #   --clean         Remove the entire build/ directory and any cached data
 #
 # The binary is placed in:
-#   build/<TARGET>/bootloader         (Linux)
-#   build/<TARGET>/bootloader.exe     (Windows)
+#   build/<TARGET>/bin/bootloader         (Linux)
+#   build/<TARGET>/bin/bootloader.exe     (Windows)
 
 set -euo pipefail
 
@@ -174,7 +174,7 @@ copy_deps "${BUILD_DIR}"
 if [[ "${PLATFORM}" == "Windows" ]]; then
     BIN="${BUILD_DIR}/bootloader.exe"
 else
-    BIN="${BUILD_DIR}/bootloader"
+    BIN="${BUILD_DIR}/bin/bootloader"
 fi
 
 echo ""

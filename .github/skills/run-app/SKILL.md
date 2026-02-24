@@ -36,4 +36,4 @@ bash scripts/run.sh --monitor   # run + tail logs
 ```
 
 Run specific build targets by prefixing the command with the directory or
-by invoking the binary directly (e.g. `./build/linux-debug/bootloader`).
+by invoking the binary directly (e.g. `./build/linux-debug/bin/bootloader`).

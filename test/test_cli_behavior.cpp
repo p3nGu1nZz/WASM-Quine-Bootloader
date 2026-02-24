@@ -21,24 +21,21 @@ TEST_CASE("App honors max-gen and stops updating", "[app][cli]") {
 TEST_CASE("autoExport respects telemetry-level", "[export][cli]") {
     namespace fs = std::filesystem;
     // remove any leftovers from previous runs so the test is hermetic
-    fs::path exe = executableDir();
-    fs::path root = exe;
-    if (exe.filename() == "test")
-        root = exe.parent_path();
+    struct TestApp : App { using App::telemetryRoot; explicit TestApp(const CliOptions& o) : App(o) {} };
     fs::path override = "test_seq";
-    fs::remove_all(root / override);
-    fs::remove_all("test_run");
+    // compute root using telemetryRoot of a temporary app
+    CliOptions tmpOpts;
+    tmpOpts.telemetryDir = override;
+    TestApp cleaner(tmpOpts);
+    fs::remove_all(cleaner.telemetryRoot());
+
     CliOptions opts;
     opts.telemetryLevel = TelemetryLevel::BASIC;
-    opts.telemetryDir = "test_seq";
+    opts.telemetryDir = override;
 
-    App a(opts);
+    TestApp a(opts);
     a.doReboot(true);
-    fs::path base = root / override / a.runId();
-    INFO("exe=" << exe);
-    INFO("root=" << root);
-    INFO("override=" << override);
-    INFO("runId=" << a.runId());
+    fs::path base = a.telemetryRoot() / a.runId();
     INFO("base=" << base);
     REQUIRE(fs::exists(base));
     std::ifstream fin((base / "gen_1.txt").string());
@@ -50,11 +47,11 @@ TEST_CASE("autoExport respects telemetry-level", "[export][cli]") {
 
     // if none, file is absent
     opts.telemetryLevel = TelemetryLevel::NONE;
-    App b(opts);
+    TestApp b(opts);
     b.doReboot(true);
-    fs::path base2 = root / override / b.runId();
+    fs::path base2 = b.telemetryRoot() / b.runId();
     // remove everything under the override
-    fs::remove_all(root / override);
+    fs::remove_all(b.telemetryRoot());
     REQUIRE(!fs::exists(base2 / "gen_1.txt"));
 }
 

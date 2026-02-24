@@ -14,7 +14,7 @@ Define the behaviour of the bootloader executable's command-line arguments. This
 Additional options implemented by `parseCli()`:
 
 - `--telemetry-level=<none|basic|full>` – control verbosity of telemetry exports; `none` disables files, `basic` writes header+size, `full` includes all sections (mutations, traps, etc.).  The default level is now **full** to aid debugging and analysis of evolving kernels.
-- `--telemetry-dir=<path>` – override the default location used for exports.  When unspecified the base path is derived from the **executable’s directory** (e.g. `build/linux-debug`), so telemetry lives under `<exe_dir>/bin/seq/<runid>`.  This avoids accidentally creating a `bin/` folder in the current working directory.
+- `--telemetry-dir=<path>` – override the default location used for exports.  When unspecified the base path is derived from the **executable’s directory**, which may itself be a `bin` subdirectory (e.g. `build/linux-debug/bin`).  The telemetry root is then `<exe_dir>/bin/seq/<runid>` with an extra `bin` stripped if necessary to avoid producing `bin/bin`.  This avoids accidentally creating a `bin/` folder in the current working directory.
 - `--telemetry-format=<text|json>` – choose the export file format.  `text` (the default) produces the traditional plain‑text report; `json` emits a minimal JSON object for easier programmatic parsing.
 - `--mutation-strategy=<random|blacklist|smart>` – choose the evolution sampling policy.  `blacklist` interacts with the mutation heuristic but does not itself enable it.
 - `--heuristic=<none|blacklist|decay>` – enable the trap-avoidance blacklist, with `decay` allowing entries to expire after successful generations.

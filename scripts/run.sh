@@ -22,13 +22,15 @@ error() { echo -e "${RED}[run]${RESET} $*"; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TARGET="${BUILD_TARGET:-linux-debug}"
-BINARY="$REPO_ROOT/build/$TARGET/bootloader"
+BINARY="$REPO_ROOT/build/$TARGET/bin/bootloader"
 
 # Build the project automatically if the binary is missing
 if [[ ! -f "$BINARY" ]]; then
     info "Binary not found – building ($TARGET) first..."
     bash "$SCRIPT_DIR/build.sh" "$TARGET"
 fi
+# after building the binary may now live under bin/; update path
+BINARY="$REPO_ROOT/build/$TARGET/bin/bootloader"
 
 # if no args provided default to GUI mode (was previously headless by default)
 if [[ $# -eq 0 ]]; then
@@ -38,7 +40,7 @@ fi
 # change into the build directory so logs/seq folders are created there
 BUILD_DIR="$REPO_ROOT/build/$TARGET"
 cd "$BUILD_DIR"
-# ensure bin directories exist
+# ensure bin directories exist and relocate binary symlink if necessary
 mkdir -p bin/logs
 mkdir -p bin/seq
 

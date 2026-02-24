@@ -714,7 +714,12 @@ std::filesystem::path App::telemetryRoot() const {
     namespace fs = std::filesystem;
     fs::path exe = fs::path(executableDir());
     fs::path root = exe;
-    if (exe.filename() == "test")
+    // if the executable lives inside a "test" folder (unit tests) or a
+    // "bin" folder (normal build) treat the parent as the logical root so
+    // telemetry exports land alongside the build directory rather than
+    // nested one level deeper.
+    auto fname = exe.filename().string();
+    if (fname == "test" || fname == "bin")
         root = exe.parent_path();
     if (!m_opts.telemetryDir.empty())
         return root / m_opts.telemetryDir;
