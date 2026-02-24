@@ -55,3 +55,4 @@ quine_telemetry_*.txt
 
 # CodeQL
 _codeql_detected_source_root
+_codeql_build_dir/
