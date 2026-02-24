@@ -34,9 +34,12 @@ improve long-term survival rate of mutated kernels.
    known-instruction pool.
 4. Expose CLI flag `--heuristic=<none|blacklist|decay>` to control
    whether the heuristic is active and whether its entries decay over time.
-5. The heuristic is local to a run; it is not persisted between program
-   invocations (although export reports may record blacklist contents for
-   offline analysis).
+5. The heuristic state is now persisted between runs.  On
+   shutdown the blacklist is saved to `blacklist.txt` in the telemetry
+   directory and automatically reloaded on startup, so the bootloader can
+   remember prior trap‑inducing sequences across process restarts.
+   Export reports may still include blacklist contents for offline
+   analysis.
 
 ## Outputs / Side Effects
 
