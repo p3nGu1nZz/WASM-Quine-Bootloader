@@ -55,7 +55,9 @@ Each time you are asked to "work" you should:
 2. **If no suitable issue exists**
    * Run the `code-review` skill on the repository.
    * Present the generated `[ISSUE]…` candidates to the user for selection.
-   * Create GitHub issues for the chosen candidates.
+   * Optionally create GitHub issues automatically for all or a subset of
+     the candidates rather than leaving them only in the agent output.
+     (This avoids leaving the backlog empty.)
 3. **Work the selected issue**
    * Create a new branch (`mcp_github_create_branch`) named after the issue
      (e.g. `issue-123-fix-cli-parsing`).
@@ -81,6 +83,12 @@ Each time you are asked to "work" you should:
      documentation and agent instructions current.
 
 Repeat this loop until the project is feature‑complete for 0.0.1.
+
+> **Tip:** the current prompt mixes triage and development guidance; in
+> a future revision we could split it into two focused sections
+> ("issue triage" vs "development loop") for clarity.  If you edit this
+> file, remember to run `update-skills` so the agent documentation stays
+> in sync.
 
 ---
 
