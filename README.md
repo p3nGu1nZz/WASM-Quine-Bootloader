@@ -8,7 +8,10 @@ telemetry output.  See `docs/specs/spec_heuristics.md` and
 application caches the decoded kernel bytes and instruction stream to
 avoid repeated base64 work, and the build system enforces
 `-Werror` so the codebase must remain warning-free.  The CLI also
-prints stderr warnings when a flag value is unrecognised.
+prints stderr warnings when a flag value is unrecognised, setting a
+`parseError` flag that wrapper scripts or tests can inspect.  DPI
+scaling is computed automatically from the window size and is clamped
+to a maximum of **2×** to prevent runaway fonts on enormous displays.
 
 A self-replicating, self-evolving WebAssembly kernel visualizer — native **C++17** desktop application using **SDL3** and **Dear ImGui**.
 
@@ -31,7 +34,7 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | Telemetry Export | Dump full hex / disassembly / history report to a `.txt` file |
 | Kernel Cache | App retains decoded kernel/instruction data between generations to
   reduce CPU work |
-| DPI Scaling & Touch UI | UI text and widgets automatically scale with window size for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
+| DPI Scaling & Touch UI | UI text and widgets automatically scale with window size (1×–2×) for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
 
 ---
 

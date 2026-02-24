@@ -88,11 +88,34 @@ is used instead.
 
 ## 5. GUI Rendering and DPI Scaling
 
+
+## 7. Additional Behavioural Enhancements
+
+Several smaller usability improvements have been added in recent
+revisions:
+
+* **Kernel caching:** To reduce CPU overhead the `App` caches the
+decoded bytes of the current base64 kernel and the corresponding
+instruction list.  `updateKernelData()` is invoked whenever the
+base64 string changes, preventing repeated decoding during tight
+event/update loops or telemetry export.
+* **CLI parsing warnings:** `parseCli()` now emits a warning to
+stderr and sets a `parseError` flag whenever a flag value is
+unrecognised (e.g. `--telemetry-level=frobnitz`).  Unknown options
+are still ignored so wrapper scripts can forward extra arguments.
+* **Log API convenience:** `App` exposes a simple `log(msg,type)`
+wrapper that forwards to its `AppLogger`, making it easy for UI
+handlers or shortcuts (see `main.cpp`) to append entries without
+reaching into the logger object.
+
+
 The desktop UI is built with Dear ImGui running on top of an SDL3 window.
 To ensure text and widgets remain legible on high‑resolution displays, the
 code computes a simple scale factor at startup that is proportional to the
 window's pixel area (larger windows → bigger DPI).  The helper
-`computeDpiScale(SDL_Window*)` lives in `src/util.cpp` and defaults to 1.0.
+`computeDpiScale(SDL_Window*)` lives in `src/util.cpp` and defaults to 1.0
+(its return value is clamped to the range [1.0, 2.0] so extremely large
+windows do not produce unreasonably huge fonts).
 
 The `Gui` class calls this helper during `init()` and applies the result to
 `ImGui::GetIO().FontGlobalScale`.  For a more touch‑friendly interface we

@@ -108,7 +108,7 @@ Transition history is not recorded here; that is the responsibility of `AppLogge
 
 | Member | Description |
 |---|---|
-| `log(msg, type)` | Append a `LogEntry`; deduplicates within 100 ms; caps at 1 000 entries |
+| `log(msg, type)` | Append a `LogEntry`; deduplicates within 100 ms; caps at 1 000 entries.  Also callable via `App::log()` wrapper. |
 | `addHistory(entry)` | Append a `HistoryEntry` (never truncated) |
 | `logs()` | Read-only reference to the live log `std::deque` |
 | `history()` | Read-only reference to the history `std::vector` |
@@ -143,6 +143,10 @@ Exposes read-only accessors for everything the `Gui` needs to render.
   `m_instructions` via `updateKernelData()` so the same base64 string is
   only decoded once per change, reducing CPU overhead during tight
   update loops.
+- **UI logging helper:** provides `log(msg,type)` which simply forwards to
+  the underlying `AppLogger` instance; this is used by the `main.cpp`
+  shortcut handlers and is convenient for any component that has an
+  `App&` reference.
 
 **Dependencies:** `fsm.h`, `logger.h`, `exporter.h`, `wasm/kernel.h`, `wasm/parser.h`,
 `wasm_evolution.h`, `base64.h`, `constants.h`, `util.h`, `types.h`
