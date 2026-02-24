@@ -2,6 +2,7 @@
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
 #include <filesystem>
+#include "util.h"  // for executableDir()
 #include "app.h"
 
 TEST_CASE("Blacklist helper methods behave correctly", "[app]") {
@@ -97,6 +98,56 @@ TEST_CASE("spawnInstance records kernels and logs", "[app][spawn]") {
     REQUIRE(a.instances()[0] == "AAA");
     a.spawnInstance("BBB");
     REQUIRE(a.instanceCount() == 2);
+}
+
+TEST_CASE("App.log helper adds entries", "[app][log]") {
+    CliOptions opts;
+    App a(opts);
+    REQUIRE(a.logs().empty());
+    a.log("test message", "debug");
+    REQUIRE(!a.logs().empty());
+    REQUIRE(a.logs().back().message == "test message");
+}
+
+TEST_CASE("blacklist persists across App instances", "[app][blacklist][persistence]") {
+    namespace fs = std::filesystem;
+    fs::path exe = executableDir();
+    fs::path base = exe / "bltest";
+    fs::remove_all(base);
+
+    CliOptions opts;
+    opts.telemetryDir = "bltest";
+    opts.heuristic = HeuristicMode::BLACKLIST;
+    {
+        App a(opts);
+        std::vector<uint8_t> seq{0x1,0x2};
+        REQUIRE(!a.isBlacklisted(seq));
+        a.addToBlacklist(seq);
+        REQUIRE(a.isBlacklisted(seq));
+    }
+    App b(opts);
+    std::vector<uint8_t> seq{0x1,0x2};
+    REQUIRE(b.isBlacklisted(seq));
+    fs::remove_all(base);
+}
+
+TEST_CASE("telemetryRoot derives from exe directory and respects override", "[app][telemetry]") {
+    struct TestApp : App {
+        using App::telemetryRoot;
+        explicit TestApp(const CliOptions& o) : App(o) {}
+    };
+    CliOptions opts;
+    TestApp a(opts);
+    auto root = a.telemetryRoot();
+    // should live under bin/seq and not contain "/test/"
+    std::string s = root.string();
+    REQUIRE(s.find("bin/seq") != std::string::npos);
+    REQUIRE(s.find("/test/") == std::string::npos);
+
+    opts.telemetryDir = "xyz";
+    TestApp b(opts);
+    auto root2 = b.telemetryRoot();
+    REQUIRE(root2.string().find("xyz") != std::string::npos);
 }
 
 TEST_CASE("App.requestExit triggers update to return false", "[app][signal]") {
