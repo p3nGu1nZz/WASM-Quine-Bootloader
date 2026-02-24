@@ -494,13 +494,19 @@ void App::onGrowMemory(uint32_t /*pages*/) {
     m_memGrowFlashUntil = now() + 800;
 }
 
+void App::spawnInstance(const std::string& kernel) {
+    if (!kernel.empty()) {
+        m_instances.push_back(kernel);
+        m_logger.log("SPAWN: recorded new instance (total=" + std::to_string(m_instances.size()) + ")", "info");
+    }
+}
+
 void App::handleSpawnRequest(uint32_t ptr, uint32_t len) {
     uint32_t memSize = 0;
     const uint8_t* wMem = m_kernel.rawMemory(&memSize);
     if (wMem && ptr + len <= memSize) {
         std::string s(reinterpret_cast<const char*>(wMem + ptr), len);
-        m_instances.push_back(s);
-        m_logger.log("SPAWN: received new instance (total=" + std::to_string(m_instances.size()) + ")", "info");
+        spawnInstance(s);
     }
 }
 

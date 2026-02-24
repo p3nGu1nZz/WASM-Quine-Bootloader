@@ -361,4 +361,8 @@ void Gui::renderStatusBar(const App& app) {
     ImGui::Separator();
     ImGui::TextDisabled("WASM-QUINE-BOOTLOADER_SYS v2.4 // STATUS: %s",
                         app.isPaused() ? "PAUSED" : "RUNNING");
+    if (app.instanceCount() > 0) {
+        ImGui::SameLine(0,20);
+        ImGui::Text("Instances: %d", app.instanceCount());
+    }
 }

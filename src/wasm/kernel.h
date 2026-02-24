@@ -24,6 +24,8 @@ using LogCallback       = std::function<void(uint32_t ptr, uint32_t len,
 using GrowMemCallback   = std::function<void(uint32_t pages)>;
 // request from WASM to spawn a new kernel; passes pointer/length of base64 string
 using SpawnCallback     = std::function<void(uint32_t ptr, uint32_t len)>;
+// callback for recording neural matrix updates sent by kernel
+using WeightCallback    = std::function<void(uint32_t ptr, uint32_t len)>;
 
 class WasmKernel {
 public:
@@ -36,7 +38,8 @@ public:
     void bootDynamic(const std::string& glob,
                      LogCallback        logCb,
                      GrowMemCallback    growCb = {},
-                     SpawnCallback      spawnCb = {});
+                     SpawnCallback      spawnCb = {},
+                     WeightCallback     weightCb = {});
 
     // Execute the exported 'run' function with source written to WASM memory
     void runDynamic(const std::string& sourceGlob);

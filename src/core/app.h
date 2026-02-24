@@ -59,6 +59,8 @@ public:
     // multi-instance support
     int instanceCount() const { return (int)m_instances.size(); }
     const std::vector<std::string>& instances() const { return m_instances; }
+    // helper that directly records a spawned kernel (used by tests or host)
+    void spawnInstance(const std::string& kernel);
 
     // Build and return a telemetry report string.
     std::string exportHistory() const;

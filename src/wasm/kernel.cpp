@@ -77,22 +77,25 @@ void WasmKernel::terminate() {
 
 void WasmKernel::bootDynamic(const std::string& glob,
                                LogCallback        logCb,
-                               GrowMemCallback    growCb)
+                               GrowMemCallback    growCb,
+                               SpawnCallback      spawnCb,
+                               WeightCallback     weightCb)
 {
     terminate();
 
     m_wasmBytes = base64_decode(glob);
     m_logCb     = std::move(logCb);
     m_growCb    = std::move(growCb);
-    // spawn callback optional, stored in user data below
+    // spawn and weight callbacks optional; store pointers
 
     m_env = m3_NewEnvironment();
     if (!m_env) throw std::runtime_error("wasm3: failed to create environment");
 
     // Allocate user-data; lifetime managed by this WasmKernel instance
-    // allocate user data including spawnCb pointer set later
+    // allocate user data including spawnCb and weightCb pointers set later
     SpawnCallback* scb = new SpawnCallback();
-    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb };
+    WeightCallback* wcb = new WeightCallback();
+    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb, wcb };
     m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, m_userData);
     if (!m_runtime) {
         delete m_userData; m_userData = nullptr;
@@ -128,8 +131,10 @@ void WasmKernel::bootDynamic(const std::string& glob,
     err = m3_LinkRawFunction(m_module, "env", "spawn", "v(ii)", hostSpawnImpl);
     if (err && err != m3Err_functionLookupFailed)
         throw std::runtime_error(std::string("wasm3 link spawn: ") + err);
+    // link weight logger as no-op stub
+    err = m3_LinkRawFunction(m_module, "env", "record_weight", "v(ii)", hostSpawnImpl); // reuse spawn impl
     if (err && err != m3Err_functionLookupFailed)
-        throw std::runtime_error(std::string("wasm3 link grow_memory: ") + err);
+        throw std::runtime_error(std::string("wasm3 link record_weight: ") + err);
 
     err = m3_FindFunction(&m_runFunc, m_runtime, "run");
     if (err) {

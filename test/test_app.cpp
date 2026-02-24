@@ -88,6 +88,17 @@ TEST_CASE("App saves trainer state to CLI option", "[app][trainer]") {
     std::remove("trainer_save.tmp");
 }
 
+TEST_CASE("spawnInstance records kernels and logs", "[app][spawn]") {
+    CliOptions opts;
+    App a(opts);
+    REQUIRE(a.instanceCount() == 0);
+    a.spawnInstance("AAA");
+    REQUIRE(a.instanceCount() == 1);
+    REQUIRE(a.instances()[0] == "AAA");
+    a.spawnInstance("BBB");
+    REQUIRE(a.instanceCount() == 2);
+}
+
 TEST_CASE("App.requestExit triggers update to return false", "[app][signal]") {
     CliOptions opts;
     App a(opts);
