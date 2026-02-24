@@ -165,3 +165,14 @@ target_link_libraries(test_train PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME train_test COMMAND test_train)
+
+# Example kernel tests (spawn / kill_instance / record_weight)
+add_executable(test_examples test_examples.cpp)
+target_include_directories(test_examples PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_examples PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME examples_test COMMAND test_examples)
