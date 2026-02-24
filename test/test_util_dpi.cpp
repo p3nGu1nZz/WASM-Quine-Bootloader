@@ -31,6 +31,7 @@ TEST_CASE("Gui init applies dpi & ui scales", "[dpi]") {
     gui.init(w, r);
     REQUIRE(gui.dpiScale() == computeDpiScale(w));
     REQUIRE(gui.uiScale() >= gui.dpiScale());
+    REQUIRE(gui.uiScale() <= 2.0f); // our clamp should prevent excessive scaling
     // ImGui global scale should reflect the uiScale value
     ImGuiIO& io = ImGui::GetIO();
     REQUIRE(io.FontGlobalScale == gui.uiScale());
