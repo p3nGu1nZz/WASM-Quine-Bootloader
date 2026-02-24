@@ -139,11 +139,13 @@ public:
     void loadBlacklist();
     void saveBlacklist() const;
 
-private:
+protected:
     // compute base directory for telemetry/logs using executable path;
     // CLI override (telemetryDir) is appended to this location.
     // e.g. returns <exe_dir>/bin/seq when runId is empty.
     std::filesystem::path telemetryRoot() const;
+
+private:
 
 private:
     // FSM helpers
