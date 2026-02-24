@@ -85,11 +85,28 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
         }
     }
 
-    // create advisor using telemetry directory (allow override via CLI)
-    {
-        std::string baseDir = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
-        m_advisor = Advisor(baseDir);
-    }
+    // compute the base directory where bin/logs and bin/seq live.  By
+    // default this is derived from the executable path rather than the
+    // current working directory, which prevents stray "bin/" folders when
+    // launching from the repo root.  Users may override the telemetry
+    // subdirectory via --telemetry-dir; the override is interpreted relative
+    // to the executable directory.
+    namespace fs = std::filesystem;
+    fs::path exeDir = fs::path(executableDir());
+    // if we're running from a "test" subdirectory, step up one level so
+    // telemetry lands alongside the primary binary instead of under
+    // build/<target>/test.
+    fs::path root = exeDir;
+    if (exeDir.filename() == "test")
+        root = exeDir.parent_path();
+
+    fs::path logsDir = root / "bin" / "logs";
+    fs::path seqBase = root / "bin" / "seq";
+    if (!m_opts.telemetryDir.empty())
+        seqBase = root / m_opts.telemetryDir;
+
+    // create advisor using the telemetry base (without runId appended)
+    m_advisor = Advisor(seqBase.string());
     // if heuristic blacklist is active we expect to store entries; reserve
     // some initial capacity to avoid rehash churn.
     if (m_opts.heuristic != HeuristicMode::NONE) {
@@ -118,16 +135,16 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
         }
     }
 
-    // Ensure necessary directories exist (relative to cwd, typically build/<target>)
+    // Ensure necessary directories exist beneath the executable root
     namespace fs = std::filesystem;
-    fs::create_directories("bin/logs");
-    fs::create_directories(fs::path("bin/seq") / m_runId);
+    fs::create_directories(logsDir);
+    fs::create_directories(seqBase / m_runId);
 
     // load any persisted heuristic blacklist from previous sessions
     loadBlacklist();
 
     // Open buffered log file (flushes every ~1 s; always flushed on exit/signal)
-    m_logger.init("bin/logs/bootloader_" + nowFileStamp() + ".log");
+    m_logger.init((logsDir / ("bootloader_" + nowFileStamp() + ".log")).string());
 
     // Parse initial kernel and populate the instruction list; this also
     // fills the byte cache used by `kernelBytes()`.
@@ -675,9 +692,22 @@ std::string App::exportHistory() const {
 }
 
 // Write the current telemetry and kernel blob to the session directory.
+
+// return the directory that should contain telemetry data (without runId)
+std::filesystem::path App::telemetryRoot() const {
+    namespace fs = std::filesystem;
+    fs::path exe = fs::path(executableDir());
+    fs::path root = exe;
+    if (exe.filename() == "test")
+        root = exe.parent_path();
+    if (!m_opts.telemetryDir.empty())
+        return root / m_opts.telemetryDir;
+    return root / "bin" / "seq";
+}
+
 void App::loadBlacklist() {
     namespace fs = std::filesystem;
-    fs::path base = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
+    fs::path base = telemetryRoot();
     fs::path file = base / "blacklist.txt";
     if (!fs::exists(file)) return;
     std::ifstream f(file);
@@ -702,7 +732,7 @@ void App::loadBlacklist() {
 
 void App::saveBlacklist() const {
     namespace fs = std::filesystem;
-    fs::path base = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
+    fs::path base = telemetryRoot();
     fs::create_directories(base);
     fs::path file = base / "blacklist.txt";
     std::ofstream f(file);
@@ -727,12 +757,7 @@ void App::exportNow() {
 void App::autoExport() {
     namespace fs = std::filesystem;
     try {
-        fs::path base;
-        if (!m_opts.telemetryDir.empty()) {
-            base = fs::path(m_opts.telemetryDir) / m_runId;
-        } else {
-            base = sequenceDir(m_runId);
-        }
+        fs::path base = telemetryRoot() / m_runId;
         fs::create_directories(base);
 
         if (m_opts.telemetryLevel == TelemetryLevel::NONE) {

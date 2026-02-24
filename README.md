@@ -210,9 +210,14 @@ manually opening files.
 ```
 
 By default the executable is started with its working directory set to the
-build target (e.g. `build/linux-debug`).  Runtime log files are written to
-`bin/logs/` inside that directory, and automatic telemetry exports live under
-`bin/seq/<runid>/` (generation reports, kernel blobs, etc.).
+build target (e.g. `build/linux-debug`).  However the **actual base path for
+logs and telemetry is computed from the executable’s location** so that
+running the binary from another directory (including the repo root) still
+writes into the build tree.  Files appear under
+`<exe_dir>/bin/logs/` and `<exe_dir>/bin/seq/<runid>/` where `<exe_dir>` is
+where the bootloader executable lives.  The wrapper script (`run.sh`) changes
+into the build directory merely for convenience and to mirror prior
+behaviour, but the app no longer depends on the working directory.
 
 The build script prints colored, prefixed `[build]` messages (green for info,
 yellow for warnings, red for errors) on top of the usual cmake/ninja output to

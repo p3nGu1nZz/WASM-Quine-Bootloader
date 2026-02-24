@@ -124,7 +124,9 @@ further boost the raw DPI value by a constant (currently **×1.5**, clamped
 which is also used when sizing buttons and panels.
 
 Telemetry exports are saved automatically each generation to
-`bin/seq/<runid>/gen_<n>.txt` (plus `kernel_<n>.b64`) in the working
+`bin/seq/<runid>/gen_<n>.txt` (plus `kernel_<n>.b64`) located under the
+executable directory rather than the current working directory; this avoids
+accidentally creating a `bin/` folder when launching from elsewhere.
 directory.  Runtime logs are written to `bin/logs/` and can be monitored live
 using `bash scripts/run.sh --monitor`.
 

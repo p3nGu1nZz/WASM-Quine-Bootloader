@@ -12,6 +12,7 @@
 #include <functional>
 #include <map>
 #include <unordered_map>
+#include <filesystem>
 
 #include <string>
 #include <vector>
@@ -137,6 +138,12 @@ public:
     ~App();                             // flush blacklist on destruction
     void loadBlacklist();
     void saveBlacklist() const;
+
+private:
+    // compute base directory for telemetry/logs using executable path;
+    // CLI override (telemetryDir) is appended to this location.
+    // e.g. returns <exe_dir>/bin/seq when runId is empty.
+    std::filesystem::path telemetryRoot() const;
 
 private:
     // FSM helpers

@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "app.h"
 #include "cli.h"
+#include "util.h"  // for executableDir()
 #include <filesystem>
 
 TEST_CASE("App honors max-gen and stops updating", "[app][cli]") {
@@ -20,16 +21,25 @@ TEST_CASE("App honors max-gen and stops updating", "[app][cli]") {
 TEST_CASE("autoExport respects telemetry-level", "[export][cli]") {
     namespace fs = std::filesystem;
     // remove any leftovers from previous runs so the test is hermetic
-    fs::remove_all("test_seq");
+    fs::path exe = executableDir();
+    fs::path root = exe;
+    if (exe.filename() == "test")
+        root = exe.parent_path();
+    fs::path override = "test_seq";
+    fs::remove_all(root / override);
     fs::remove_all("test_run");
     CliOptions opts;
     opts.telemetryLevel = TelemetryLevel::BASIC;
     opts.telemetryDir = "test_seq";
 
-    fs::remove_all(opts.telemetryDir);
     App a(opts);
     a.doReboot(true);
-    fs::path base = fs::path(opts.telemetryDir) / a.runId();
+    fs::path base = root / override / a.runId();
+    INFO("exe=" << exe);
+    INFO("root=" << root);
+    INFO("override=" << override);
+    INFO("runId=" << a.runId());
+    INFO("base=" << base);
     REQUIRE(fs::exists(base));
     std::ifstream fin((base / "gen_1.txt").string());
     REQUIRE(fin.good());
@@ -42,9 +52,9 @@ TEST_CASE("autoExport respects telemetry-level", "[export][cli]") {
     opts.telemetryLevel = TelemetryLevel::NONE;
     App b(opts);
     b.doReboot(true);
-    fs::path base2 = fs::path(opts.telemetryDir) / b.runId();
-    // base2 may reside in old directory; remove everything before
-    fs::remove_all(opts.telemetryDir);
+    fs::path base2 = root / override / b.runId();
+    // remove everything under the override
+    fs::remove_all(root / override);
     REQUIRE(!fs::exists(base2 / "gen_1.txt"));
 }
 
