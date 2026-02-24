@@ -81,6 +81,52 @@ TEST_CASE("WasmKernel error paths", "[wasm]") {
     wk.terminate();
 }
 
+// ── Example kernel tests ──────────────────────────────────────────────────
+
+TEST_CASE("spawn_kernel fires SpawnCallback", "[examples]") {
+    bool spawnFired = false;
+    bool logFired   = false;
+    auto logCb   = [&](uint32_t, uint32_t, const uint8_t*, uint32_t) { logFired   = true; };
+    auto spawnCb = [&](uint32_t, uint32_t)                            { spawnFired = true; };
+
+    WasmKernel wk;
+    REQUIRE_NOTHROW(wk.bootDynamic(SPAWN_KERNEL_GLOB, logCb, {}, spawnCb));
+    REQUIRE_NOTHROW(wk.runDynamic(KERNEL_GLOB));
+    REQUIRE(logFired);
+    REQUIRE(spawnFired);
+    wk.terminate();
+}
+
+TEST_CASE("kill_kernel fires KillCallback", "[examples]") {
+    bool killFired = false;
+    bool logFired  = false;
+    int32_t killedIdx = -1;
+    auto logCb  = [&](uint32_t, uint32_t, const uint8_t*, uint32_t) { logFired = true; };
+    auto killCb = [&](int32_t idx) { killFired = true; killedIdx = idx; };
+
+    WasmKernel wk;
+    REQUIRE_NOTHROW(wk.bootDynamic(KILL_KERNEL_GLOB, logCb, {}, {}, {}, killCb));
+    REQUIRE_NOTHROW(wk.runDynamic(KERNEL_GLOB));
+    REQUIRE(logFired);
+    REQUIRE(killFired);
+    REQUIRE(killedIdx == 0);
+    wk.terminate();
+}
+
+TEST_CASE("weight_kernel fires WeightCallback", "[examples]") {
+    bool weightFired = false;
+    bool logFired    = false;
+    auto logCb    = [&](uint32_t, uint32_t, const uint8_t*, uint32_t) { logFired    = true; };
+    auto weightCb = [&](uint32_t, uint32_t)                            { weightFired = true; };
+
+    WasmKernel wk;
+    REQUIRE_NOTHROW(wk.bootDynamic(WEIGHT_KERNEL_GLOB, logCb, {}, {}, weightCb));
+    REQUIRE_NOTHROW(wk.runDynamic(KERNEL_GLOB));
+    REQUIRE(logFired);
+    REQUIRE(weightFired);
+    wk.terminate();
+}
+
 // Harden evolveBinary by feeding corner cases
 TEST_CASE("evolveBinary handles empty and minimal inputs", "[evolution]") {
     // empty base64 -> historically we returned an empty result, but
