@@ -54,21 +54,21 @@ set(IMGUI_SOURCES
 # ── Application sources ───────────────────────────────────────────────────────
 ## Core library containing non-UI application logic
 set(CORE_SOURCES
-    src/util.cpp
-    src/base64.cpp
-    src/log.cpp
-    src/fsm.cpp
-    src/exporter.cpp
-    src/app.cpp
+    src/core/util.cpp
+    src/core/base64.cpp
+    src/core/log.cpp
+    src/core/fsm.cpp
+    src/core/exporter.cpp
+    src/core/app.cpp
     src/wasm/kernel.cpp
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
-    src/cli.cpp
-    src/advisor.cpp
-    src/feature.cpp
-    src/policy.cpp
-    src/loss.cpp
-    src/train.cpp
+    src/core/cli.cpp
+    src/core/advisor.cpp
+    src/core/feature.cpp
+    src/core/policy.cpp
+    src/core/loss.cpp
+    src/core/train.cpp
     # wasm3 runtime objects are added to the core target below instead of
     # being inlined here; this avoids potential caching issues with the
     # CORE_SOURCES variable itself.
@@ -80,6 +80,7 @@ add_library(core STATIC ${CORE_SOURCES})
 target_sources(core PRIVATE ${WASM3_SOURCES})
 target_include_directories(core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
+    ${CMAKE_SOURCE_DIR}/src/core
     "${WASM3_DIR}/source"
 )
 # SDL3 headers are needed by util.h and other core sources.  Export them so

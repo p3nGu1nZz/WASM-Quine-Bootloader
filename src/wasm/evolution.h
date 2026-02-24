@@ -1,7 +1,7 @@
 #pragma once
 
 #include "wasm/parser.h"
-#include "../cli.h"  // for MutationStrategy
+#include "cli.h"  // for MutationStrategy (search path includes src/core)
 #include <string>
 #include <vector>
 
