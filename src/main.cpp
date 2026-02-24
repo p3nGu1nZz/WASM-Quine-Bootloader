@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
                         }
                     }
                     if (ev.key.key == SDLK_H) {      // show a simple help text in logs
-                        app.logs().emplace_back("Shortcut: Space=pause, E=export, F=toggle fullscreen, H=help, Q/Esc=quit", "info");
+                        app.log("Shortcut: Space=pause, E=export, F=toggle fullscreen, H=help, Q/Esc=quit", "info");
                     }
                     if (ev.key.key == SDLK_Q ||
                         ev.key.key == SDLK_ESCAPE)  running = false;

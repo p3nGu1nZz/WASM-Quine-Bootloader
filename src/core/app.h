@@ -62,6 +62,13 @@ public:
     // helper that directly records a spawned kernel (used by tests or host)
     void spawnInstance(const std::string& kernel);
 
+    // convenient logging wrapper for UI and tests; preferring this avoids
+    // callers having to grab the internal logger and bypass the const
+    // guarantee of `logs()`.
+    void log(const std::string& msg, const std::string& type = "info") {
+        m_logger.log(msg, type);
+    }
+
     // Build and return a telemetry report string.
     std::string exportHistory() const;
 
@@ -91,10 +98,6 @@ public:
 
     // expose advisor for GUI or tests
     const Advisor& advisor() const { return m_advisor; }
-
-    // multi-instance support: kernels spawned by the running program
-    int instanceCount() const { return (int)m_instances.size(); }
-    const std::vector<std::string>& instances() const { return m_instances; }
 
     // helper used by tests to apply a telemetry entry and optionally
     // persist the model via CLI flag.
@@ -153,12 +156,10 @@ private:
     // WASM host callbacks
     void onWasmLog(uint32_t ptr, uint32_t len, const uint8_t* mem, uint32_t memSize);
     void onGrowMemory(uint32_t pages);
-    void handleSpawnRequest(uint32_t ptr, uint32_t len);
-    void handleBootFailure(const std::string& reason);
-
     // called when the kernel requests a spawn; ptr/len refer to base64 in
     // kernel memory.
     void handleSpawnRequest(uint32_t ptr, uint32_t len);
+    void handleBootFailure(const std::string& reason);
 
     // ── Components ────────────────────────────────────────────────────────────
     BootFsm   m_fsm;
