@@ -113,24 +113,25 @@ Agent/build scripts must use a `./.tmp` directory in the repo root for temporary
 ## Agent skills
 
 Available skills:
-- `setup-project` – install externals.
-- `build-app` – compile the code.
-- `run-app` – launch GUI/headless or tail logs.
-- `test-app` – build and run tests.
-- `update-docs` – refresh README and related docs.
-- `update-specs` – edit specs under `docs/specs/`.
-- `update-skills` – update skill docs and copilot-instructions.
-- `update-memory` – write repository facts to memory.
-- `search-memory` – search the memory store.
-- `repo-facts` – dig through the repository and return a comprehensive technical summary.
-- `telemetry-review` – inspect logs/seq exports.
-- `update-issues` – synchronise GitHub issues with the codebase (close done items, update descriptions, generate new tasks).
-- `improve-src` – sweep source files fixing errors, refactoring and removing dead code.
-- `improve-tests` – expand and strengthen the unit test suite for greater coverage.
-- `code-review` – perform a thorough adversarial review of code changes and suggest improvements.
-- `commit-push` – stage changes, craft a commit message, and push to remote.
-- `introspect-telemetry` – review logs and sequence exports for anomalies.
-- `improve-skills` – refine and compact all existing skill documents.
+- `setup-project` – install or reset third‑party dependencies (SDL3, ImGui, wasm3, Catch2).
+- `build-app` – compile the C++ application and run unit tests using provided scripts.
+- `run-app` – launch the bootloader executable in GUI/headless mode or tail its log output.
+- `test-app` – build and execute the Catch2 unit test suite.
+- `update-docs` – refresh README, copilot‑instructions and other documentation to match code changes.
+- `update-specs` – edit or add design specification documents under `docs/`.
+- `update-skills` – regenerate skill metadata and copilot‑instructions after altering skills.
+- `update-memory` – add or refresh repository-specific facts in the agent's memory store.
+- `search-memory` – query the memory store for past facts.
+- `repo-facts` – scan the repository and return a comprehensive technical summary.
+- `telemetry-review` – analyse runtime logs and sequence exports for anomalies or trends.
+- `update-issues` – synchronise GitHub issues with the codebase (close implemented items, update descriptions, spawn new tasks).
+- `improve-src` – perform bulk source-code improvements: fix errors, refactor, prune dead code.
+- `improve-tests` – strengthen the unit tests for better coverage and robustness.
+- `code-review` – conduct an adversarial, comprehensive review of proposed changes.
+- `commit-push` – stage local changes, craft a descriptive commit message, and push to the remote.
+- `introspect-telemetry` – examine logs/sequence exports to identify run‑time anomalies.
+- `timed-run` – launch the bootloader for a specified duration and automatically perform a telemetry review.
+- `improve-skills` – refine and compact existing skill documents and prompts.
 
 Each skill has a `SKILL.md` in `.github/skills/`. Add new skills there with YAML frontmatter and concise instructions; longer references can live elsewhere.  Workflow prompts live under `.github/prompts/` and are referenced by the `repo-facts` and `update-issues` skills when following the project workflow.
 

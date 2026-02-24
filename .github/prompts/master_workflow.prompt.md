@@ -31,6 +31,7 @@ candidates in `[ISSUE] Title… Body…` format. |
 | `build-app` | Run the shell scripts to build the C++ app and tests. |
 | `test-app` | Build and run the unit‑test suite. |
 | `run-app` | Launch the bootloader (GUI or headless) to verify behaviour. |
+| `timed-run` | Run the bootloader for a set duration then auto-review telemetry. |
 | `update-specs` | Edit docs in `docs/specs/` when behaviour or interfaces change. |
 | `improve-tests` | Add or enhance unit tests. |
 | `improve-src` | Clean, refactor and prune source code when appropriate. |

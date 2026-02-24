@@ -52,11 +52,12 @@ When told to "run" a skill the agent should execute its logic and make the
 corresponding edits automatically rather than simply listing what could be
 done.
 
-Key skills now also include `code-review` for comprehensive reviews and
-`improve-tests` for expanding the unit test suite.  Workflow prompts are
-stored under `.github/prompts/` and guide agent behaviour for the master
-and development workflows.  The development prompt now also offers an
-optional issue‑triage step: if the backlog is quiet it will run
+Key skills now also include `code-review` for comprehensive reviews,
+`improve-tests` for expanding the unit test suite, and `timed-run` for
+shortcut experiment cycles with automatic telemetry analysis.  Workflow
+prompts are stored under `.github/prompts/` and guide agent behaviour for
+the master and development workflows.  The development prompt now also
+offers an optional issue‑triage step: if the backlog is quiet it will run
 `code-review` to produce new task candidates.
 
 ---
