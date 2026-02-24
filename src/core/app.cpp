@@ -245,6 +245,9 @@ void App::tickLoading() {
             },
             [this](uint32_t pages) {
                 onGrowMemory(pages);
+            },
+            [this](uint32_t ptr, uint32_t len) {
+                handleSpawnRequest(ptr, len);
             }
         );
     } catch (const std::exception& e) {
@@ -489,6 +492,16 @@ void App::onGrowMemory(uint32_t /*pages*/) {
     // We only need the flash effect; the page count itself is not tracked.
     m_memGrowing        = true;
     m_memGrowFlashUntil = now() + 800;
+}
+
+void App::handleSpawnRequest(uint32_t ptr, uint32_t len) {
+    uint32_t memSize = 0;
+    const uint8_t* wMem = m_kernel.rawMemory(&memSize);
+    if (wMem && ptr + len <= memSize) {
+        std::string s(reinterpret_cast<const char*>(wMem + ptr), len);
+        m_instances.push_back(s);
+        m_logger.log("SPAWN: received new instance (total=" + std::to_string(m_instances.size()) + ")", "info");
+    }
 }
 
 bool App::isBlacklisted(const std::vector<uint8_t>& seq) const {

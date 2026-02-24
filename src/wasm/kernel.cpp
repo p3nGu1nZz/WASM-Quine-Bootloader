@@ -14,6 +14,7 @@ struct KernelUserData {
     WasmKernel*     kernel;
     LogCallback*    logCb;
     GrowMemCallback* growCb;
+    SpawnCallback*  spawnCb;
 };
 
 // ── Host function: env.log(ptr i32, len i32) ─────────────────────────────────
@@ -39,6 +40,17 @@ m3ApiRawFunction(hostGrowImpl) {
     if (ud && ud->growCb && *ud->growCb)
         (*ud->growCb)(pages);
 
+    m3ApiSuccess()
+}
+
+// new host function: env.spawn(ptr,len)
+m3ApiRawFunction(hostSpawnImpl) {
+    m3ApiGetArg(uint32_t, ptr)
+    m3ApiGetArg(uint32_t, len)
+    auto* ud = reinterpret_cast<KernelUserData*>(m3_GetUserData(runtime));
+    if (ud && ud->spawnCb && *ud->spawnCb) {
+        (*ud->spawnCb)(ptr, len);
+    }
     m3ApiSuccess()
 }
 
@@ -72,12 +84,15 @@ void WasmKernel::bootDynamic(const std::string& glob,
     m_wasmBytes = base64_decode(glob);
     m_logCb     = std::move(logCb);
     m_growCb    = std::move(growCb);
+    // spawn callback optional, stored in user data below
 
     m_env = m3_NewEnvironment();
     if (!m_env) throw std::runtime_error("wasm3: failed to create environment");
 
     // Allocate user-data; lifetime managed by this WasmKernel instance
-    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb };
+    // allocate user data including spawnCb pointer set later
+    SpawnCallback* scb = new SpawnCallback();
+    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb };
     m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, m_userData);
     if (!m_runtime) {
         delete m_userData; m_userData = nullptr;
@@ -108,6 +123,14 @@ void WasmKernel::bootDynamic(const std::string& glob,
     if (err && err != m3Err_functionLookupFailed)
         throw std::runtime_error(std::string("wasm3 link grow_memory: ") + err);
 
+    // link spawn if requested later (always link so kernel can import even if
+    // callback is empty)
+    err = m3_LinkRawFunction(m_module, "env", "spawn", "v(ii)", hostSpawnImpl);
+    if (err && err != m3Err_functionLookupFailed)
+        throw std::runtime_error(std::string("wasm3 link spawn: ") + err);
+    if (err && err != m3Err_functionLookupFailed)
+        throw std::runtime_error(std::string("wasm3 link grow_memory: ") + err);
+
     err = m3_FindFunction(&m_runFunc, m_runtime, "run");
     if (err) {
         terminate();
@@ -135,4 +158,9 @@ void WasmKernel::runDynamic(const std::string& sourceGlob) {
     M3Result err = m3_CallV(m_runFunc, (uint32_t)0, srcLen);
     if (err)
         throw std::runtime_error(std::string("wasm3 call 'run': ") + err);
+}
+
+const uint8_t* WasmKernel::rawMemory(uint32_t* size) const {
+    if (!m_runtime) return nullptr;
+    return m3_GetMemory(m_runtime, size, 0);
 }

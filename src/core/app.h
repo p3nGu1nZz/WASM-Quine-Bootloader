@@ -56,6 +56,10 @@ public:
 
     void togglePause() { m_paused = !m_paused; }
 
+    // multi-instance support
+    int instanceCount() const { return (int)m_instances.size(); }
+    const std::vector<std::string>& instances() const { return m_instances; }
+
     // Build and return a telemetry report string.
     std::string exportHistory() const;
 
@@ -85,6 +89,10 @@ public:
 
     // expose advisor for GUI or tests
     const Advisor& advisor() const { return m_advisor; }
+
+    // multi-instance support: kernels spawned by the running program
+    int instanceCount() const { return (int)m_instances.size(); }
+    const std::vector<std::string>& instances() const { return m_instances; }
 
     // helper used by tests to apply a telemetry entry and optionally
     // persist the model via CLI flag.
@@ -143,8 +151,12 @@ private:
     // WASM host callbacks
     void onWasmLog(uint32_t ptr, uint32_t len, const uint8_t* mem, uint32_t memSize);
     void onGrowMemory(uint32_t pages);
-
+    void handleSpawnRequest(uint32_t ptr, uint32_t len);
     void handleBootFailure(const std::string& reason);
+
+    // called when the kernel requests a spawn; ptr/len refer to base64 in
+    // kernel memory.
+    void handleSpawnRequest(uint32_t ptr, uint32_t len);
 
     // ── Components ────────────────────────────────────────────────────────────
     BootFsm   m_fsm;
@@ -203,6 +215,7 @@ private:
     std::vector<Instruction>              m_instructions;
     std::vector<std::vector<uint8_t>>     m_knownInstructions;
     std::vector<uint8_t>                  m_pendingMutation;
+    std::vector<std::string>              m_instances;
 
     int  m_focusAddr  = 0;
     int  m_focusLen   = 0;

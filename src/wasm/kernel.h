@@ -22,6 +22,8 @@ struct KernelUserData;
 using LogCallback       = std::function<void(uint32_t ptr, uint32_t len,
                                               const uint8_t* mem, uint32_t memSize)>;
 using GrowMemCallback   = std::function<void(uint32_t pages)>;
+// request from WASM to spawn a new kernel; passes pointer/length of base64 string
+using SpawnCallback     = std::function<void(uint32_t ptr, uint32_t len)>;
 
 class WasmKernel {
 public:
@@ -33,10 +35,14 @@ public:
     // Boot with a base64-encoded WASM binary
     void bootDynamic(const std::string& glob,
                      LogCallback        logCb,
-                     GrowMemCallback    growCb = {});
+                     GrowMemCallback    growCb = {},
+                     SpawnCallback      spawnCb = {});
 
     // Execute the exported 'run' function with source written to WASM memory
     void runDynamic(const std::string& sourceGlob);
+
+    // Provide read-only access to linear memory; returns pointer and size.
+    const uint8_t* rawMemory(uint32_t* size) const;
 
     // Release all wasm3 resources
     void terminate();
