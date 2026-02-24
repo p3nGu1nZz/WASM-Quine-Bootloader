@@ -49,6 +49,7 @@ private:
 
     // ── File-logging state ────────────────────────────────────────────────────
     std::ofstream            m_logFile;
+    std::string              m_logFilePath;    // path used for locking
     std::vector<std::string> m_pendingLines;
     uint64_t                 m_lastFlushMs = 0;
     bool                     m_fileLogging = false;

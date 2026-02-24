@@ -6,6 +6,9 @@
 #include <csignal>
 #include <sstream>
 #include <iomanip>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
 
 // ── Global pointer for signal/atexit handler ──────────────────────────────────
 static AppLogger* s_loggerInstance = nullptr;
@@ -23,6 +26,7 @@ AppLogger::~AppLogger() {
 }
 
 void AppLogger::init(const std::string& logFilePath) {
+    m_logFilePath = logFilePath;
     m_logFile.open(logFilePath, std::ios::app);
     if (!m_logFile.is_open()) return;
 
@@ -79,9 +83,26 @@ void AppLogger::maybeFlush(uint64_t nowMs) {
 
 void AppLogger::flush() {
     if (!m_fileLogging || m_pendingLines.empty()) return;
+
+    // Attempt to obtain advisory lock on companion lockfile.  This prevents
+    // interleaved writes when multiple processes share the same log path.
+    int lockfd = -1;
+    if (!m_logFilePath.empty()) {
+        std::string lockpath = m_logFilePath + ".lock";
+        lockfd = open(lockpath.c_str(), O_CREAT | O_RDWR, 0666);
+        if (lockfd >= 0) {
+            flock(lockfd, LOCK_EX);
+        }
+    }
+
     for (const auto& line : m_pendingLines)
         m_logFile << line << '\n';
     m_logFile.flush();
     m_pendingLines.clear();
     m_lastFlushMs = static_cast<uint64_t>(SDL_GetTicks());
+
+    if (lockfd >= 0) {
+        flock(lockfd, LOCK_UN);
+        close(lockfd);
+    }
 }

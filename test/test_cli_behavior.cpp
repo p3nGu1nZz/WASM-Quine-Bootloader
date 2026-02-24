@@ -60,3 +60,16 @@ TEST_CASE("profile flag outputs log entries", "[cli]") {
     REQUIRE(found);
 }
 
+TEST_CASE("App honors max-run-ms and stops updating", "[app][cli]") {
+    uint64_t fakeTime = 0;
+    auto nowFn = [&]() { return fakeTime; };
+    CliOptions opts;
+    opts.maxRunMs = 50;
+    App a(opts, nowFn);
+    // first call should succeed
+    REQUIRE(a.update() == true);
+    // advance past the limit and expect update to return false
+    fakeTime += 100;
+    REQUIRE(a.update() == false);
+}
+

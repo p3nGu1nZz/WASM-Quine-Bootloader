@@ -4,6 +4,7 @@
 #include "wasm/parser.h"
 #include "wasm/kernel.h"
 #include "base64.h"
+#include "constants.h"
 #include <vector>
 #include <string>
 
@@ -31,6 +32,34 @@ TEST_CASE("extractCodeSection returns empty on tiny binaries", "[wasm]") {
     std::vector<uint8_t> bytes(7, 0); // smaller than header
     auto out = extractCodeSection(bytes);
     REQUIRE(out.empty());
+}
+
+TEST_CASE("parseInstructions handles multi-byte LEB128 and control ops", "[wasm]") {
+    // i32.const 300 (0xAC02 encoded), drop, if <blocktype>, end
+    std::vector<uint8_t> data = {0x41, 0xAC, 0x02, 0x1A, 0x04, 0x40, 0x0B};
+    auto instrs = parseInstructions(data.data(), data.size());
+    REQUIRE(instrs.size() == 4);
+    REQUIRE(instrs[0].opcode == 0x41);
+    REQUIRE(instrs[0].args.size() == 2); // two-byte immediate
+    REQUIRE(instrs[1].opcode == 0x1A);
+    REQUIRE(instrs[2].opcode == 0x04);
+    REQUIRE(instrs[3].opcode == 0x0B);
+}
+
+TEST_CASE("parseInstructions tolerates truncated input without crash", "[wasm]") {
+    std::vector<uint8_t> partial1 = {0x41};           // missing argument
+    auto i1 = parseInstructions(partial1.data(), partial1.size());
+    REQUIRE(!i1.empty());
+    std::vector<uint8_t> partial2 = {0x41, 0x80};      // incomplete leb
+    auto i2 = parseInstructions(partial2.data(), partial2.size());
+    REQUIRE(!i2.empty());
+}
+
+TEST_CASE("extractCodeSection works on real kernel blob", "[wasm]") {
+    std::vector<uint8_t> blob = base64_decode(KERNEL_GLOB);
+    REQUIRE(!blob.empty());
+    auto instrs = extractCodeSection(blob);
+    REQUIRE(!instrs.empty());
 }
 
 TEST_CASE("WasmKernel error paths", "[wasm]") {

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iomanip>
 #include <sstream>
+#include <cstring>
 
 // ─── Gui lifecycle ────────────────────────────────────────────────────────────
 
@@ -177,7 +178,12 @@ void Gui::renderLogPanel(const App& app, float w, float h) {
     // filter input
     ImGui::SameLine();
     ImGui::SetCursorPosX(w - 200.0f * m_uiScale);
-    ImGui::InputText("Filter", &m_logFilter);
+    // InputText doesn't accept std::string in this build, so use fixed buffer.
+    char buf[256];
+    std::strncpy(buf, m_logFilter.c_str(), sizeof(buf));
+    if (ImGui::InputText("Filter", buf, sizeof(buf))) {
+        m_logFilter = buf;
+    }
 
     ImGui::Separator();
     ImGui::BeginChild("##LogScroll", { 0, 0 }, false,

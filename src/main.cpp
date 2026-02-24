@@ -68,13 +68,17 @@ int main(int argc, char** argv) {
                 if (ev.type == SDL_EVENT_QUIT) running = false;
                 if (ev.type == SDL_EVENT_KEY_DOWN) {
                     if (ev.key.key == SDLK_SPACE)  app.togglePause();
-                    if (ev.key.key == SDLK_e || ev.key.key == SDLK_E) app.exportNow();
+                    if (ev.key.key == SDLK_E)        app.exportNow();
                     if (ev.key.key == SDLK_Q ||
                         ev.key.key == SDLK_ESCAPE)  running = false;
                 }
             }
 
-            app.update();
+            // honor return value; `update()` will return false when the
+            // max-gen or max-run-ms limit has been reached, or when the app
+            // requests shutdown via other means.
+            if (!app.update())
+                running = false;
             gui.renderFrame(app);
         }
 
