@@ -21,6 +21,25 @@
 #include <sys/file.h>
 #include <unistd.h>
 
+// Global pointer used by the signal handler to notify the running App
+static App* g_appInstance = nullptr;
+// also keep an atomic flag for simple checks
+static std::atomic<bool> g_shouldExitFlag{false};
+
+// Forwarded function called from external code (e.g. signal handler)
+// to request the application cleanly terminate.
+void requestAppExit() {
+    g_shouldExitFlag.store(true);
+    if (g_appInstance) {
+        g_appInstance->requestExit();
+    }
+}
+
+// signal handler registered in main(); it simply forwards the request
+static void signalHandler(int /*sig*/) {
+    requestAppExit();
+}
+
 // ─── App ─────────────────────────────────────────────────────────────────────
 
 App::App()
@@ -31,11 +50,16 @@ App::App()
 App::~App() {
     // persist blacklist on shutdown
     saveBlacklist();
+    // clear global pointer so signal handler won't dereference it
+    if (g_appInstance == this) g_appInstance = nullptr;
 }
 
 App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
     : m_opts(opts)
 {
+    // register global pointer immediately so signals can be handled
+    g_appInstance = this;
+
     // choose time source
     if (nowFn) {
         m_nowFn = std::move(nowFn);

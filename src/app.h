@@ -65,6 +65,12 @@ public:
     // completed successfully before the deadline; false otherwise.
     bool runWithTimeout(const std::function<void()>& fn);
 
+    // Request that the application shut itself down at the next convenient
+    // opportunity.  This sets an internal flag so that `update()` will return
+    // false soon after the current generation completes.  It is safe to call
+    // from a signal handler (invoked via `requestAppExit()` below).
+    void requestExit();
+
     // manually trigger telemetry export for the current generation
     void exportNow();
 
@@ -217,6 +223,9 @@ private:
 
     // CLI options supplied at startup
     CliOptions m_opts;
+
+    // internal flag used by requestExit() and signal handlers
+    bool m_shouldExit = false;
 
     // optional time source (default uses SDL_GetTicks).  tests inject a fake
     // clock so that run-time limits can be verified deterministically.
