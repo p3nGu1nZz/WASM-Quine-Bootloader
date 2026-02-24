@@ -69,7 +69,11 @@ void WasmKernel::terminate() {
     m_module   = nullptr;
     if (m_runtime) { m3_FreeRuntime(m_runtime);     m_runtime = nullptr; }
     if (m_env)     { m3_FreeEnvironment(m_env);     m_env     = nullptr; }
-    delete m_userData;
+    if (m_userData) {
+        delete m_userData->spawnCb;
+        delete m_userData->weightCb;
+        delete m_userData;
+    }
     m_userData = nullptr;
     m_wasmBytes.clear();
     m_logCb  = {};
@@ -96,6 +100,9 @@ void WasmKernel::bootDynamic(const std::string& glob,
     // allocate user data including spawnCb and weightCb pointers set later
     SpawnCallback* scb = new SpawnCallback();
     WeightCallback* wcb = new WeightCallback();
+    // copy provided callbacks into heap objects so they outlive this scope
+    if (spawnCb) *scb = std::move(spawnCb);
+    if (weightCb) *wcb = std::move(weightCb);
     m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb, wcb };
     m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, m_userData);
     if (!m_runtime) {
