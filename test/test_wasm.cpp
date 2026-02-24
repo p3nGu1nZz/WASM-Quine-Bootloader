@@ -70,3 +70,16 @@ TEST_CASE("WasmKernel error paths", "[wasm]") {
     REQUIRE_THROWS_AS(wk.bootDynamic("!!!notbase64!!!", {}, {}), std::exception);
     wk.terminate();
 }
+
+// Harden evolveBinary by feeding corner cases
+TEST_CASE("evolveBinary handles empty and minimal inputs", "[evolution]") {
+    // empty base64 -> should not crash; result binary empty as well
+    auto r1 = evolveBinary("", {}, 0, MutationStrategy::RANDOM);
+    REQUIRE(r1.binary.empty());
+    // very small kernel (just header) should also return non-empty string
+    std::string small = "AGFzbQEAAAA="; // minimal wasm
+    auto r2 = evolveBinary(small, {}, 1, MutationStrategy::BLACKLIST);
+    REQUIRE(!r2.binary.empty());
+    // ensure mutationSequence size is bounded (<=10 for this test)
+    REQUIRE(r2.mutationSequence.size() <= 10);
+}

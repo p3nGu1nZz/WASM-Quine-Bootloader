@@ -30,6 +30,11 @@ Unrecognised flags or malformed values generate a warning on stderr and set the 
 
 If a flag that expects a finite set of values is given an unrecognised token (e.g. `--telemetry-level=foo` or `--heuristic=bar`), `parseCli()` emits a `Warning:` line to stderr and sets the `parseError` flag in the returned `CliOptions`.  The bootloader then continues with the default for that option; wrapper scripts or tests can check `parseError` and abort if desired.  Completely unknown options likewise produce a warning but are otherwise ignored so that `scripts/run.sh` can transparently forward extra arguments to the executable.
 
+> **Note:** earlier versions of this spec accidentally listed the
+> `--heuristic` values in the order `blacklist|none|decay` which did not
+> match the parser.  The documentation above has been corrected and a unit
+> test (`[cli]` cases) now verifies consistent parsing.
+
 Flags that accept values may be written either as `--flag=value` or the traditional `--flag value`; the parser's `extractValue()` helper handles both forms and advances `argv` appropriately.
 
 ## Behaviour

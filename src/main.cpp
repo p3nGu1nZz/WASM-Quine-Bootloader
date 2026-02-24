@@ -81,6 +81,17 @@ int main(int argc, char** argv) {
                 if (ev.type == SDL_EVENT_KEY_DOWN) {
                     if (ev.key.key == SDLK_SPACE)  app.togglePause();
                     if (ev.key.key == SDLK_E)        app.exportNow();
+                    if (ev.key.key == SDLK_F) {      // toggle fullscreen/windowed
+                        Uint32 flags = SDL_GetWindowFlags(window);
+                        if (flags & SDL_WINDOW_MAXIMIZED) {
+                            SDL_RestoreWindow(window);
+                        } else {
+                            SDL_MaximizeWindow(window);
+                        }
+                    }
+                    if (ev.key.key == SDLK_H) {      // show a simple help text in logs
+                        app.logs().emplace_back("Shortcut: Space=pause, E=export, F=toggle fullscreen, H=help, Q/Esc=quit", "info");
+                    }
                     if (ev.key.key == SDLK_Q ||
                         ev.key.key == SDLK_ESCAPE)  running = false;
                 }

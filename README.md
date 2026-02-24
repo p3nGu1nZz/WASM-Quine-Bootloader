@@ -152,6 +152,8 @@ Keyboard shortcuts are available when using the GUI version:
 
 - **Spacebar** – pause or resume the current kernel.
 - **E** – export the current kernel/telemetry immediately.
+- **F** – toggle fullscreen/windowed (useful when switching focus).
+- **H** – log a help message summarising shortcuts.
 - **Q** or **Escape** – quit the application.
 
 The launcher also supports several command‑line options (see

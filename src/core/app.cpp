@@ -90,6 +90,11 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
         std::string baseDir = m_opts.telemetryDir.empty() ? "bin/seq" : m_opts.telemetryDir;
         m_advisor = Advisor(baseDir);
     }
+    // if heuristic blacklist is active we expect to store entries; reserve
+    // some initial capacity to avoid rehash churn.
+    if (m_opts.heuristic != HeuristicMode::NONE) {
+        m_blacklist.reserve(512);
+    }
     // load model if requested
     if (!m_opts.loadModelPath.empty()) {
         if (!m_trainer.load(m_opts.loadModelPath)) {
