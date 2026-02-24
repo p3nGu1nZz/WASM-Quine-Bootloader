@@ -19,6 +19,9 @@ TEST_CASE("App honors max-gen and stops updating", "[app][cli]") {
 
 TEST_CASE("autoExport respects telemetry-level", "[export][cli]") {
     namespace fs = std::filesystem;
+    // remove any leftovers from previous runs so the test is hermetic
+    fs::remove_all("test_seq");
+    fs::remove_all("test_run");
     CliOptions opts;
     opts.telemetryLevel = TelemetryLevel::BASIC;
     opts.telemetryDir = "test_seq";

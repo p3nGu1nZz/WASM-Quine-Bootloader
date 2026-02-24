@@ -11,6 +11,8 @@ lerna-debug.log*
 *.tmp
 .tmp
 tmp
+test_seq/
+test_run/
 
 # Node / Web app
 node_modules

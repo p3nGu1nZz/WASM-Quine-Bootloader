@@ -44,6 +44,8 @@ TEST_CASE("Gui init applies dpi & ui scales", "[dpi]") {
 TEST_CASE("App auto-export creates session files", "[export]") {
     namespace fs = std::filesystem;
     // use a temporary working directory so we don't pollute repo
+    fs::remove_all("test_seq");
+    fs::remove_all("test_run");
     fs::path orig = fs::current_path();
     fs::path tmp = orig / "test_run";
     fs::remove_all(tmp);
