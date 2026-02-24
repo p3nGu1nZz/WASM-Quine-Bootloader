@@ -16,6 +16,7 @@ struct KernelUserData {
     GrowMemCallback* growCb;
     SpawnCallback*  spawnCb;
     WeightCallback* weightCb;
+    KillCallback*   killCb;
 };
 
 // ── Host function: env.log(ptr i32, len i32) ─────────────────────────────────
@@ -55,6 +56,29 @@ m3ApiRawFunction(hostSpawnImpl) {
     m3ApiSuccess()
 }
 
+// new host function: env.record_weight(ptr,len)
+// this is used by the kernel to transmit its serialized neural matrix or
+// weight update; the host may ignore or persist the blob.
+m3ApiRawFunction(hostRecordWeightImpl) {
+    m3ApiGetArg(uint32_t, ptr)
+    m3ApiGetArg(uint32_t, len)
+    auto* ud = reinterpret_cast<KernelUserData*>(m3_GetUserData(runtime));
+    if (ud && ud->weightCb && *ud->weightCb) {
+        (*ud->weightCb)(ptr, len);
+    }
+    m3ApiSuccess()
+}
+
+// new host function: env.kill_instance(idx)
+m3ApiRawFunction(hostKillImpl) {
+    m3ApiGetArg(int32_t, idx)
+    auto* ud = reinterpret_cast<KernelUserData*>(m3_GetUserData(runtime));
+    if (ud && ud->killCb && *ud->killCb) {
+        (*ud->killCb)(idx);
+    }
+    m3ApiSuccess()
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 
 WasmKernel::WasmKernel()  = default;
@@ -84,7 +108,8 @@ void WasmKernel::bootDynamic(const std::string& glob,
                                LogCallback        logCb,
                                GrowMemCallback    growCb,
                                SpawnCallback      spawnCb,
-                               WeightCallback     weightCb)
+                               WeightCallback     weightCb,
+                               KillCallback       killCb)
 {
     terminate();
 
@@ -97,13 +122,15 @@ void WasmKernel::bootDynamic(const std::string& glob,
     if (!m_env) throw std::runtime_error("wasm3: failed to create environment");
 
     // Allocate user-data; lifetime managed by this WasmKernel instance
-    // allocate user data including spawnCb and weightCb pointers set later
+    // allocate user data including spawnCb, weightCb and killCb pointers set later
     SpawnCallback* scb = new SpawnCallback();
     WeightCallback* wcb = new WeightCallback();
+    KillCallback*   kcb = new KillCallback();
     // copy provided callbacks into heap objects so they outlive this scope
     if (spawnCb) *scb = std::move(spawnCb);
     if (weightCb) *wcb = std::move(weightCb);
-    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb, wcb };
+    if (killCb)   *kcb = std::move(killCb);
+    m_userData  = new KernelUserData{ this, &m_logCb, &m_growCb, scb, wcb, kcb };
     m_runtime   = m3_NewRuntime(m_env, WASM3_STACK_SLOTS, m_userData);
     if (!m_runtime) {
         delete m_userData; m_userData = nullptr;
@@ -139,10 +166,14 @@ void WasmKernel::bootDynamic(const std::string& glob,
     err = m3_LinkRawFunction(m_module, "env", "spawn", "v(ii)", hostSpawnImpl);
     if (err && err != m3Err_functionLookupFailed)
         throw std::runtime_error(std::string("wasm3 link spawn: ") + err);
-    // link weight logger as no-op stub
-    err = m3_LinkRawFunction(m_module, "env", "record_weight", "v(ii)", hostSpawnImpl); // reuse spawn impl
+    // link weight logger; this will call the weightCb if one was provided
+    err = m3_LinkRawFunction(m_module, "env", "record_weight", "v(ii)", hostRecordWeightImpl);
     if (err && err != m3Err_functionLookupFailed)
         throw std::runtime_error(std::string("wasm3 link record_weight: ") + err);
+    // link kill_instance so kernels can request their own termination
+    err = m3_LinkRawFunction(m_module, "env", "kill_instance", "v(i)", hostKillImpl);
+    if (err && err != m3Err_functionLookupFailed)
+        throw std::runtime_error(std::string("wasm3 link kill_instance: ") + err);
 
     err = m3_FindFunction(&m_runFunc, m_runtime, "run");
     if (err) {

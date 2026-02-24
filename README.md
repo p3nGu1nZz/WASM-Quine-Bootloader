@@ -35,6 +35,8 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | Kernel Cache | App retains decoded kernel/instruction data between generations to
   reduce CPU work |
 | DPI Scaling & Touch UI | UI text and widgets automatically scale with window size (1×–2×) for high‑DPI and touch‑friendly use; big buttons, snappy interaction |
+| Multi-Instance Support | Kernels can `env.spawn` siblings; instances are tracked, exported
+  in telemetry, and a GUI panel lets you inspect or kill them |
 
 ---
 
@@ -188,7 +190,10 @@ flag that callers may inspect.
 
 These may be passed to `scripts/run.sh` and will be forwarded to the
 binary when launched directly.
-
+A helper script `scripts/telemetry_analysis.py` can parse generated
+telemetry exports (`gen_*.txt`) and summarise metrics such as mutation
+rates, generation durations, and instance counts.  Run it directly or
+integrate it into research workflows.
 ```bash
 # GUI is the default; window starts fullscreen
 bash scripts/run.sh            # equivalent to --gui
@@ -304,6 +309,7 @@ bash scripts/run.sh --headless
 | **Kernel Source** | Base64 diff view: header (blue), mutation (yellow), expansion (green) |
 | **Memory Map** | Heat-decay block visualizer of WASM linear memory activity |
 | **Status Bar** | RUNNING/PAUSED indicator |
+| **Instances Panel** | List of spawned kernels with kill buttons (when N>0) |
 
 ---
 

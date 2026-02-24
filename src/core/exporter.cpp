@@ -97,6 +97,12 @@ std::string buildReport(const ExportData& d) {
     if (d.advisorEntryCount) {
         out << "Advisor Entries: " << d.advisorEntryCount << "\n";
     }
+    if (!d.instances.empty()) {
+        out << "INSTANCES: " << d.instances.size() << "\n";
+        for (const auto& inst : d.instances) {
+            out << "  " << inst << "\n";
+        }
+    }
     // Note: exporter itself doesn't perform file I/O; caller should handle
     // errors when writing the string.  This function now warns if decoded
     // raw bytes are unexpectedly empty.

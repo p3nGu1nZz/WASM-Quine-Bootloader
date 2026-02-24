@@ -69,5 +69,6 @@ private:
     void renderInstrPanel(const App& app, float w, float h);
     void renderKernelPanel(const App& app, float w, float h);
     void renderAdvisorPanel(const App& app, float w, float h);
+    void renderInstancesPanel(App& app, float w, float h);
     void renderStatusBar(const App& app);
 };

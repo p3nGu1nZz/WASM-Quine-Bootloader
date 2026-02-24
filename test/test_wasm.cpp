@@ -70,6 +70,14 @@ TEST_CASE("WasmKernel error paths", "[wasm]") {
     REQUIRE_THROWS_AS(wk.runDynamic(""), std::runtime_error);
     // boot with invalid base64 -> decode returns empty which should cause parse error
     REQUIRE_THROWS_AS(wk.bootDynamic("!!!notbase64!!!", {}, {}), std::exception);
+
+    // ensure callbacks can be supplied; this uses the real kernel blob but
+    // callbacks will never actually be invoked during these harmless boots
+    bool killInvoked = false;
+    bool weightInvoked = false;
+    auto killCb = [&](int32_t) { killInvoked = true; };
+    auto weightCb = [&](uint32_t, uint32_t) { weightInvoked = true; };
+    REQUIRE_NOTHROW(wk.bootDynamic(KERNEL_GLOB, {}, {}, {}, weightCb, killCb));
     wk.terminate();
 }
 

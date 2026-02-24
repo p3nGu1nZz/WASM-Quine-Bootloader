@@ -25,8 +25,20 @@ serialized into the kernel genome and accessed via host imports.
 
 ## Host Imports
 
-The bootloader exposes the following host calls so the WASM program can
-operate on the matrix:
+Currently the only host import provided for neural data is a simple
+logger that allows the kernel to ship serialized blobs back to the
+bootloader.  This is enough to extract a copy of the matrix for
+analysis, but richer operations may be added as the evolution engine
+matures.
+
+- `env.record_weight(ptr:u32,len:u32)` – send a chunk of bytes to the
+  host.  The semantics of the blob are up to the kernel; the intended use
+  is to transmit a serialized neural matrix or incremental update.  The
+  host will receive the data via the `WeightCallback` supplied to
+  `WasmKernel::bootDynamic` and may choose to persist it in telemetry files.
+
+Future releases may also offer the following (currently unimplemented)
+imports:
 
 - `env.add_edge(ptr:u32,len:u32,target:u32,weight:f32)` – append an edge
   record.  `ptr`/`len` point to the source instruction sequence in linear
@@ -52,3 +64,12 @@ operate on the matrix:
   encoding).
 - Provide utilities in the bootloader for offline analysis of the matrix
   snapshots located in telemetry exports.
+- Implement richer host imports (`add_edge`, `query_weight`,
+  `serialize_matrix`) so that kernels can manipulate the matrix at runtime
+  and query learned weights during execution.
+- **Experience Inheritance** – when a kernel spawns a child via
+  `env.spawn`, the serialized matrix (or a compressed snapshot thereof)
+  should travel with the genome.  Children should load this data on
+  startup and continue training without starting from scratch.  One
+  proposal is to attach the blob as a suffix to the base64 quine string
+  with a small header indicating its length.

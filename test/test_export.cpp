@@ -20,9 +20,12 @@ TEST_CASE("buildReport includes telemetry metrics when provided") {
     d.kernelSizeMax = 20;
     d.heuristicBlacklistCount = 5;
     d.advisorEntryCount = 3;
+    d.instances = {"AAA","BBB"};
 
     std::string report = buildReport(d);
     REQUIRE(report.find("Mutations Attempted: 2") != std::string::npos);
+    REQUIRE(report.find("INSTANCES:") != std::string::npos);
+    REQUIRE(report.find("AAA") != std::string::npos);
     REQUIRE(report.find("Mutations Applied: 1") != std::string::npos);
     REQUIRE(report.find("Mutation Breakdown: insert=1") != std::string::npos);
     REQUIRE(report.find("Traps: unreachable") != std::string::npos);

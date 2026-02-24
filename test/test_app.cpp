@@ -100,6 +100,31 @@ TEST_CASE("spawnInstance records kernels and logs", "[app][spawn]") {
     REQUIRE(a.instanceCount() == 2);
 }
 
+TEST_CASE("killInstance removes kernels and logs", "[app][spawn]") {
+    CliOptions opts;
+    App a(opts);
+    a.spawnInstance("X");
+    a.spawnInstance("Y");
+    REQUIRE(a.instanceCount() == 2);
+    a.killInstance(0);
+    REQUIRE(a.instanceCount() == 1);
+    REQUIRE(a.instances()[0] == "Y");
+    // killing out-of-range should be safe and leave count unchanged
+    a.killInstance(5);
+    REQUIRE(a.instanceCount() == 1);
+}
+
+TEST_CASE("exportHistory includes instances section", "[export]") {
+    CliOptions opts;
+    App a(opts);
+    a.spawnInstance("ONE");
+    a.spawnInstance("TWO");
+    std::string report = a.exportHistory();
+    REQUIRE(report.find("INSTANCES:") != std::string::npos);
+    REQUIRE(report.find("ONE") != std::string::npos);
+    REQUIRE(report.find("TWO") != std::string::npos);
+}
+
 TEST_CASE("App.log helper adds entries", "[app][log]") {
     CliOptions opts;
     App a(opts);
@@ -111,24 +136,24 @@ TEST_CASE("App.log helper adds entries", "[app][log]") {
 
 TEST_CASE("blacklist persists across App instances", "[app][blacklist][persistence]") {
     namespace fs = std::filesystem;
-    fs::path exe = executableDir();
-    fs::path base = exe / "bltest";
-    fs::remove_all(base);
-
     CliOptions opts;
     opts.telemetryDir = "bltest";
     opts.heuristic = HeuristicMode::BLACKLIST;
+    struct TestApp : App { using App::telemetryRoot; explicit TestApp(const CliOptions& o) : App(o) {} };
+    TestApp cleaning(opts);
+    fs::remove_all(cleaning.telemetryRoot());
+
     {
-        App a(opts);
+        TestApp a(opts);
         std::vector<uint8_t> seq{0x1,0x2};
         REQUIRE(!a.isBlacklisted(seq));
         a.addToBlacklist(seq);
         REQUIRE(a.isBlacklisted(seq));
     }
-    App b(opts);
+    TestApp b(opts);
     std::vector<uint8_t> seq{0x1,0x2};
     REQUIRE(b.isBlacklisted(seq));
-    fs::remove_all(base);
+    fs::remove_all(b.telemetryRoot());
 }
 
 TEST_CASE("telemetryRoot derives from exe directory and respects override", "[app][telemetry]") {

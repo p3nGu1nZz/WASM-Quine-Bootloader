@@ -265,6 +265,10 @@ void App::tickLoading() {
             },
             [this](uint32_t ptr, uint32_t len) {
                 handleSpawnRequest(ptr, len);
+            },
+            {}, // weight callback is unused here
+            [this](int32_t idx) {
+                handleKillRequest(idx);
             }
         );
     } catch (const std::exception& e) {
@@ -518,6 +522,16 @@ void App::spawnInstance(const std::string& kernel) {
     }
 }
 
+void App::killInstance(int index) {
+    if (index < 0 || index >= (int)m_instances.size()) return;
+    m_logger.log("KILL: removing instance " + std::to_string(index), "info");
+    m_instances.erase(m_instances.begin() + index);
+}
+
+void App::handleKillRequest(int32_t idx) {
+    killInstance((int)idx);
+}
+
 void App::handleSpawnRequest(uint32_t ptr, uint32_t len) {
     uint32_t memSize = 0;
     const uint8_t* wMem = m_kernel.rawMemory(&memSize);
@@ -677,6 +691,8 @@ std::string App::exportHistory() const {
     // telemetry metrics
     d.mutationsAttempted = m_evolutionAttempts;
     d.mutationsApplied   = m_mutationsApplied;
+    // include any kernels that have been spawned (alive instances)
+    d.instances = m_instances;
     d.mutationInsert     = m_mutationInsert;
     d.mutationDelete     = m_mutationDelete;
     d.mutationModify     = m_mutationModify;

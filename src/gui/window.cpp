@@ -130,6 +130,12 @@ void Gui::renderFrame(App& app) {
         renderAdvisorPanel(app, 300.0f * m_uiScale, panelH);
     }
 
+    if (app.instanceCount() > 0) {
+        ImGui::SameLine();
+        // allocate a modest width for the instances overview
+        renderInstancesPanel(app, 260.0f * m_uiScale, panelH);
+    }
+
     m_heatmap.renderPanel(app, winW);
     renderStatusBar(app);
 
@@ -353,6 +359,21 @@ void Gui::renderAdvisorPanel(const App& app, float w, float h) {
     }
     if (!m_lastDumpPath.empty()) {
         ImGui::Text("Last dump: %s", m_lastDumpPath.c_str());
+    }
+    ImGui::EndChild();
+}
+
+void Gui::renderInstancesPanel(App& app, float w, float h) {
+    ImGui::BeginChild("##InstancesPanel", { w, h }, true);
+    ImGui::TextDisabled("INSTANCES");
+    ImGui::Separator();
+    for (int i = 0; i < app.instanceCount(); i++) {
+        const std::string& inst = app.instances()[i];
+        ImGui::Text("%d: %s", i, inst.c_str());
+        ImGui::SameLine();
+        if (ImGui::SmallButton((std::string("Kill##") + std::to_string(i)).c_str())) {
+            app.killInstance(i);
+        }
     }
     ImGui::EndChild();
 }

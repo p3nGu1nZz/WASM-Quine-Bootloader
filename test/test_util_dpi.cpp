@@ -183,9 +183,11 @@ TEST_CASE("exportNow produces a file identically to autoExport", "[app][export]"
     fs::remove_all("test_seq");
     CliOptions opts;
     opts.telemetryDir = "test_seq";
-    App a(opts);
+    // subclass to expose telemetryRoot for the test
+    struct TestApp : App { using App::telemetryRoot; explicit TestApp(const CliOptions& o) : App(o) {} };
+    TestApp a(opts);
     a.doReboot(true);
-    fs::path seqdir = sequenceDir(a.runId());
+    fs::path seqdir = a.telemetryRoot() / a.runId();
     REQUIRE(fs::exists(seqdir / "gen_1.txt"));
     // now manually trigger again and expect generation 1 overwritten or new file
     a.exportNow();

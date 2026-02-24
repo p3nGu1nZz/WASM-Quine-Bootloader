@@ -158,7 +158,7 @@ Exposes read-only accessors for everything the `Gui` needs to render.
 
 | Member | Description |
 |---|---|
-| `bootDynamic(b64, logCb, growCb)` | Decode kernel, instantiate wasm3 runtime, link host imports |
+| `bootDynamic(b64, logCb, growCb)` | Decode kernel, instantiate wasm3 runtime, link host imports (supports optional `spawnCb`, `weightCb` and `killCb` callbacks) |
 | `runDynamic(b64)` | Write base64 into WASM memory, call exported `run(ptr, len)` |
 | `terminate()` | Free wasm3 runtime and environment |
 | `isLoaded()` | True when a module is ready to execute |
@@ -244,6 +244,7 @@ Panel helpers:
 | `renderLogPanel` | System log ring-buffer |
 | `renderInstrPanel` | WASM instruction list with IP highlight |
 | `renderKernelPanel` | Base64 kernel diff viewer |
+| `renderInstancesPanel` | Shows all spawned kernels with kill buttons and basic telemetry |
 | `renderStatusBar` | Bottom status line |
 
 Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.

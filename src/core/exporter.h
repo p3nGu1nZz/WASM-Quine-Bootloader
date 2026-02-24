@@ -32,6 +32,10 @@ struct ExportData {
     // number of entries currently held in the heuristic blacklist
     int heuristicBlacklistCount = 0;
     int advisorEntryCount = 0;  // number of entries loaded by Advisor
+
+    // if multi-instance support is active, the current set of base64
+    // kernels that have been spawned and not yet killed.
+    std::vector<std::string> instances;
 };
 
 // Build a full text report (hex dump, disassembly, history) from the given data.

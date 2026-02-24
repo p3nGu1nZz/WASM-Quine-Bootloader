@@ -63,6 +63,12 @@ public:
     // helper that directly records a spawned kernel (used by tests or host)
     void spawnInstance(const std::string& kernel);
 
+    // remove the instance at the given index (no-op if out of range)
+    void killInstance(int index);
+
+    // invoked by the WasmKernel host import when a kernel requests a kill
+    void handleKillRequest(int32_t idx);
+
     // convenient logging wrapper for UI and tests; preferring this avoids
     // callers having to grab the internal logger and bypass the const
     // guarantee of `logs()`.
