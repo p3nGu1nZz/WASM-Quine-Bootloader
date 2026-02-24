@@ -5,6 +5,7 @@
 #include "gui/window.h"
 #include "app.h"
 #include <filesystem>
+#include <unistd.h>
 
 
 TEST_CASE("computeDpiScale handles null window gracefully", "[dpi]") {
@@ -57,6 +58,8 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     REQUIRE(fs::exists(seqdir / "gen_1.txt"));
     // default telemetry level is BASIC, which does not write kernel blob
     REQUIRE(!fs::exists(seqdir / "kernel_1.b64"));
+    // concurrency lock file should exist
+    REQUIRE(fs::exists(seqdir / "export.lock"));
 
     // inspect contents: should start with plain-text header
     std::ifstream f(seqdir / "gen_1.txt");
@@ -90,6 +93,18 @@ TEST_CASE("App auto-export creates session files", "[export]") {
     // cleanup
     fs::current_path(orig);
     fs::remove_all(tmp);
+}
+
+TEST_CASE("AppLogger creates lock file during flush", "[log]") {
+    namespace fs = std::filesystem;
+    fs::remove_all("bin/logs");
+    fs::create_directories("bin/logs");
+    AppLogger logger;
+    logger.init("bin/logs/test.log");
+    logger.log("hi","info");
+    logger.flush();
+    REQUIRE(fs::exists("bin/logs/test.log.lock"));
+    fs::remove_all("bin/logs");
 }
 
 TEST_CASE("executableDir returns non-empty string", "[util]") {
@@ -141,6 +156,23 @@ TEST_CASE("App sanitizes invalid telemetryDir", "[app][telemetry]") {
     opts.telemetryDir = "../notallowed";
     App a(opts);
     REQUIRE(a.options().telemetryDir.empty());
+}
+
+TEST_CASE("runWithTimeout returns false when lambda overruns", "[app][timeout]") {
+    CliOptions opts;
+    opts.maxExecMs = 1; // 1 ms
+    App a(opts);
+    // lambda that sleeps longer than limit
+    bool ok = a.runWithTimeout([](){ usleep(5000); });
+    REQUIRE(ok == false);
+}
+
+TEST_CASE("runWithTimeout returns true for fast lambdas", "[app][timeout]") {
+    CliOptions opts;
+    opts.maxExecMs = 100;
+    App a(opts);
+    bool ok = a.runWithTimeout([](){ /* nothing */ });
+    REQUIRE(ok == true);
 }
 
 TEST_CASE("exportNow produces a file identically to autoExport", "[app][export]") {

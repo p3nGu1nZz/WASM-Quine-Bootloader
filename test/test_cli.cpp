@@ -90,10 +90,18 @@ TEST_CASE("CLI telemetry-format parsing") {
     const char* argv2[] = {"bootloader", "--telemetry-format", "text"};
     CliOptions o2 = parseCli(3, const_cast<char**>(argv2));
     REQUIRE(o2.telemetryFormat == TelemetryFormat::TEXT);
+    REQUIRE(o2.maxExecMs == 0);
 
     const char* argv3[] = {"bootloader", "--telemetry-format=xml"};
     CliOptions o3 = parseCli(2, const_cast<char**>(argv3));
     REQUIRE(o3.parseError == true);
+}
+
+TEST_CASE("CLI --max-exec-ms parsing") {
+    const char* argv[] = {"bootloader", "--max-exec-ms", "500"};
+    CliOptions opts = parseCli(3, const_cast<char**>(argv));
+    REQUIRE(opts.maxExecMs == 500);
+    REQUIRE(opts.parseError == false);
 }
 
 TEST_CASE("CLI parses save-model and load-model paths") {
@@ -101,4 +109,16 @@ TEST_CASE("CLI parses save-model and load-model paths") {
     CliOptions opts = parseCli(4, const_cast<char**>(argv));
     REQUIRE(opts.saveModelPath == "model.dat");
     REQUIRE(opts.loadModelPath == "prev.bin");
+}
+
+TEST_CASE("CLI --max-run-ms parsing") {
+    const char* argv[] = {"bootloader", "--max-run-ms", "1000"};
+    CliOptions opts = parseCli(3, const_cast<char**>(argv));
+    REQUIRE(opts.maxRunMs == 1000);
+}
+
+TEST_CASE("CLI invalid --max-run-ms sets parseError") {
+    const char* argv[] = {"bootloader", "--max-run-ms=abc"};
+    CliOptions opts = parseCli(2, const_cast<char**>(argv));
+    REQUIRE(opts.parseError == true);
 }

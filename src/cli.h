@@ -28,6 +28,12 @@ struct CliOptions {
     std::string saveModelPath;
     std::string loadModelPath;
 
+    // execution watchdog for entire run (milliseconds); 0 = disabled
+    int maxRunMs = 0;
+
+    // per-kernel execution timeout (milliseconds); 0 = disabled
+    int maxExecMs = 0;
+
     // flag set if any parsing error/warning occurred
     bool parseError = false;
 };

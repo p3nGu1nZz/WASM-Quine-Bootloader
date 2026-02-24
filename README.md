@@ -169,6 +169,8 @@ The launcher also supports several command‑line options (see
   generation.
 - `--profile` – log per-generation timing and memory usage.
 - `--max-gen=<n>` – stop after `n` successful generations (handy for CI).
+- `--max-run-ms=<n>` – exit once the bootloader has been running for roughly `n` milliseconds; acts as a simple watchdog for long‑running jobs.
+- `--max-exec-ms=<n>` – limit each WASM kernel execution to roughly `n` milliseconds; kernels that overrun are killed and flagged as failures (Unix only).
 - `--save-model=<path>` / `--load-model=<path>` – persist or restore the
   trainer model between runs (used by `train` and related utilities).
 

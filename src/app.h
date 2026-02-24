@@ -9,7 +9,9 @@
 #include "advisor.h"
 #include "train.h"
 #include <climits>
+#include <functional>
 #include <map>
+#include <unordered_map>
 
 #include <string>
 #include <vector>
@@ -24,7 +26,9 @@
 class App {
 public:
     App();
-    explicit App(const CliOptions& opts);
+    // constructor with optional custom time source (used by unit tests)
+    explicit App(const CliOptions& opts,
+                 std::function<uint64_t()> nowFn = nullptr);
 
     // Drive the state machine.  Returns false when the app should exit.
     bool update();
@@ -55,6 +59,12 @@ public:
     // Build and return a telemetry report string.
     std::string exportHistory() const;
 
+    // Execute a callback with a per-run timeout.  On platforms that support
+    // it this will fork a child process and kill it if it exceeds the
+    // configured `CliOptions::maxExecMs`.  Returns true if the callback
+    // completed successfully before the deadline; false otherwise.
+    bool runWithTimeout(const std::function<void()>& fn);
+
     // manually trigger telemetry export for the current generation
     void exportNow();
 
@@ -82,6 +92,7 @@ public:
     // Blacklist management
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);
+
     // decay all weights by one; entries reaching zero are removed
     void decayBlacklist();
 
@@ -147,7 +158,18 @@ private:
     int    m_mutationAdd      = 0;
     // heuristic blacklist: sequences that previously caused traps, mapped to decay weight
     // weight >0 means entry is still blacklisted; DECAY mode will decrement after each success
-    std::map<std::vector<uint8_t>, int> m_blacklist;
+    struct VecHash {
+        size_t operator()(const std::vector<uint8_t>& v) const noexcept {
+            // FNV-1a 64-bit
+            size_t h = 1469598103934665603ULL;
+            for (uint8_t b : v) {
+                h ^= b;
+                h *= 1099511628211ULL;
+            }
+            return h;
+        }
+    };
+    std::unordered_map<std::vector<uint8_t>, int, VecHash> m_blacklist;
     // profiling / telemetry timing
     uint64_t m_genStartTime   = 0; // steady ticks at generation start
     double   m_lastGenDurationMs = 0.0;
@@ -188,6 +210,10 @@ private:
 
     // CLI options supplied at startup
     CliOptions m_opts;
+
+    // optional time source (default uses SDL_GetTicks).  tests inject a fake
+    // clock so that run-time limits can be verified deterministically.
+    std::function<uint64_t()> m_nowFn;
 
     // requester to exit after max generation reached
     bool m_shouldExit = false;

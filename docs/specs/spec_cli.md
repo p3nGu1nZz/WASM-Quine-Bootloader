@@ -20,6 +20,8 @@ Additional options implemented by `parseCli()`:
 - `--heuristic=<none|blacklist|decay>` – enable the trap-avoidance blacklist, with `decay` allowing entries to expire after successful generations.
 - `--profile` – log per‑generation timing and memory usage.
 - `--max-gen=<n>` – exit after `n` successful generations (0=unlimited); handy for CI tests.
+- `--max-run-ms=<n>` – abort as soon as the process has been running for roughly `n` milliseconds.  Useful as a simple watchdog when invoking the bootloader from external harnesses or when integrating into services that impose time limits.
+- `--max-exec-ms=<n>` – limit the duration of each WASM kernel execution to about `n` milliseconds.  When a kernel exceeds the threshold it is forcibly terminated and the generation is treated as a failure; this protects against infinite loops or runaway code.  This feature is implemented via a fork‑based watchdog on Unix platforms.
 - `--save-model=<path>` / `--load-model=<path>` – persist or restore the trainer model to/from disk.
 
 Unrecognised flags or malformed values generate a warning on stderr and set the `parseError` field in the returned `CliOptions`.  Completely unknown options are otherwise ignored so that wrapper scripts can forward extra arguments to the bootloader.
@@ -45,5 +47,5 @@ Flags that accept values may be written either as `--flag=value` or the traditio
 
 ## Open Questions
 
-- Do we need support for specifying a run-time limit from the CLI, or should callers use external tools (e.g. `timeout`)?
+- (answered) the `--max-run-ms` flag now exists and is handled by the launcher; external tools such as `timeout` are still valid alternatives but the built-in mechanism provides a lightweight option for CI and headless runs.
 

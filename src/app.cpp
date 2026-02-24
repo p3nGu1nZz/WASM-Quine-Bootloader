@@ -12,6 +12,14 @@
 #include <iomanip>
 #include <stdexcept>
 #include <filesystem>
+#include <functional>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
+#include <signal.h>
+#include <fcntl.h>
+#include <sys/file.h>
+#include <unistd.h>
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
@@ -25,9 +33,15 @@ App::~App() {
     saveBlacklist();
 }
 
-App::App(const CliOptions& opts)
+App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
     : m_opts(opts)
 {
+    // choose time source
+    if (nowFn) {
+        m_nowFn = std::move(nowFn);
+    } else {
+        m_nowFn = [](){ return static_cast<uint64_t>(SDL_GetTicks()); };
+    }
     m_stableKernel   = KERNEL_GLOB;
     m_currentKernel  = KERNEL_GLOB;
     m_lastFrameTicks = now();
@@ -95,7 +109,8 @@ App::App(const CliOptions& opts)
 }
 
 uint64_t App::now() const {
-    return static_cast<uint64_t>(SDL_GetTicks());
+    // use injected callback (or SDL ticks by default)
+    return m_nowFn();
 }
 
 // decode the current base64 kernel and refresh the parsed instruction
@@ -127,6 +142,16 @@ bool App::update() {
 
     if (!m_paused)
         m_uptimeMs += static_cast<double>(dt);
+
+    // enforce run-time limit if requested.  we check here so that both GUI
+    // and headless loops will eventually see `update()` return false (and
+    // `m_shouldExit` will be set).  the check is made before the state
+    // machine so we abort as soon as the budget is exceeded.
+    if (m_opts.maxRunMs > 0 && m_uptimeMs >= m_opts.maxRunMs) {
+        m_logger.log("Max-run-ms limit reached (" + std::to_string(m_opts.maxRunMs) + " ms)", "info");
+        m_shouldExit = true;
+        return false;
+    }
 
     if (m_memGrowing && t >= m_memGrowFlashUntil)
         m_memGrowing = false;
@@ -249,11 +274,20 @@ void App::tickExecuting() {
 
     if (inst.opcode == 0x10 && !m_callExecuted) { // CALL
         m_sysReading = true;
+        bool ok = true;
         try {
-            m_kernel.runDynamic(m_currentKernel);
+            if (m_opts.maxExecMs > 0) {
+                ok = runWithTimeout([&]{ m_kernel.runDynamic(m_currentKernel); });
+            } else {
+                m_kernel.runDynamic(m_currentKernel);
+            }
         } catch (const std::exception& e) {
-            m_sysReading = false;
+            ok = false;
             handleBootFailure(e.what());
+        }
+        if (!ok) {
+            // timeout or failure already logged
+            m_sysReading = false;
             return;
         }
         m_callExecuted = true;
@@ -261,6 +295,49 @@ void App::tickExecuting() {
     }
 
     m_instrIndex++;
+}
+
+bool App::runWithTimeout(const std::function<void()>& fn) {
+    if (m_opts.maxExecMs <= 0) {
+        fn();
+        return true;
+    }
+#ifndef _WIN32
+    pid_t pid = fork();
+    if (pid == 0) {
+        // child
+        try {
+            fn();
+            _exit(0);
+        } catch (...) {
+            _exit(1);
+        }
+    } else if (pid > 0) {
+        int status = 0;
+        int waited = 0;
+        while (waited < m_opts.maxExecMs) {
+            pid_t r = waitpid(pid, &status, WNOHANG);
+            if (r == pid) {
+                if (WIFEXITED(status) && WEXITSTATUS(status) == 0) return true;
+                return false;
+            }
+            usleep(1000);
+            waited++;
+        }
+        // timeout
+        m_logger.log("EXECUTION: kernel timeout, killing child", "error");
+        kill(pid, SIGKILL);
+        waitpid(pid, &status, 0);
+        return false;
+    } else {
+        m_logger.log("EXECUTION: fork failed for timeout watchdog", "error");
+        return false;
+    }
+#else
+    // Windows: no fork, just run and hope for the best
+    fn();
+    return true;
+#endif
 }
 
 void App::tickVerifying() {
@@ -470,6 +547,13 @@ void App::doReboot(bool success) {
         if (m_opts.maxGen > 0 && m_generation >= m_opts.maxGen) {
             m_shouldExit = true;
         }
+        // also honour the wall‑clock limit if it was reached during a long
+        // generation; this duplicates the check in update(), but ensures the
+        // flag is set even if `update()` isn't called again (e.g. GUI loop
+        // ignoring return value).
+        if (m_opts.maxRunMs > 0 && m_uptimeMs >= m_opts.maxRunMs) {
+            m_shouldExit = true;
+        }
 
         // decay blacklist entries if requested
         if (m_opts.heuristic == HeuristicMode::DECAY) {
@@ -602,6 +686,11 @@ void App::autoExport() {
 
         // export header/full report or JSON
         fs::path reportFile = base / ("gen_" + std::to_string(m_generation) + ".txt");
+        // acquire lock file to prevent concurrent writers from other processes
+        int lockfd = -1;
+        fs::path lockPath = base / "export.lock";
+        lockfd = ::open(lockPath.string().c_str(), O_CREAT | O_RDWR, 0666);
+        if (lockfd >= 0) flock(lockfd, LOCK_EX);
         std::ofstream r(reportFile);
         if (r) {
             if (m_opts.telemetryFormat == TelemetryFormat::JSON) {
@@ -632,6 +721,10 @@ void App::autoExport() {
             fs::path kernelFile = base / ("kernel_" + std::to_string(m_generation) + ".b64");
             std::ofstream k(kernelFile);
             if (k) k << m_currentKernel;
+        }
+        if (lockfd >= 0) {
+            flock(lockfd, LOCK_UN);
+            close(lockfd);
         }
     } catch (const std::exception& e) {
         // logging may not be initialized yet
