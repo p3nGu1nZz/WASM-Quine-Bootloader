@@ -140,6 +140,25 @@ TEST_CASE("App.log helper adds entries", "[app][log]") {
     REQUIRE(a.logs().back().message == "test message");
 }
 
+TEST_CASE("App.scoreSequence delegates to Advisor and returns reasonable values", "[app][advisor]") {
+    // use a fresh, empty telemetry directory to avoid leftover data from
+    // earlier test runs.  Advisor scans this path on construction so we
+    // remove it first to guarantee emptiness.
+    namespace fs = std::filesystem;
+    std::string tmpdir = "score_seq_test";
+    fs::remove_all(tmpdir);
+
+    CliOptions opts;
+    opts.telemetryDir = tmpdir;
+    App a(opts);
+    std::vector<uint8_t> seq = {0xDE, 0xAD, 0xBE, 0xEF};
+
+    // create a second Advisor pointing at the same base and compare results
+    Advisor adv(a.seqBaseDir().string());
+    float direct = adv.score(seq);
+    REQUIRE(a.scoreSequence(seq) == Approx(direct));
+}
+
 TEST_CASE("blacklist persists across App instances", "[app][blacklist][persistence]") {
     namespace fs = std::filesystem;
     CliOptions opts;

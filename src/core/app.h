@@ -145,6 +145,11 @@ public:
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);
 
+    // return advisor safety score in [0,1] for a candidate mutation sequence.
+    // This convenience wrapper exists so callers (tests/gui) don't need to
+    // reach through `advisor()` themselves.
+    float scoreSequence(const std::vector<uint8_t>& seq) const;
+
     // decay all weights by one; entries reaching zero are removed
     void decayBlacklist();
 

@@ -633,6 +633,13 @@ bool App::isBlacklisted(const std::vector<uint8_t>& seq) const {
     return it != m_blacklist.end() && it->second > 0;
 }
 
+float App::scoreSequence(const std::vector<uint8_t>& seq) const {
+    // simply forward to our internal Advisor instance.  We expose this
+    // because a few clients (notably the GUI) prefer to call directly on
+    // App rather than plumbing their own Advisor reference.
+    return m_advisor.score(seq);
+}
+
 void App::addToBlacklist(const std::vector<uint8_t>& seq) {
     if (seq.empty()) return;
     if (m_opts.heuristic == HeuristicMode::NONE) return;

@@ -33,4 +33,6 @@ TEST_CASE("buildReport includes telemetry metrics when provided") {
     REQUIRE(report.find("Kernel Size Min/Max: 10/20") != std::string::npos);
     REQUIRE(report.find("Heuristic Blacklist Entries: 5") != std::string::npos);
     REQUIRE(report.find("Advisor Entries: 3") != std::string::npos);
+    // new field should be present even if sequence empty
+    REQUIRE(report.find("OPCODE SEQUENCE:") != std::string::npos);
 }

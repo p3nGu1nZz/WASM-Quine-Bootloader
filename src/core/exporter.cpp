@@ -111,6 +111,19 @@ std::string buildReport(const ExportData& d) {
         << std::string(80, '-') << '\n'
         << d.currentKernel << '\n'
         << std::string(80, '-') << "\n\n"
+        // include decoded opcode sequence for models that want to consume it
+        << "OPCODE SEQUENCE:\n"
+        << std::string(80, '-') << '\n';
+    {
+        // replicate minimal sequence extraction: decode, parse code section
+        auto bytes = base64_decode(d.currentKernel);
+        auto instrs = extractCodeSection(bytes);
+        for (auto& inst : instrs) {
+            out << (int)inst.opcode << " ";
+        }
+        out << '\n';
+    }
+    out << std::string(80, '-') << "\n\n"
         << "HEX DUMP:\n"
         << std::string(80, '-') << '\n'
         << hd.str()
