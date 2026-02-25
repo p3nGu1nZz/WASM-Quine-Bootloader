@@ -114,6 +114,24 @@ std::vector<float> Policy::forward(const std::vector<float>& input) const {
     return acts.empty() ? input : acts.back();
 }
 
+void Policy::resetState() {
+    for (auto &layer : m_layers) {
+        if (layer.type == LayerType::LSTM) {
+            layer.lstmH.assign(layer.out, 0.0f);
+            layer.lstmC.assign(layer.out, 0.0f);
+        }
+    }
+}
+
+std::vector<float> Policy::forwardSequence(const std::vector<std::vector<float>>& seq) {
+    resetState();
+    std::vector<float> out;
+    for (const auto& v : seq) {
+        out = forward(v);
+    }
+    return out;
+}
+
 void Policy::relu(std::vector<float>& v) {
     for (auto& x : v) if (x < 0.0f) x = 0.0f;
 }

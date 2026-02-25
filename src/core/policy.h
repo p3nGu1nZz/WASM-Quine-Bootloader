@@ -51,6 +51,15 @@ public:
         return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].biases : empty;
     }
 
+    // reset the mutable state (hidden & cell) of all LSTM layers to zero.
+    // Call this before processing a new sequence of inputs.
+    void resetState();
+
+    // Run a sequence of inputs through the network.  The internal LSTM
+    // state is cleared before the first element is processed.  Returns the
+    // final output vector (same as calling `forward()` on the last input)
+    std::vector<float> forwardSequence(const std::vector<std::vector<float>>& seq);
+
 private:
     // Layer: Dense or LSTM.
     //   Dense  – weights (out×in), biases (out).

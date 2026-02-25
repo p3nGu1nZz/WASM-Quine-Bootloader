@@ -21,3 +21,39 @@ TEST_CASE("Policy forward pass and layer addition", "[policy]") {
     REQUIRE(out[0] == Approx(3.0f)); // 1+2
     REQUIRE(out[1] == Approx(5.0f)); // 2+3
 }
+
+TEST_CASE("LSTM state persists between forward calls and can be reset", "[policy][lstm]") {
+    Policy p;
+    p.addLSTM(1, 1);
+
+    std::vector<float> u = {1.0f};
+    // run twice without resetting; output should change
+    auto o1 = p.forward(u);
+    auto o2 = p.forward(u);
+    REQUIRE(o2 != o1); // hidden state has changed, so outputs differ
+
+    // reset and run again; the first output should match the original first
+    // output, but the second may differ because the hidden state advances.
+    p.resetState();
+    auto r1 = p.forward(u);
+    auto r2 = p.forward(u);
+    REQUIRE(r1.size() == o1.size());
+    REQUIRE(r1[0] == Approx(o1[0]));
+    REQUIRE(r2.size() == r1.size());
+    REQUIRE(r2[0] != Approx(r1[0]));
+}
+
+TEST_CASE("forwardSequence is equivalent to manual sequential forwards", "[policy][lstm]") {
+    Policy p;
+    p.addLSTM(1, 1);
+
+    std::vector<float> u = {1.0f};
+    p.resetState();
+    auto m = p.forward(u);
+    m = p.forward(u);
+
+    p.resetState();
+    auto seq = p.forwardSequence({u, u});
+    REQUIRE(seq.size() == m.size());
+    REQUIRE(seq == m);
+}
