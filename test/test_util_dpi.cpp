@@ -160,6 +160,12 @@ TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatm
     REQUIRE(gui.test_lastHeatmapGen() == gen0);
     REQUIRE(gui.test_heatmapTex(0) == tex0);
 
+    // now draw with a narrow window width to force the horizontal scrollbar
+    // path in the layout; the cache behaviour should be unchanged.
+    drawOnce(100);
+    REQUIRE(gui.test_lastHeatmapGen() == gen0);
+    REQUIRE(gui.test_heatmapTex(0) == tex0);
+
     // simulate a generation advance and redraw; cache should refresh
     app.doReboot(true);
     REQUIRE(app.generation() == gen0 + 1);

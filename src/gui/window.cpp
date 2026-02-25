@@ -620,43 +620,50 @@ void Gui::renderWeightHeatmaps(const App& app, int winW) {
     ImGui::TextDisabled("NN WEIGHT HEATMAPS");
     float visW = (float)winW - 20.0f;
 
+    // Layout each layer as a horizontal row of fixed height.  Compute the
+    // unscaled width for each row (in * out * rowH) so we can calculate a
+    // global scaling factor that shrinks the entire strip to fit the panel.
+    const float rowH = 16.0f;
+    std::vector<float> layerWidth(layers);
+    float totalWidth = 0.0f;
+    for (int l = 0; l < layers; ++l) {
+        int in = pol.layerInSize(l);
+        int out = pol.layerOutSize(l);
+        if (in <= 0 || out <= 0) {
+            layerWidth[l] = 0.0f;
+            continue;
+        }
+        layerWidth[l] = (float)in * (float)out * rowH;
+        totalWidth += layerWidth[l];
+    }
+    float scale = 1.0f;
+    if (totalWidth > visW && visW > 0.0f) {
+        scale = visW / totalWidth;
+    }
+
+    // wrap the row in a child window to enable horizontal scrolling if the
+    // scaled width still exceeds the visible area.
+    ImGui::BeginChild("##WeightHeatmaps", ImVec2(visW, rowH + 10.0f),
+                      true, ImGuiWindowFlags_HorizontalScrollbar);
     for (int l = 0; l < layers; ++l) {
         int in = pol.layerInSize(l);
         int out = pol.layerOutSize(l);
         if (in <= 0 || out <= 0) continue;
-        float cell = std::min(4.0f, visW / (float)in);
-        float layerH = cell * out;
-        ImGui::Text("Layer %d (%dx%d)", l, out, in);
-
         if (m_heatmapCache[l].tex) {
-            // draw the pre-rasterized texture, letting ImGui scale it
+            float drawW = layerWidth[l] * scale;
+            float drawH = rowH * scale;
             ImGui::Image((ImTextureID)m_heatmapCache[l].tex,
-                         ImVec2(cell * in, layerH));
+                         ImVec2(drawW, drawH));
+            ImGui::SameLine();
         } else {
-            // fallback to slow immediate-mode drawing (should rarely happen)
-            ImGui::Dummy({cell * in, layerH});
-            ImVec2 p = ImGui::GetCursorScreenPos();
-            const auto &w = pol.layerWeights(l);
-            ImDrawList* dl = ImGui::GetWindowDrawList();
-            for (int i = 0; i < out; ++i) {
-                for (int j = 0; j < in; ++j) {
-                    float val = w[i * in + j];
-                    float tn = std::tanh(val);
-                    ImU32 col;
-                    if (tn >= 0) {
-                        col = IM_COL32((int)(tn * 255), 0, 0, 255);
-                    } else {
-                        col = IM_COL32(0, 0, (int)(-tn * 255), 255);
-                    }
-                    dl->AddRectFilled({p.x + j * cell, p.y + i * cell},
-                                      {p.x + (j + 1) * cell,
-                                       p.y + (i + 1) * cell},
-                                      col);
-                }
-            }
-            ImGui::SetCursorScreenPos({p.x, p.y + layerH + 5.0f});
+            // fallback: just reserve space for the texture
+            float drawW = layerWidth[l] * scale;
+            float drawH = rowH * scale;
+            ImGui::Dummy(ImVec2(drawW, drawH));
+            ImGui::SameLine();
         }
     }
+    ImGui::EndChild();
 }
 
 void Gui::renderStatusBar(const App& app) {
