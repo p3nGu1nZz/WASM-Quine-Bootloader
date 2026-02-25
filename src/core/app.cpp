@@ -98,17 +98,22 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
     // to the executable directory.
     namespace fs = std::filesystem;
     fs::path exeDir = fs::path(executableDir());
-    // if we're running from a "test" subdirectory, step up one level so
-    // telemetry lands alongside the primary binary instead of under
-    // build/<target>/test.
+    // if we're running from a "test" or "bin" subdirectory, step up one
+    // level so telemetry lands alongside the primary binary rather than
+    // nested under build/<target>/test or build/<target>/bin/bin.
     fs::path root = exeDir;
-    if (exeDir.filename() == "test")
+    auto fname = exeDir.filename().string();
+    if (fname == "test" || fname == "bin")
         root = exeDir.parent_path();
 
     fs::path logsDir = root / "bin" / "logs";
     fs::path seqBase = root / "bin" / "seq";
     if (!m_opts.telemetryDir.empty())
         seqBase = root / m_opts.telemetryDir;
+
+    // remember for tests
+    m_logsDir = logsDir;
+    m_seqBase = seqBase;
 
     // create advisor using the telemetry base (without runId appended)
     m_advisor = Advisor(seqBase.string());

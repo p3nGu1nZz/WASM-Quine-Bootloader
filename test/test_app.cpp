@@ -175,6 +175,15 @@ TEST_CASE("telemetryRoot derives from exe directory and respects override", "[ap
     REQUIRE(root2.string().find("xyz") != std::string::npos);
 }
 
+TEST_CASE("App constructor avoids bin/bin nested paths", "[app][telemetry]") {
+    CliOptions opts;
+    App a(opts);
+    auto logs = a.logsDir();
+    auto seq  = a.seqBaseDir();
+    REQUIRE(logs.string().find("/bin/bin/") == std::string::npos);
+    REQUIRE(seq.string().find("/bin/bin/") == std::string::npos);
+}
+
 TEST_CASE("App.requestExit triggers update to return false", "[app][signal]") {
     CliOptions opts;
     App a(opts);
