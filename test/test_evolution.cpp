@@ -69,6 +69,21 @@ TEST_CASE("evolveBinary outputs are loadable and runnable", "[evolution][validat
     }
 }
 
+TEST_CASE("evolveBinary never emits CALL opcodes", "[evolution][safety]") {
+    for (int seed = 0; seed < 500; ++seed) {
+        try {
+            auto res = evolveBinary(KERNEL_GLOB, {}, seed, MutationStrategy::RANDOM);
+            auto bytes = base64_decode(res.binary);
+            auto instrs = parseInstructions(bytes.data(), bytes.size());
+            for (const auto& inst : instrs) {
+                REQUIRE(inst.opcode != 0x10);
+            }
+        } catch (...) {
+            // validation failure is acceptable
+        }
+    }
+}
+
 TEST_CASE("regression: known bad kernel should trap", "[evolution][regression]") {
     std::string bad =
         "AGFzbQEAAAABCgJgAn9/AGABfwACHQIDZW52A2xvZwAAA2Vudgtncm93X21lbW9yeQABAwIBAAUDAQABBxACBm1lbW9yeQIAA3J1bgACCvQDAfEDAEE"

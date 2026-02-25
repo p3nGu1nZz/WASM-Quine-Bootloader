@@ -35,11 +35,14 @@ Frame N
 │
 ├─ BootFsm::current() == EXECUTING
 │     → step through instructions at stepSpeed ms/instr
-│     → at opcode CALL (0x10): WasmKernel::runDynamic()
-│         ├─ host env.log callback → App::onWasmLog()
-│         │     ├─ output == kernel?  → transition → VERIFYING_QUINE
-│         │     └─ mismatch          → handleBootFailure()
-│         └─ host env.grow_memory    → App::onGrowMemory()
+│     → after the final instruction has been stepped, the host calls
+│       `WasmKernel::runDynamic()` once to exercise the current kernel.
+│       (legacy versions looked for a `call` opcode as a trigger, which
+│       proved fragile when mutations inserted spurious calls.)
+│       ↳ host env.log callback → App::onWasmLog()
+│           ├─ output == kernel?  → transition → VERIFYING_QUINE
+│           └─ mismatch          → handleBootFailure()
+│       ↳ host env.grow_memory   → App::onGrowMemory()
 │
 ├─ BootFsm::current() == VERIFYING_QUINE
 │     → wait rebootDelayMs (2 s default)

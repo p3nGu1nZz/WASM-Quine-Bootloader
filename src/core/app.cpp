@@ -383,12 +383,13 @@ void App::tickExecuting() {
 
     if (m_instrIndex >= static_cast<int>(m_instructions.size())) {
         if (!m_callExecuted) {
-            m_logger.log("Warning: No CALL detected, forcing execution...", "warning");
+            m_logger.log("EXEC: end of instruction stream, executing kernel", "info");
             try {
                 m_kernel.runDynamic(m_currentKernel);
             } catch (const std::exception& e) {
                 handleBootFailure(e.what());
             }
+            m_callExecuted = true;
         }
         return;
     }
@@ -398,27 +399,13 @@ void App::tickExecuting() {
     m_focusAddr       = inst.originalOffset;
     m_focusLen        = std::max(1, inst.length);
 
-    if (inst.opcode == 0x10 && !m_callExecuted) { // CALL
-        m_sysReading = true;
-        bool ok = true;
-        try {
-            if (m_opts.maxExecMs > 0) {
-                ok = runWithTimeout([&]{ m_kernel.runDynamic(m_currentKernel); });
-            } else {
-                m_kernel.runDynamic(m_currentKernel);
-            }
-        } catch (const std::exception& e) {
-            ok = false;
-            handleBootFailure(e.what());
-        }
-        if (!ok) {
-            // timeout or failure already logged
-            m_sysReading = false;
-            return;
-        }
-        m_callExecuted = true;
-        m_sysReading   = false;
-    }
+    // Previous versions used the presence of a CALL opcode as a signal to
+    // invoke `runDynamic`.  This proved fragile: mutations often insert
+    // extraneous `call` instructions with invalid indices, causing the
+    // WASM runtime to trap early and the host to reboot prematurely.  The
+    // kernel no longer relies on this mechanism; the host will execute the
+    // `run` export once the instruction stream has been fully stepped.
+    // Therefore we ignore CALL opcodes here and handle execution below.
 
     m_instrIndex++;
 }

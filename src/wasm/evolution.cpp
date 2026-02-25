@@ -110,6 +110,40 @@ EvolutionResult evolveBinary(
 {
     std::vector<uint8_t> bytes = base64_decode(currentBase64);
 
+    // helper used repeatedly below: remove any CALL opcodes (0x10) along
+    // with their immediates.  We do not generate new functions when we
+    // mutate so any stray CALL would target a nonexistent index and trap.
+    // Rather than throw we simply strip the instruction altogether.  The
+    // bootloader no longer relies on CALL as a trigger either, so this is
+    // safe.
+    auto stripCalls = [&](std::vector<uint8_t>& seq) {
+        std::vector<uint8_t> out;
+        size_t i = 0;
+        while (i < seq.size()) {
+            uint8_t op = seq[i];
+            if (op == 0x10) {
+                auto leb = decodeLEB128(seq.data(), seq.size(), i + 1);
+                i += 1 + leb.length;
+                continue;
+            }
+            out.push_back(op);
+            if (op == 0x41 || op == 0x20 || op == 0x21 || op == 0x22 ||
+                op == 0x10) {
+                auto leb = decodeLEB128(seq.data(), seq.size(), i + 1);
+                for (int k = 0; k < leb.length; k++)
+                    out.push_back(seq[i + 1 + k]);
+                i += 1 + leb.length;
+            } else if (op == 0x04) {
+                // if + blocktype
+                if (i + 1 < seq.size()) out.push_back(seq[i + 1]);
+                i += 2;
+            } else {
+                i += 1;
+            }
+        }
+        seq.swap(out);
+    };
+
     // 1. Locate code section
     int ptr                    = 8;
     int codeSectionStart       = -1;
@@ -170,6 +204,18 @@ EvolutionResult evolveBinary(
     std::vector<uint8_t> instrBytes(bytes.begin() + instructionStart,
                                      bytes.begin() + endOpIndex);
     auto parsedInstructions = parseInstructions(instrBytes.data(), instrBytes.size());
+
+    // tighten up parsed instruction list: any CALL opcode is potentially
+    // dangerous (may refer to a nonexistent function index after mutation)
+    // and we no longer rely on CALL as a host-side trigger.  Convert them to
+    // NOP so they disappear from subsequent evolution steps.
+    for (auto &inst : parsedInstructions) {
+        if (inst.opcode == 0x10) {          // CALL
+            inst.opcode = 0x01;              // nop
+            inst.args.clear();
+            inst.length = 1;
+        }
+    }
 
     // 4. Evolution logic
     int action = attemptSeed % 4;
@@ -277,6 +323,7 @@ EvolutionResult evolveBinary(
         }
         case (int)EvolutionAction::ADD: {
             auto seq = getGenome(knownInstructions, strategy == MutationStrategy::SMART);
+            stripCalls(seq);
             mutationSequence = seq;
             newInstructionsBytes = flatten(parsedInstructions);
             newInstructionsBytes.insert(newInstructionsBytes.end(), seq.begin(), seq.end());
@@ -288,6 +335,20 @@ EvolutionResult evolveBinary(
     if (newInstructionsBytes.empty() && !parsedInstructions.empty())
         newInstructionsBytes = flatten(parsedInstructions);
 
+    // drop any remaining CALLs from the final byte stream as well; this
+    // also handles the case where parsedInstructions (sanitized earlier)
+    // contained calls that were copied verbatim.
+    {
+        auto tmp = parseInstructions(newInstructionsBytes.data(),
+                                      newInstructionsBytes.size());
+        std::vector<uint8_t> filtered;
+        for (const auto& inst : tmp) {
+            if (inst.opcode == 0x10) continue;
+            filtered.push_back(inst.opcode);
+            filtered.insert(filtered.end(), inst.args.begin(), inst.args.end());
+        }
+        newInstructionsBytes.swap(filtered);
+    }
     // quick sanity: the mutation sequence itself should not contain an
     // explicit `unreachable` opcode.  parseInstructions will treat any
     // 0x00 byte as such, so we can detect bad genomes early and abort.
