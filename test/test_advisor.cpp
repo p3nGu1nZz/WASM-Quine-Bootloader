@@ -63,6 +63,15 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     REQUIRE(sc >= 0.0f);
     REQUIRE(sc <= 1.0f);
 
+    // if we score the exact opcode sequence from one of the entries, we get
+    // the maximum value (1.0) due to the new sequence-aware heuristic
+    if (!adv.entries().empty() && !adv.entries()[0].opcodeSequence.empty()) {
+        auto known = adv.entries()[0].opcodeSequence;
+        REQUIRE(adv.score(known) == Approx(1.0f));
+        // scoring a different sequence should be lower or equal
+        REQUIRE(adv.score(seq) <= adv.score(known) + 1e-6f);
+    }
+
     // construct a simple advisor with known generations to check formula
     fs::path root2 = fs::temp_directory_path() / "advtest2";
     fs::remove_all(root2);
@@ -82,4 +91,25 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
     REQUIRE(emptyAdv.score(seq) == Approx(1.0f));
 
     fs::remove_all(root);
+}
+
+TEST_CASE("Advisor can accept manually added entries and score them", "[advisor][sequence]") {
+    Advisor adv;
+    TelemetryEntry a;
+    a.generation = 5;
+    a.opcodeSequence = {10,20,30};
+    TelemetryEntry b;
+    b.generation = 1;
+    b.opcodeSequence = {1,2,3};
+    adv.test_addEntry(a);
+    adv.test_addEntry(b);
+
+    // exact match should yield highest score
+    REQUIRE(adv.score(a.opcodeSequence) == Approx(1.0f));
+    REQUIRE(adv.score(b.opcodeSequence) == Approx(1.0f));
+    // a different sequence should get lower or equal score
+    std::vector<uint8_t> unknown = {99,99};
+    float su = adv.score(unknown);
+    REQUIRE(su <= 1.0f);
+    REQUIRE(su >= 0.0f);
 }

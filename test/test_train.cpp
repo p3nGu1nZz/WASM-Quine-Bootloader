@@ -75,6 +75,23 @@ TEST_CASE("Trainer replay buffer collects entries and is bounded", "[train][repl
     t.observe(e);
     REQUIRE(t.lastLoss() >= 0.0f);
     REQUIRE(t.test_replaySize() == 4);
+
+    // test very small capacities
+    t.test_setReplayCap(0);
+    // reducing the cap does not immediately clear existing entries; observe
+    // repeatedly until the buffer drains to zero.
+    while (t.test_replaySize() > 0) {
+        t.observe(e);
+    }
+    REQUIRE(t.test_replaySize() == 0);
+
+    // further observes should keep it at zero and not crash
+    t.observe(e);
+    REQUIRE(t.test_replaySize() == 0);
+
+    t.test_setReplayCap(1);
+    t.observe(e);
+    REQUIRE(t.test_replaySize() <= 1);
 }
 
 TEST_CASE("Trainer sequence branch toggles flag and updates weights", "[train][sequence]") {

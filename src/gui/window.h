@@ -116,6 +116,9 @@ public:
     }
     int test_lastHeatmapGen() const { return m_lastHeatmapGen; }
 
+    // expose the current scene enum for GUI tests
+    int test_scene() const { return (int)m_scene; }
+
     // allow tests to directly exercise the internal heatmap renderer without
     // having to go through a full frame.  This simply forwards to the private
     // implementation.

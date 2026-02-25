@@ -12,6 +12,12 @@ std::vector<float> Feature::extract(const TelemetryEntry& entry) {
         vec[op] += 1.0f;  // indices 0-255: opcode frequency counts
         // indices 256-1023: reserved for future features (currently zero)
     }
+    // simple supplemental feature: if this entry contained a trap code, set
+    // a flag in the first spare slot.  This is part of the "feature
+    // iteration" task from issue #101.
+    if (!entry.trapCode.empty() && kFeatSize > 256) {
+        vec[256] = 1.0f;
+    }
     return vec;
 }
 

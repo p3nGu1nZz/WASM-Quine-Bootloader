@@ -189,6 +189,13 @@ TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatm
     }
     REQUIRE(gui.test_fps() > 0.0f);
 
+    // -- new scene transition test --
+    app.test_forceEvolutionEnabled(false);
+    app.test_forceTrainingPhase(TrainingPhase::TRAINING);
+    gui.renderFrame(app);
+    REQUIRE(gui.test_scene() == (int)GuiScene::TRAINING);
+
+
     gui.shutdown();
     SDL_DestroyRenderer(r);
     SDL_DestroyWindow(w);

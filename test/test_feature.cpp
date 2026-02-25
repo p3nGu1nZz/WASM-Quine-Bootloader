@@ -11,6 +11,12 @@ TEST_CASE("Feature extractor produces opcode histogram", "[feature]") {
     REQUIRE(vec.size() == (size_t)kFeatSize);
     for (auto v : vec) REQUIRE(v == 0.0f);
 
+    // if a trap code is provided, the special flag slot is set
+    e.trapCode = "oops";
+    vec = Feature::extract(e);
+    REQUIRE(vec[256] == 1.0f);
+    e.trapCode.clear();
+
     // realistic kernel should yield some non-zero counts
     e.kernelBase64 = KERNEL_GLOB;
     vec = Feature::extract(e);

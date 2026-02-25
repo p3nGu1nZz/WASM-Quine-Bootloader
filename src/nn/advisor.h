@@ -30,6 +30,9 @@ public:
     // number of telemetry entries loaded from disk
     size_t entryCount() const { return m_entries.size(); }
 
+    // test helper: insert an entry directly without reading from filesystem
+    void test_addEntry(const TelemetryEntry& e) { m_entries.push_back(e); }
+
     // write the current advisor entries to disk (simple text format).
     // Returns true on success.
     bool dump(const std::string& path) const;

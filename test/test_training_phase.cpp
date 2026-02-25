@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
+#include <iostream>
 #include "app.h"
 #include "nn/policy.h"
 #include <filesystem>
@@ -66,19 +67,34 @@ TEST_CASE("trainingProgress is monotonically increasing", "[training]") {
 // ── Phase transitions ─────────────────────────────────────────────────────────
 
 TEST_CASE("Training phase transitions LOADING -> TRAINING -> COMPLETE", "[training]") {
-    CliOptions opts;
-    opts.useGui = true;
+    CliOptions opts = freshOpts(true);
     uint64_t fakeTick = 0;
     App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
 
     REQUIRE(app.trainingPhase() == TrainingPhase::LOADING);
+    // sanity-check the load end value so we know why TRAINING may not start
+    CAPTURE(app.test_trainingLoadEnd());
+    int loadEnd = app.test_trainingLoadEnd();
+    REQUIRE(loadEnd > 0);
+    REQUIRE(loadEnd < 1000);  // should be small in tests
 
     // Drive until TRAINING phase (should happen within a reasonable
     // number of steps; fail loudly if it does not).
     int iters = 0;
     while (app.trainingPhase() == TrainingPhase::LOADING && ++iters < 1000) {
         app.update();
+        CAPTURE(iters, app.test_trainingStep(), app.test_trainingLoadEnd());
+        if (iters % 50 == 0) {
+            WARN("iter=" << iters << " step=" << app.test_trainingStep()
+                 << " loadEnd=" << app.test_trainingLoadEnd()
+                 << " evo=" << app.evolutionEnabled()
+                 << " phase=" << (int)app.trainingPhase());
+        }
     }
+    CAPTURE(iters, app.test_trainingStep());
+    // debug: ensure we advanced at least to load end
+    REQUIRE(app.test_trainingStep() >= app.test_trainingLoadEnd());
+    // this final check will still run if above fails, giving phase info
     REQUIRE(app.trainingPhase() == TrainingPhase::TRAINING);
 
     // Now drive until COMPLETE; this loop will definitely terminate because

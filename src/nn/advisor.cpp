@@ -70,9 +70,22 @@ void Advisor::parseFile(const std::string& path) {
     }
 }
 
-float Advisor::score(const std::vector<uint8_t>& /*seq*/) const {
-    // simple heuristic: use average generation number mapped into (0,1]
+float Advisor::score(const std::vector<uint8_t>& seq) const {
+    // if we have no entries, return a neutral (max) score so evolution can
+    // start without bias.
     if (m_entries.empty()) return 1.0f;
+
+    // non-trivial behaviour: if the supplied sequence exactly matches one of
+    // the entries we have seen, treat it as "known good" and return top
+    // score.  This allows the advisor to reward mutations that reproduce
+    // previously successful instruction patterns.
+    for (auto& e : m_entries) {
+        if (!e.opcodeSequence.empty() && e.opcodeSequence == seq) {
+            return 1.0f;
+        }
+    }
+
+    // fallback heuristic: average generation mapped into (0,1]
     float total = 0.0f;
     for (auto& e : m_entries) total += static_cast<float>(e.generation);
     float avg = total / m_entries.size();
