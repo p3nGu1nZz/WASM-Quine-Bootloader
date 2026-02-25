@@ -4,21 +4,19 @@
 #include <fstream>
 #include <cmath>
 
-// ─── Architecture ─────────────────────────────────────────────────────────────
-// Layer 0 Dense : kFeatSize(1024) → 16
-// Layer 1 Dense : 16  → 1024   (bridge to deeper stack)
-// Layer 2 Dense : 1024 → 1024  (was specified as 256, increased to 1024)
-// Layer 3 LSTM  : 1024 → 1024  (temporal context; Xavier-initialised)
-// Layer 4 Dense : 1024 → 16
-// Layer 5 Dense : 16   → 1     (scalar reward prediction)
+// ─── Architecture (scaled down) ─────────────────────────────────────────────
+// Layer 0 Dense : kFeatSize(1024) → 32     (compact input projection)
+// Layer 1 Dense : 32 → 64                    (feed into LSTM)
+// Layer 2 LSTM  : 64 → 64                    (temporal context)
+// Layer 3 Dense : 64 → 32                    (dimensionality reduction)
+// Layer 4 Dense : 32 → 1                     (scalar reward prediction)
 
 Trainer::Trainer() {
-    m_policy.addDense(kFeatSize, 16);    // layer 0
-    m_policy.addDense(16, 1024);         // layer 1
-    m_policy.addDense(1024, 1024);       // layer 2
-    m_policy.addLSTM(1024, 1024);        // layer 3
-    m_policy.addDense(1024, 16);         // layer 4
-    m_policy.addDense(16, 1);            // layer 5 (output)
+    m_policy.addDense(kFeatSize, 32);    // layer 0
+    m_policy.addDense(32, 64);           // layer 1
+    m_policy.addLSTM(64, 64);            // layer 2
+    m_policy.addDense(64, 32);           // layer 3
+    m_policy.addDense(32, 1);            // layer 4 (output)
 }
 
 void Trainer::observe(const TelemetryEntry& entry) {
