@@ -37,15 +37,20 @@ TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {
             saw1 = true;
             REQUIRE(e.kernelBase64 == "AAA");
             REQUIRE(e.trapCode == "oops");
+            // sequence derived from invalid wasm should be empty
+            REQUIRE(e.opcodeSequence.empty());
         }
         if (e.generation == 2) {
             saw2 = true;
             REQUIRE(e.kernelBase64 == "BBB");
+            REQUIRE(e.opcodeSequence.empty());
         }
         if (e.generation == 5) {
             saw5 = true;
             REQUIRE(e.kernelBase64 == "CCC");
             REQUIRE(e.trapCode == "trap");
+            // CCC isn't valid base64-wasm either, but test just that field exists
+            REQUIRE(e.opcodeSequence.empty());
         }
     }
     REQUIRE(saw1);

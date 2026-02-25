@@ -9,6 +9,8 @@ struct TelemetryEntry {
     int generation = 0;
     std::string kernelBase64;
     std::string trapCode;
+    // decoded opcode sequence (filled by Advisor) for convenience
+    std::vector<uint8_t> opcodeSequence;
 };
 
 // Advisor loads all telemetry exports under a given base

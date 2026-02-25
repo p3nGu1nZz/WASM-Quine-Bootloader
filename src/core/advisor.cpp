@@ -1,4 +1,5 @@
 #include "advisor.h"
+#include "feature.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>
@@ -63,6 +64,8 @@ void Advisor::parseFile(const std::string& path) {
     }
 
     if (te.generation || !te.kernelBase64.empty()) {
+        // populate sequence now that kernelBase64 is known
+        te.opcodeSequence = Feature::extractSequence(te);
         m_entries.push_back(std::move(te));
     }
 }
