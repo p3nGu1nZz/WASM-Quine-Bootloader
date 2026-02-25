@@ -106,14 +106,22 @@ TEST_CASE("App auto-export creates session files", "[export]") {
 
 TEST_CASE("AppLogger creates lock file during flush", "[log]") {
     namespace fs = std::filesystem;
-    fs::remove_all("bin/logs");
-    fs::create_directories("bin/logs");
+    // avoid creating a top-level "bin" when tests run from repo root; prefer
+    // an explicit temporary directory under .tmp if detected.
+    fs::path base = fs::current_path();
+    if (base.filename() == "WASM-Quine-Bootloader") {
+        base /= ".tmp/test_bin";
+    }
+    fs::path logs = base / "bin/logs";
+
+    fs::remove_all(logs);
+    fs::create_directories(logs);
     AppLogger logger;
-    logger.init("bin/logs/test.log");
+    logger.init((logs / "test.log").string());
     logger.log("hi","info");
     logger.flush();
-    REQUIRE(fs::exists("bin/logs/test.log.lock"));
-    fs::remove_all("bin/logs");
+    REQUIRE(fs::exists((logs / "test.log.lock").string()));
+    fs::remove_all(logs);
 }
 
 TEST_CASE("executableDir returns non-empty string", "[util]") {
