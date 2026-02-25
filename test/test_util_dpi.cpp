@@ -175,6 +175,12 @@ TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatm
     REQUIRE(tex1 != nullptr);
     REQUIRE(tex1 != tex0);
 
+    // draw a few more full frames to exercise the FPS counter
+    for (int i = 0; i < 5; ++i) {
+        gui.renderFrame(app);
+    }
+    REQUIRE(gui.test_fps() > 0.0f);
+
     gui.shutdown();
     SDL_DestroyRenderer(r);
     SDL_DestroyWindow(w);

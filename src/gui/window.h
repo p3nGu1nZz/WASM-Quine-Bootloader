@@ -46,11 +46,17 @@ private:
     // touch-friendly, easy-to-read controls.  This is typically the DPI scale
     // boosted by a constant factor, with a minimum of 1.0.
     float m_uiScale  = 1.0f;
+
+    // fps measurement helpers
+    Uint64 m_prevCounter = 0;
+    float  m_fps = 0.0f;
 public:
     // Query the raw DPI-based scale.
     float dpiScale() const { return m_dpiScale; }
     // Query the effective UI scale used for fonts and widget dimensions.
     float uiScale() const { return m_uiScale; }
+    // expose fps for tests
+    float test_fps() const { return m_fps; }
 
 private:
     // Current scene; starts at TRAINING

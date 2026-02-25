@@ -94,6 +94,16 @@ void Gui::shutdown() {
 // ─── Frame ───────────────────────────────────────────────────────────────────
 
 void Gui::renderFrame(App& app) {
+    // compute FPS
+    Uint64 now = SDL_GetPerformanceCounter();
+    if (m_prevCounter != 0) {
+        double dt = (double)(now - m_prevCounter) / SDL_GetPerformanceFrequency();
+        if (dt > 0.0) {
+            m_fps = (float)(1.0 / dt);
+        }
+    }
+    m_prevCounter = now;
+
     // Sync auto-scroll flags (only relevant for EVOLUTION scene)
     if (app.programCounter() != m_lastIP) {
         m_scrollInstrs = true;
@@ -674,4 +684,7 @@ void Gui::renderStatusBar(const App& app) {
         ImGui::SameLine(0,20);
         ImGui::Text("Instances: %d", app.instanceCount());
     }
+    // show fps at far right
+    ImGui::SameLine(0,20);
+    ImGui::Text("FPS: %.1f", m_fps);
 }
