@@ -193,7 +193,7 @@ deleted in `terminate()`.
 | Symbol | Description |
 |---|---|
 | `EvolutionResult` | `{ binary (base64), mutationSequence, description }` |
-| `evolveBinary(b64, knownInstructions, seed, strategy)` | Apply one mutation to the code section; return a new base64 binary. `strategy` may be RANDOM, BLACKLIST or SMART to bias selection. The result is validated (magic/header, code parsing, trial boot) before acceptance. |
+| `evolveBinary(b64, knownInstructions, seed, strategy)` | Apply one mutation to the code section; return a new base64 binary. `strategy` may be RANDOM, BLACKLIST or SMART to bias selection. The result is validated (magic/header, code parsing, trial boot) before acceptance; invalid candidates cause an `EvolutionException` with the failing base64 attached. Existing `call` instructions are left intact while any calls introduced by the mutation are stripped. |
 
 Uses `std::mt19937` seeded from `std::random_device` for all random choices.
 
