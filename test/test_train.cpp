@@ -8,10 +8,10 @@ using Catch::Approx;
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
-#include "train.h"
-#include "advisor.h"
+#include "nn/train.h"
+#include "nn/advisor.h"
 #include "constants.h"  // KERNEL_GLOB
-#include "feature.h"    // kFeatSize
+#include "nn/feature.h"    // kFeatSize
 
 TEST_CASE("Trainer observation increments count and save/load", "[train]") {
     Trainer t;
