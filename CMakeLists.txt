@@ -64,11 +64,11 @@ set(CORE_SOURCES
     src/wasm/parser.cpp
     src/wasm/evolution.cpp
     src/core/cli.cpp
-    src/core/advisor.cpp
-    src/core/feature.cpp
-    src/core/policy.cpp
-    src/core/loss.cpp
-    src/core/train.cpp
+    src/nn/advisor.cpp
+    src/nn/feature.cpp
+    src/nn/policy.cpp
+    src/nn/loss.cpp
+    src/nn/train.cpp
     # wasm3 runtime objects are added to the core target below instead of
     # being inlined here; this avoids potential caching issues with the
     # CORE_SOURCES variable itself.
@@ -81,6 +81,7 @@ target_sources(core PRIVATE ${WASM3_SOURCES})
 target_include_directories(core PUBLIC
     ${CMAKE_SOURCE_DIR}/src
     ${CMAKE_SOURCE_DIR}/src/core
+    ${CMAKE_SOURCE_DIR}/src/nn
     "${WASM3_DIR}/source"
 )
 # SDL3 headers are needed by util.h and other core sources.  Export them so
