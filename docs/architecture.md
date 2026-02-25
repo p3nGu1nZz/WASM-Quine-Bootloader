@@ -245,6 +245,7 @@ Panel helpers:
 | `renderKernelPanel` | Base64 kernel diff viewer |
 | `renderInstancesPanel` | Shows all spawned kernels with kill buttons and basic telemetry |
 | `renderStatusBar` | Bottom status line |
+| `renderWeightHeatmaps` | Draw per-layer policy weight grids above memory panel |
 
 Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.
 

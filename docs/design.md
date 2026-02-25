@@ -92,11 +92,27 @@ rejected.  The calling code catches the exception and treats the candidate
 as rejected, falling back to the previously stable kernel (or rolling
 another mutation if inside a repair cycle).
 
+* **Auto‑training trigger:** additionally the host monitors how many
+  successful generations have been executed; once **50 generations** are
+  reached the FSM pauses evolution, reloads the freshly written telemetry
+  data, and enters the startup training phase automatically.  This removes
+  manual mode switching and keeps training focussed on the most recent
+  evolutionary run.
+
 ---
 
 ---
 
 ## 5. GUI Rendering and DPI Scaling
+
+Throughout the evolution scene the HUD shows several panels: a system log,
+instruction stream, kernel viewer, optional advisor/instance panels and
+at the bottom a memory heatmap.  A new addition is a set of **neural weight
+heatmaps** positioned immediately above the heap visualizer; each layer of
+the policy network is rendered as a small grid of colored squares (red for
+positive weights, blue for negative) and updates in real time as training
+proceeds.
+
 
 
 ## 7. Additional Behavioural Enhancements
