@@ -157,6 +157,10 @@ public:
     void loadBlacklist();
     void saveBlacklist() const;
 
+    // helpers used by tests to validate constructor path decisions
+    std::filesystem::path logsDir() const { return m_logsDir; }
+    std::filesystem::path seqBaseDir() const { return m_seqBase; }
+
 protected:
     // compute base directory for telemetry/logs using executable path;
     // CLI override (telemetryDir) is appended to this location.
@@ -196,6 +200,10 @@ private:
     BootFsm   m_fsm;
     AppLogger m_logger;
     WasmKernel m_kernel;
+
+    // directory paths computed during construction (exposed for tests)
+    std::filesystem::path m_logsDir;
+    std::filesystem::path m_seqBase;
 
     // for learning & advice
     Advisor m_advisor;
