@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-#include "loss.h"
-#include "advisor.h"
+#include "nn/loss.h"
+#include "nn/advisor.h"
 
 TEST_CASE("Loss computation returns negative generation", "[loss]") {
     TelemetryEntry e;

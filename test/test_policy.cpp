@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
-#include "policy.h"
+#include "nn/policy.h"
 
 TEST_CASE("Policy forward pass and layer addition", "[policy]") {
     Policy p;

@@ -1,5 +1,5 @@
 #include <catch2/catch_test_macros.hpp>
-#include "feature.h"
+#include "nn/feature.h"
 #include "constants.h"
 #include "base64.h"
 

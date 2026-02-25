@@ -1,5 +1,5 @@
-#include "advisor.h"
-#include "feature.h"
+#include "nn/advisor.h"
+#include "nn/feature.h"
 #include <filesystem>
 #include <fstream>
 #include <sstream>

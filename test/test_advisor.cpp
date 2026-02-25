@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
-#include "advisor.h"
+#include "nn/advisor.h"
 #include <filesystem>
 #include <fstream>
 

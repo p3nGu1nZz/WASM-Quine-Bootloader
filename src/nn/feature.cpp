@@ -1,4 +1,4 @@
-#include "feature.h"
+#include "nn/feature.h"
 #include "base64.h"
 
 std::vector<float> Feature::extract(const TelemetryEntry& entry) {

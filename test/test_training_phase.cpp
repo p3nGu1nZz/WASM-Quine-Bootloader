@@ -2,7 +2,7 @@
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
 #include "app.h"
-#include "policy.h"
+#include "nn/policy.h"
 #include <filesystem>
 
 // Helper to return a CliOptions with a fresh telemetry directory.  The
