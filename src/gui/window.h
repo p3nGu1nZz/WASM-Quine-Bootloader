@@ -18,6 +18,12 @@ struct ImFont;
 //   gui.shutdown();
 // ─────────────────────────────────────────────────────────────────────────────
 
+// Active GUI scene.
+enum class GuiScene {
+    TRAINING,   // startup training dashboard (shown before evolution)
+    EVOLUTION,  // main simulation panels
+};
+
 class Gui {
 public:
     // Initialize ImGui context and SDL3/Renderer backends.
@@ -47,6 +53,9 @@ public:
     float uiScale() const { return m_uiScale; }
 
 private:
+    // Current scene; starts at TRAINING
+    GuiScene m_scene = GuiScene::TRAINING;
+
     // Sub-module: memory heatmap (owns its own heat-decay state)
     GuiHeatmap m_heatmap;
 
@@ -64,6 +73,7 @@ private:
     std::string m_lastDumpPath;
 
     // ── Panel helpers (each renders one independent UI region) ────────────────
+    void renderTrainingScene(App& app, int winW, int winH);
     void renderTopBar(App& app, int winW);
     void renderLogPanel(const App& app, float w, float h);
     void renderInstrPanel(const App& app, float w, float h);

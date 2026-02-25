@@ -18,7 +18,15 @@ public:
     // expose access to underlying policy for inspection/tests
     const Policy& policy() const { return m_policy; }
 
+    // training statistics
+    int   observations() const { return m_observations; }
+    float avgLoss()      const { return m_avgLoss; }
+    float lastLoss()     const { return m_lastLoss; }
+
 private:
     Policy m_policy;
-    int m_observations = 0;
+    int   m_observations = 0;
+    float m_avgLoss      = 0.0f;
+    float m_lastLoss     = 0.0f;
+    float m_maxReward    = 1.0f; // tracks max reward seen for normalisation
 };
