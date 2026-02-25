@@ -1,75 +1,112 @@
-# Neural Matrix Representation
+# Neural Network Policy – RL Trainer
 
-To enable the evolving WASM kernel to store and act upon its learned
-experience, we define a simple in-memory graph structure that may be
-serialized into the kernel genome and accessed via host imports.
+The bootloader maintains an on-device reinforcement-learning policy that
+predicts kernel quality from opcode statistics and guides the mutation
+engine toward longer-surviving kernels.
 
-## Format
+---
 
-- The neural matrix is a directed adjacency graph whose nodes are
-  instruction byte sequences and whose edge weights represent observed
-  transition frequencies.
-- In linear memory the graph is encoded as a sequence of records:
-  ```text
-  [node_count:u32]
-  for each node {
-      [instr_len:u32] [instr_bytes...]
-      [edge_count:u32]
-      for each edge {
-          [target_node_index:u32]
-          [weight:f32]
-      }
-  }
-  ```
-- The entire structure must fit within the kernel's 32 KB code section.
+## Architecture (current)
 
-## Host Imports
+```
+Input (kFeatSize = 1024 floats)
+  │  indices 0-255  : WASM opcode frequency counts
+  │  indices 256-1023: reserved for future features
+  ▼
+Layer 0  Dense  1024 → 16     ReLU
+  ▼
+Layer 1  Dense    16 → 1024   ReLU   (bridge)
+  ▼
+Layer 2  Dense  1024 → 1024   ReLU
+  ▼
+Layer 3  LSTM   1024 → 1024   Xavier-initialised; h/c state persists
+                               across observations in a training epoch
+  ▼
+Layer 4  Dense  1024 → 16     ReLU
+  ▼
+Layer 5  Dense    16 → 1      ReLU   (scalar reward prediction)
+```
 
-Currently the only host import provided for neural data is a simple
-logger that allows the kernel to ship serialized blobs back to the
-bootloader.  This is enough to extract a copy of the matrix for
-analysis, but richer operations may be added as the evolution engine
-matures.
+All dense weights are zero-initialised (so `forward(zeros) = 0`).
+LSTM gate weights use Xavier-uniform initialisation
+(`±sqrt(6/(inSize+hiddenSize))`) with a fixed LCG seed for
+reproducibility; LSTM biases are zero.
 
-- `env.record_weight(ptr:u32,len:u32)` – send a chunk of bytes to the
-  host.  The semantics of the blob are up to the kernel; the intended use
-  is to transmit a serialized neural matrix or incremental update.  The
-  host will receive the data via the `WeightCallback` supplied to
-  `WasmKernel::bootDynamic` and may choose to persist it in telemetry files.
+---
 
-Future releases may also offer the following (currently unimplemented)
-imports:
+## Feature Extraction (`src/core/feature.cpp`)
 
-- `env.add_edge(ptr:u32,len:u32,target:u32,weight:f32)` – append an edge
-  record.  `ptr`/`len` point to the source instruction sequence in linear
-  memory.
-- `env.query_weight(ptr:u32,len:u32,target:u32) -> f32` – return the
-  current weight of the given transition (0.0 if absent).
-- `env.serialize_matrix(ptr:u32)` – write the compressed matrix to
-  memory starting at `ptr` and return the byte length; used when saving
-  the kernel.
+`Feature::extract(entry)` decodes the kernel base64 string, parses the
+WASM code section, counts per-opcode occurrences, and returns a
+`kFeatSize`-element float vector.  Indices 256-1023 are currently zero
+and reserved for future features (e.g. section-size statistics).
 
-## Kernel Responsibilities
+---
 
-- During execution the kernel should update the matrix in response to
-  observed instruction sequences (e.g., after each `run()` call).
-- The matrix may be mutated heuristically when the program evolves; the
-  bootloader treats the serialized bytes as part of the quine string.
-- Children kernels spawned via `env.spawn` will inherit a copy of the
-  current matrix and may continue training.
+## Reward & Loss (`src/core/train.cpp`, `src/core/loss.cpp`)
+
+| Symbol | Value |
+|--------|-------|
+| reward | `entry.generation` (higher generation = longer survival = better) |
+| normReward | `reward / maxRewardSeen` |
+| loss | `(prediction − normReward)²` (MSE) |
+| avgLoss | exponential moving average, α = 0.1 |
+
+---
+
+## Training Update
+
+After each `Trainer::observe()` call the delta rule is applied to every
+**dense** layer.  Each layer's weights are nudged using the layer's own
+input activation and the global output error:
+
+```
+w[l][o,i] -= lr * diff * acts[l][i]    (lr = 0.005)
+```
+
+Biases are **not** updated so that `forward(zeros) = 0` is preserved.
+The LSTM layer participates in the forward pass (providing temporal
+context) but its weights are not updated by this rule; they retain their
+Xavier-initialised values and evolve only via future BPTT.
+
+`forwardActivations()` stores every layer's input in `acts[l]` so that
+the weight updates can access them without a second forward pass.
+
+---
+
+## Model Persistence
+
+`Trainer::save(path)` / `Trainer::load(path)` serialise the full network
+state including layer type (0 = DENSE, 1 = LSTM), in/out sizes, all
+weights, and all biases.  The LSTM weight tensor has size
+`4 × (in + hidden) × hidden`; the bias tensor has size `4 × hidden`.
+A mismatch in type, in-size, or out-size causes `load()` to return
+`false`.
+
+---
+
+## Neural Matrix Host Import (existing)
+
+The kernel may call `env.record_weight(ptr, len)` to ship a serialised
+weight blob back to the host via the `WeightCallback` supplied to
+`WasmKernel::bootDynamic`.  This mechanism is independent of the C++
+policy above and is intended for future kernel-side learning.
+
+Future host imports (currently unimplemented):
+
+- `env.add_edge(ptr, len, target, weight)` – append a graph edge.
+- `env.query_weight(ptr, len, target) → f32` – query a transition weight.
+- `env.serialize_matrix(ptr) → len` – write the compressed adjacency
+  graph to linear memory.
+
+---
 
 ## Future Work
 
-- Define compression schemes for large graphs (spatial hashing, delta
-  encoding).
-- Provide utilities in the bootloader for offline analysis of the matrix
-  snapshots located in telemetry exports.
-- Implement richer host imports (`add_edge`, `query_weight`,
-  `serialize_matrix`) so that kernels can manipulate the matrix at runtime
-  and query learned weights during execution.
-- **Experience Inheritance** – when a kernel spawns a child via
-  `env.spawn`, the serialized matrix (or a compressed snapshot thereof)
-  should travel with the genome.  Children should load this data on
-  startup and continue training without starting from scratch.  One
-  proposal is to attach the blob as a suffix to the base64 quine string
-  with a small header indicating its length.
+- **BPTT for LSTM** – implement back-propagation through time so the
+  LSTM gate weights are trained.
+- **Richer features** – populate indices 256-1023 with section-size
+  statistics, base64 entropy, generation delta, etc.
+- **Experience inheritance** – propagate a compressed weight snapshot
+  from parent to child kernel via `env.spawn`.
+- **Compression** – spatial hashing / delta encoding for large graphs.

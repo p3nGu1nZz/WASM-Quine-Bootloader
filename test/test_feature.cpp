@@ -8,7 +8,7 @@ TEST_CASE("Feature extractor produces opcode histogram", "[feature]") {
     // invalid wasm produces no instructions
     e.kernelBase64 = "AQ==";
     auto vec = Feature::extract(e);
-    REQUIRE(vec.size() == 256);
+    REQUIRE(vec.size() == (size_t)kFeatSize);
     for (auto v : vec) REQUIRE(v == 0.0f);
 
     // realistic kernel should yield some non-zero counts
