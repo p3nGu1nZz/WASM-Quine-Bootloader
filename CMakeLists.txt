@@ -106,6 +106,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin)
 set(APP_SOURCES
     src/main.cpp
     src/gui/window.cpp
+    src/gui/window_panels.cpp
     src/gui/heatmap.cpp
 )
 
