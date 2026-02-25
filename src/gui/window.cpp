@@ -254,7 +254,18 @@ void Gui::renderTrainingScene(App& app, int winW, int winH) {
     ImGui::Spacing();
 
     if (app.advisor().entryCount() == 0) {
-        ImGui::TextDisabled("No prior run sequences found in bin/seq/");
+        // show the actual telemetry root so users running from different
+        // working directories know where data is being searched for.  the
+        // path is derived from the executable location (see App::telemetryRoot()).
+        std::string telemetry = app.telemetryRootPublic().string();
+        if (!telemetry.empty()) {
+            // add trailing slash for readability
+            if (telemetry.back() != '/' && telemetry.back() != '\\')
+                telemetry += '/';
+            ImGui::TextDisabled("No prior run sequences found in %s", telemetry.c_str());
+        } else {
+            ImGui::TextDisabled("No prior run sequences found (telemetry root unknown)");
+        }
         ImGui::TextDisabled("Training will begin fresh once evolution starts.");
     } else {
         // Table header

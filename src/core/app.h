@@ -106,6 +106,10 @@ public:
     // expose advisor for GUI or tests
     const Advisor& advisor() const { return m_advisor; }
 
+    // public wrapper to the protected telemetryRoot() helper; used by the
+    // GUI to display the effective directory being scanned for telemetry.
+    std::filesystem::path telemetryRootPublic() const { return telemetryRoot(); }
+
     // helper used by tests to apply a telemetry entry and optionally
     // persist the model via CLI flag.
     void trainAndMaybeSave(const TelemetryEntry& te);
