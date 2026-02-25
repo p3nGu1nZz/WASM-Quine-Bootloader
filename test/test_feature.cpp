@@ -18,6 +18,16 @@ TEST_CASE("Feature extractor produces opcode histogram", "[feature]") {
     for (auto v : vec) if (v > 0.0f) saw_nonzero = true;
     REQUIRE(saw_nonzero);
     
-    // our only check is that some opcode was seen, the exact opcodes
-    // present may vary between builds so we avoid tying the test to one.
+    // sequence extraction should return a vector the same length as the
+    // number of decoded instructions and should start with a known opcode
+    // for the seed kernel (which always begins with 0x00, WASM module magic
+    // followed by version).  The parser currently skips header bytes and only
+    // returns code section opcodes, so we just verify non‑empty.
+    auto seq = Feature::extractSequence(e);
+    REQUIRE(!seq.empty());
+    
+    // extractSequence on nonsense input yields empty sequence
+    e.kernelBase64 = "AQ==";
+    auto seq2 = Feature::extractSequence(e);
+    REQUIRE(seq2.empty());
 }

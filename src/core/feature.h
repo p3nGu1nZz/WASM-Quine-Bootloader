@@ -15,4 +15,8 @@ class Feature {
 public:
     // return vector of kFeatSize floats (opcode histogram + extra features)
     static std::vector<float> extract(const TelemetryEntry& entry);
+
+    // decode the kernel and return the raw opcode sequence (one byte per
+    // instruction).  Useful for sequence-based models and training.
+    static std::vector<uint8_t> extractSequence(const TelemetryEntry& entry);
 };

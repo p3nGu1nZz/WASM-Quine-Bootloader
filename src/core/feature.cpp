@@ -14,3 +14,15 @@ std::vector<float> Feature::extract(const TelemetryEntry& entry) {
     }
     return vec;
 }
+
+std::vector<uint8_t> Feature::extractSequence(const TelemetryEntry& entry) {
+    std::vector<uint8_t> seq;
+    if (entry.kernelBase64.empty()) return seq;
+    auto bytes = base64_decode(entry.kernelBase64);
+    auto instrs = extractCodeSection(bytes);
+    seq.reserve(instrs.size());
+    for (auto& inst : instrs) {
+        seq.push_back(inst.opcode);
+    }
+    return seq;
+}
