@@ -26,7 +26,7 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | Feature | Description |
 |---|---|
 | WASM Quine | A minimal WebAssembly binary that echoes its own source back through a host import |
-| Self-Evolution | Binary mutates each generation (insert / delete / modify / append), sanity-checking each candidate by loading and running it before acceptance |
+| Self-Evolution | Binary mutates each generation (insert / delete / modify / append), sanity-checking each candidate by loading and running it before acceptance; CALL opcodes are stripped to avoid invalid targets |
 | Memory Visualizer | Real-time SDL3 canvas heatmap of WASM heap activity |
 | Instruction Stream | Step-by-step WASM opcode visualizer with program counter |
 | Terminal Log | Colour-coded system event log (info / success / warning / error / mutation) |
