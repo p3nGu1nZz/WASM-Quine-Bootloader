@@ -37,6 +37,9 @@ Specification documents live under `docs/specs/` (e.g. CLI, telemetry formats).
 | DPI Scaling & Touch UI | UI text and widgets automatically scale with window size (1×–2×); a light boost (~0.65× the raw DPI factor) is applied for readability, especially on touch screens. |
 | Multi-Instance Support | Kernels can `env.spawn` siblings; instances are tracked, exported
   in telemetry, and a GUI panel lets you inspect or kill them |
+| Training UI Clarity | Initial training screen now displays the exact telemetry
+  directory being scanned (build/<target>/bin/seq) to avoid confusion when
+  running from different working directories |
 
 ---
 
