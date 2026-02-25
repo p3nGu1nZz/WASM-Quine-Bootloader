@@ -78,9 +78,14 @@ the `append` path to bias later evolutions toward proven expansions.
 After mutation the binary is base-64 encoded and validated by checking:
 - WASM magic bytes `\0asm` at offset 0
 - Successful re-parse by `extractCodeSection()`
+- Instantiation with `WasmKernel::bootDynamic()` followed by a
+  no-op `runDynamic("")` to ensure the module loads and its
+  `run` export is callable without trapping.
 
-Any mutation that produces an invalid binary is rejected and the stable kernel
-is used instead.
+Any mutation that fails these sanity checks throws an exception.  The
+calling code catches the exception and treats the candidate as rejected,
+falling back to the previously stable kernel (or rolling another mutation
+if inside a repair cycle).
 
 ---
 

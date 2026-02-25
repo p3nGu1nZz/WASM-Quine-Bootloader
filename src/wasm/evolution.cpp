@@ -1,5 +1,6 @@
 #include "wasm/evolution.h"
 #include "base64.h"
+#include "kernel.h"  // for Validate mutated binaries
 
 #include <cstdlib>
 #include <ctime>
@@ -287,6 +288,19 @@ EvolutionResult evolveBinary(
     if (newInstructionsBytes.empty() && !parsedInstructions.empty())
         newInstructionsBytes = flatten(parsedInstructions);
 
+    // quick sanity: the mutation sequence itself should not contain an
+    // explicit `unreachable` opcode.  parseInstructions will treat any
+    // 0x00 byte as such, so we can detect bad genomes early and abort.
+    {
+        auto check = parseInstructions(newInstructionsBytes.data(),
+                                       newInstructionsBytes.size());
+        for (const auto& inst : check) {
+            if (inst.opcode == 0x00) {
+                throw std::runtime_error("Evolution generated unreachable opcode");
+            }
+        }
+    }
+
     // 5. Reconstruct binary
     std::vector<uint8_t> preInstructions(bytes.begin() + funcContentStart,
                                           bytes.begin() + instructionStart);
@@ -327,6 +341,28 @@ EvolutionResult evolveBinary(
     append(preInstructions);
     append(newInstructionsBytes);
     append(postInstructions);
+
+    // Before handing the new binary back to the caller we perform a
+    // *validation* pass.  Several hard-to-debug issues (including the
+    // "stuck at gen 49" case) were caused by malformed modules getting
+    // past the evolution layer and then immediately trapping when run.
+    // The cost of instantiating/running the candidate is small compared
+    // to the overall generation time, and catching errors here allows the
+    // caller's try/catch wrappers to reject the mutation cleanly and
+    // continue searching for a different sequence.
+    {
+        std::string b64 = base64_encode(newBytes);
+        try {
+            WasmKernel wk;
+            // no callbacks needed for validation
+            wk.bootDynamic(b64, {}, {}, {}, {}, {});
+            // execute an empty run to ensure the entry point is reachable
+            wk.runDynamic("");
+            wk.terminate();
+        } catch (const std::exception& e) {
+            throw std::runtime_error(std::string("Validation failed: ") + e.what());
+        }
+    }
 
     return {
         base64_encode(newBytes),
