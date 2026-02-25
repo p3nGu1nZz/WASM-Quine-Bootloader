@@ -161,3 +161,28 @@ TEST_CASE("Trainer multiple observations drive loss toward zero", "[train]") {
     REQUIRE(t.avgLoss() <= firstLoss + 0.1f);
 }
 
+TEST_CASE("Trainer reset clears stats and buffer without touching weights", "[train]") {
+    Trainer t;
+    TelemetryEntry e;
+    e.generation   = 4;
+    e.kernelBase64 = KERNEL_GLOB;
+    // populate some state to modify weights
+    t.observe(e);
+    t.observe(e);
+    REQUIRE(t.observations() > 0);
+    REQUIRE(t.test_replaySize() > 0);
+    // capture output of policy with a sample input
+    std::vector<float> inp(kFeatSize, 0.5f);
+    float beforeOut = t.policy().forward(inp)[0];
+
+    // reset statistics and buffer
+    t.reset();
+    REQUIRE(t.observations() == 0);
+    REQUIRE(t.test_replaySize() == 0);
+    REQUIRE(t.avgLoss() == Approx(0.0f));
+
+    // confirm network weights were not modified by reset
+    float afterOut = t.policy().forward(inp)[0];
+    REQUIRE(afterOut == Approx(beforeOut));
+}
+

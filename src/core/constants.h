@@ -25,6 +25,16 @@ static const std::string KERNEL_GLOB =
     "AGFzbQEAAAABCgJgAn9/AGABfwACHQIDZW52A2xvZwAAA2Vudgtncm93X21lbW9yeQABAwIBAAUDAQAB"
     "BxACBm1lbW9yeQIAA3J1bgACCgsBCQAgACABEAABCw==";
 
+// A simple recurrent sequence-prediction kernel used for early
+// experiments with in-kernel learning.  It maintains two mutable globals
+// (`h1` and `h2`), updates them each invocation, and reports their values
+// back to the host via the `record_weight` import.  Training on the host
+// will interpret these as a tiny 2×2 weight matrix.
+//
+// The corresponding WAT source lives in `src/wasm/sequence_model.wat`.
+static const std::string KERNEL_SEQ =
+    "AGFzbQEAAAABCwJgAn19AGACf38AAhUBA2Vudg1yZWNvcmRfd2VpZ2h0AAADAgEBBhECfQFDAAAAAAt9AUMAAAAACwcHAQNydW4AAQoeARwAIwBDzczMPZIkACMBQ6RwfT+UJAEjACMBEAAL";
+
 static const BootConfig DEFAULT_BOOT_CONFIG = {
     /* memorySizePages */ 1,
     /* autoReboot      */ true,

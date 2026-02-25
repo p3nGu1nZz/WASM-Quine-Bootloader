@@ -1,6 +1,6 @@
-#include "nn/train.h"
-#include "nn/feature.h"
-#include "nn/loss.h"
+#include "train.h"
+#include "feature.h"
+#include "loss.h"
 #include <fstream>
 #include <cmath>
 #include <random>

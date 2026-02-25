@@ -53,6 +53,7 @@ main.cpp
 | Symbol | Description |
 |---|---|
 | `KERNEL_GLOB` | Base64-encoded minimal WASM binary (the initial quine kernel) |
+| `KERNEL_SEQ`  | Base64-encoded tiny recurrent kernel used to prototype the in-kernel autoregressive model (updates hidden state and reports weights to host) |
 | `DEFAULT_BOOT_CONFIG` | Default `BootConfig` values |
 
 **Dependencies:** `types.h`
@@ -143,6 +144,12 @@ Exposes read-only accessors for everything the `Gui` needs to render.
   `m_instructions` via `updateKernelData()` so the same base64 string is
   only decoded once per change, reducing CPU overhead during tight
   update loops.
+- **Training cycle:** every `kAutoTrainGen` successful generations the app
+  pauses evolution, reloads telemetry into the `Advisor`, and enters a
+  supervised training phase.  `Trainer::reset()` clears statistics and the
+  replay buffer at the start of each cycle while leaving learned weights
+  intact.  Once training completes the app writes a checkpoint file and
+  returns to evolution.
 - **UI logging helper:** provides `log(msg,type)` which simply forwards to
   the underlying `AppLogger` instance; this is used by the `main.cpp`
   shortcut handlers and is convenient for any component that has an
@@ -158,7 +165,7 @@ Exposes read-only accessors for everything the `Gui` needs to render.
 
 | Member | Description |
 |---|---|
-| `bootDynamic(b64, logCb, growCb)` | Decode kernel, instantiate wasm3 runtime, link host imports (supports optional `spawnCb`, `weightCb` and `killCb` callbacks) |
+| `bootDynamic(b64, logCb, growCb)` | Decode kernel, instantiate wasm3 runtime, link host imports (supports optional `spawnCb`, `weightCb` and `killCb` callbacks).  `weightCb` is used by the sequence-model kernel to send learned weights back to the host. |
 | `runDynamic(b64)` | Write base64 into WASM memory, call exported `run(ptr, len)` |
 | `terminate()` | Free wasm3 runtime and environment |
 | `isLoaded()` | True when a module is ready to execute |

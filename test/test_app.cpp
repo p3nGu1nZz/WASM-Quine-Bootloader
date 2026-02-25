@@ -254,3 +254,23 @@ TEST_CASE("update() re-enables evolution when training has already completed", "
     REQUIRE(a.evolutionEnabled());
 }
 
+TEST_CASE("evolution/training cycles can repeat indefinitely", "[app][cycle]") {
+    CliOptions opts;
+    App a(opts);
+    a.enableEvolution();
+    // drive the first auto-train trigger
+    for (int i = 0; i < kAutoTrainGen; ++i)
+        a.doReboot(true);
+    REQUIRE(!a.evolutionEnabled());
+
+    // simulate finishing the training phase and let update re-enable
+    a.test_forceTrainingPhase(TrainingPhase::COMPLETE);
+    a.update();
+    REQUIRE(a.evolutionEnabled());
+
+    // now drive a second auto-train threshold; generation has increased
+    for (int i = 0; i < kAutoTrainGen; ++i)
+        a.doReboot(true);
+    REQUIRE(!a.evolutionEnabled());
+}
+

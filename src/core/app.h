@@ -18,6 +18,10 @@
 #include <vector>
 #include <cstdint>
 
+// automatic transition threshold; tests reference this value to drive
+// evolution/training cycles without hard-coding the number.
+static constexpr int kAutoTrainGen = 50;
+
 // ── App ───────────────────────────────────────────────────────────────────────
 //
 // Top-level orchestrator.  Drives the BootFsm, coordinates the WasmKernel,

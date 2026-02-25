@@ -1,5 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
+#include <catch2/catch_approx.hpp>
+using Catch::Approx;
 
 #include "wasm/parser.h"
 #include "wasm/kernel.h"
@@ -9,6 +11,7 @@
 #include "constants.h"
 #include <vector>
 #include <string>
+#include <cstring>
 
 TEST_CASE("LEB128 encode/decode round trip", "[wasm]") {
     for (uint32_t v : {0u, 1u, 127u, 128u, 255u, 256u, 0xFFFFFFFFu}) {
@@ -58,10 +61,36 @@ TEST_CASE("parseInstructions tolerates truncated input without crash", "[wasm]")
 }
 
 TEST_CASE("extractCodeSection works on real kernel blob", "[wasm]") {
-    std::vector<uint8_t> blob = base64_decode(KERNEL_GLOB);
-    REQUIRE(!blob.empty());
-    auto instrs = extractCodeSection(blob);
-    REQUIRE(!instrs.empty());
+    for (auto& b64 : {KERNEL_GLOB, KERNEL_SEQ}) {
+        std::vector<uint8_t> blob = base64_decode(b64);
+        REQUIRE(!blob.empty());
+        auto instrs = extractCodeSection(blob);
+        REQUIRE(!instrs.empty());
+    }
+}
+
+TEST_CASE("sequence-model kernel invokes weight callback", "[wasm][sequence]") {
+    WasmKernel wk;
+    bool weightInvoked = false;
+    std::vector<float> seen;
+    auto weightCb = [&](uint32_t a, uint32_t b) {
+        weightInvoked = true;
+        // store two 32-bit pieces into floats for inspection
+        float f1, f2;
+        std::memcpy(&f1, &a, sizeof(f1));
+        std::memcpy(&f2, &b, sizeof(f2));
+        seen.push_back(f1);
+        seen.push_back(f2);
+    };
+    wk.bootDynamic(KERNEL_SEQ, {}, {}, {}, weightCb);
+    // running once should update globals and call callback
+    wk.runDynamic(KERNEL_SEQ);
+    REQUIRE(weightInvoked);
+    REQUIRE(seen.size() == 2);
+    // first invocation corresponds to initial hidden state update of 0.1/0
+    REQUIRE(seen[0] == Approx(0.1f));
+    REQUIRE(seen[1] == Approx(0.0f));
+    wk.terminate();
 }
 
 TEST_CASE("WasmKernel error paths", "[wasm]") {

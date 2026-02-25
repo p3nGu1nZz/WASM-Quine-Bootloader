@@ -26,7 +26,7 @@ handle both formats transparently.
 7. (optional) `Kernel Size Min/Max: <min>/<max>` for run‑wide extremes.
 8. (optional) `Heuristic Blacklist Entries: <count>` summarising the current heuristic state.
 9. (optional) `Advisor Entries: <count>` indicating how many telemetry entries the in‑memory advisor has loaded; useful when the model is involved in decision‑making.
-10. (optional) `OPCODE SEQUENCE:` a newline‑terminated list of raw opcode bytes extracted from the kernel.  This is used by the neural network trainer when sequence‑based learning is enabled.
+10. (optional) `OPCODE SEQUENCE:` a newline‑terminated list of raw opcode bytes extracted from the kernel.  The host treats this as the raw corpus for the autoregressive sequence model: sliding windows are drawn from the stream and fed to the RNN to predict the next opcode.  Sequences from long‑surviving kernels are weighted more heavily, while those from trapped kernels may be down‑weighted or tagged for special handling.
 11. (optional) `INSTANCES: <n>` followed by one or more indented lines containing base64 blobs for each currently alive spawned kernel.  This is only present if the application has recorded instance activity during the run.
 
 These are followed by the payload sections (absent in JSON

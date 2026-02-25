@@ -18,9 +18,6 @@
 // Shared by both the constructor (to compute m_trainingTotal) and tickTraining.
 static constexpr int kTrainMinAnimSteps = 30;
 static constexpr int kTrainEpochs       = 5;
-// generation count at which we automatically pause evolution and begin
-// a fresh training cycle using the telemetry we just collected.
-static constexpr int kAutoTrainGen      = 50;
 #include <atomic>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -775,6 +772,9 @@ void App::doReboot(bool success) {
             m_evolutionEnabled = false;
             // clear any previous checkpoint flag so we will save again later
             m_modelSaved = false;
+            // wipe the trainer statistics/replay buffer so the next train cycle
+            // starts from a clean slate (weights remain unchanged)
+            m_trainer.reset();
             // re-scan telemetry so the advisor sees the latest entries
             namespace fs = std::filesystem;
             fs::path seqBase = telemetryRoot();

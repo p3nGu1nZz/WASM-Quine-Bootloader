@@ -49,54 +49,65 @@ and reserved for future features (e.g. section-size statistics).
 
 ## Reward & Loss (`src/core/train.cpp`, `src/core/loss.cpp`)
 
+The previous regression-style reward scheme has been replaced by a
+straightforward *next-token prediction* objective.
+
 | Symbol | Value |
 |--------|-------|
-| reward | `entry.generation` (higher generation = longer survival = better) |
-| normReward | `reward / maxRewardSeen` |
-| loss | `(prediction − normReward)²` (MSE) |
-| avgLoss | exponential moving average, α = 0.1 |
+| vocabSize | 256 possible WASM opcodes + a handful of special tokens |
+| target | next opcode in sliding window sampled from telemetry sequence |
+| loss   | cross‑entropy between the network’s softmax output and the true token |
+| avgLoss| exponential moving average used for progress reporting (α = 0.1) |
+
+Weights corresponding to examples drawn from kernels that survived many
+generations are given extra importance either by repeated sampling or by
+attaching a multiplicative weight; entries from trapped kernels may be
+assigned a special `BAD` token instead of the real next opcode.
 
 ---
 
 ## Training Update
 
-A single entry comprises the kernel that was executed along with its
-`generation` count.  Two update modes are supported:
+Training now mimics the way modern language models are trained.  Each
+evolutionary telemetry entry contains the full opcode sequence of the
+kernel that executed that generation.  The host treats these sequences as a
+corpus for a tiny autoregressive RNN, generating training examples by
+sliding a fixed-length window (typical length 32–128) over the raw bytes.
 
-* **Histogram mode** – the original behaviour.  `Feature::extract()` builds a
-  1024‑element vector counting opcode frequencies and that vector is fed
-  forward through the network.
-* **Sequence mode** – if `Feature::extractSequence()` returns a non-empty list
-  of opcode bytes then training proceeds one opcode at a time.  Each opcode is
-  converted into a one‑hot feature vector (using the first 256 indices) and
-  the network's hidden state is advanced; this allows the LSTM to provide
-  temporal context.  On each step the same delta rule described below is
-  applied, effectively unrolling the network over the sequence.  Sequence
-  mode is now the default when telemetry files contain opcode data.
+For every position in the sequence we use the preceding tokens as input and
+try to predict the next opcode.  The network's forward pass produces a
+vocabulary-sized probability distribution; the cross‑entropy loss with the
+true next opcode is computed and back‑propagated immediately.  The LSTM
+layer naturally carries context across positions, allowing the model to
+learn common subroutine patterns and control flows.
 
-To improve convergence we now maintain a small **replay buffer** of recent
-sequence-based examples (default capacity 256).  `Trainer::observe()` always
-trains on the current entry and then samples one random item from the buffer
-for an additional update, creating a very lightweight "mini‑batch" effect.
-New sequence entries are appended to the buffer, and old entries are dropped
-FIFO when the capacity is exceeded.  This replay mechanism is transparent to
-the rest of the system and is tested via `test_replaySize()`.
+A modest **replay buffer** (default capacity 256 entries) keeps recent
+telemetry sequences around so that training minibatches sample both the latest
+and slightly older examples.  `Trainer::observe()` always updates on the
+current entry first and then randomly samples one buffer element for a
+second update.  Stale entries are discarded FIFO when the buffer fills.
 
-After each `Trainer::observe()` call the delta rule is applied to every
-**dense** layer.  Each layer's weights are nudged using the layer's own
-input activation and the global output error:
+When the automatic training trigger fires (see `App` documentation) the
+buffer is cleared via `Trainer::reset()` before any new observations are
+processed, ensuring that loss statistics and past gradients do not leak into
+the fresh cycle.  We do **not** reset the network weights unless the user
+explicitly loads a model from disk.
+
+Weight updates remain simple SGD/Adam steps applied only to **dense** layers;
+the LSTM gate weights are still left untouched for now.  A typical update
+loop looks like:
 
 ```
-w[l][o,i] -= lr * diff * acts[l][i]    (lr = 0.005)
+vector<float> probs = m_policy.forward(features);
+float loss = crossEntropy(probs, trueToken);
+// back‑prop through dense layers only (in-place update using lr * grad)
 ```
 
-Biases are **not** updated so that `forward(zeros) = 0` is preserved.
-The LSTM layer participates in the forward pass (providing temporal
-context) but its weights are not updated by this rule; they retain their
-Xavier-initialised values and evolve only via future BPTT.
-
-`forwardActivations()` stores every layer's input in `acts[l]` so that
-the weight updates can access them without a second forward pass.
+This scheme completely avoids back-propagation through long-generation
+histories, keeping updates fast and memory costs low.  It also aligns
+naturally with the eventual goal of exporting the learned weights into the
+kernel itself, where the same RNN can be executed on-device during
+mutation time.
 
 ---
 
