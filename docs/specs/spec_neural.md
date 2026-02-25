@@ -10,22 +10,26 @@ engine toward longer-surviving kernels.
 
 ```
 Input (kFeatSize = 1024 floats)
-  │  indices 0-255  : WASM opcode frequency counts
-  │  indices 256-1023: reserved for future features
+  │  indices 0-255  : WASM opcode frequency counts or opcode one-hot when
+  │                    sequence training is active
+  │  indices 256-1023: reserved for future features (currently zero)
   ▼
-Layer 0  Dense  1024 → 16     ReLU
+Layer 0  Dense  1024 → 32     (compact input projection)
   ▼
-Layer 1  Dense    16 → 1024   ReLU   (bridge)
+Layer 1  Dense   32 → 64      (feeds LSTM)
   ▼
-Layer 2  Dense  1024 → 1024   ReLU
+Layer 2  LSTM    64 → 64      (temporal context; state reset on each new
+                               telemetry entry during training)
   ▼
-Layer 3  LSTM   1024 → 1024   Xavier-initialised; h/c state persists
-                               across observations in a training epoch
+Layer 3  Dense   64 → 32      (dimensionality reduction)
   ▼
-Layer 4  Dense  1024 → 16     ReLU
-  ▼
-Layer 5  Dense    16 → 1      ReLU   (scalar reward prediction)
+Layer 4  Dense   32 → 1       (scalar reward prediction)
 ```
+
+The network has been dramatically shrunk from its original 1024‑wide
+layout.  Aside from the reduced layer widths the only remaining recurrent
+component is a single LSTM with a 64‑element hidden state; its weights are
+currently untouched by weight updates for simplicity.
 
 All dense weights are zero-initialised (so `forward(zeros) = 0`).
 LSTM gate weights use Xavier-uniform initialisation
@@ -55,6 +59,28 @@ and reserved for future features (e.g. section-size statistics).
 ---
 
 ## Training Update
+
+A single entry comprises the kernel that was executed along with its
+`generation` count.  Two update modes are supported:
+
+* **Histogram mode** – the original behaviour.  `Feature::extract()` builds a
+  1024‑element vector counting opcode frequencies and that vector is fed
+  forward through the network.
+* **Sequence mode** – if `Feature::extractSequence()` returns a non-empty list
+  of opcode bytes then training proceeds one opcode at a time.  Each opcode is
+  converted into a one‑hot feature vector (using the first 256 indices) and
+  the network's hidden state is advanced; this allows the LSTM to provide
+  temporal context.  On each step the same delta rule described below is
+  applied, effectively unrolling the network over the sequence.  Sequence
+  mode is now the default when telemetry files contain opcode data.
+
+To improve convergence we now maintain a small **replay buffer** of recent
+sequence-based examples (default capacity 256).  `Trainer::observe()` always
+trains on the current entry and then samples one random item from the buffer
+for an additional update, creating a very lightweight "mini‑batch" effect.
+New sequence entries are appended to the buffer, and old entries are dropped
+FIFO when the capacity is exceeded.  This replay mechanism is transparent to
+the rest of the system and is tested via `test_replaySize()`.
 
 After each `Trainer::observe()` call the delta rule is applied to every
 **dense** layer.  Each layer's weights are nudged using the layer's own
