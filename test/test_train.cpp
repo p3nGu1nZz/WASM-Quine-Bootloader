@@ -57,6 +57,26 @@ TEST_CASE("Trainer observe with non-empty kernel updates avgLoss", "[train]") {
     REQUIRE(t.avgLoss() >= 0.0f);
 }
 
+TEST_CASE("Trainer replay buffer collects entries and is bounded", "[train][replay]") {
+    Trainer t;
+    t.test_setReplayCap(4);
+    TelemetryEntry e;
+    e.generation   = 1;
+    e.kernelBase64 = KERNEL_GLOB;
+
+    // observe more times than capacity; buffer size should cap
+    for (int i = 0; i < 10; ++i) {
+        t.observe(e);
+    }
+    REQUIRE(t.test_replaySize() == 4);
+
+    // ensure sampling path executes by calling observe again; just check no crash
+    float lossBefore = t.lastLoss();
+    t.observe(e);
+    REQUIRE(t.lastLoss() >= 0.0f);
+    REQUIRE(t.test_replaySize() == 4);
+}
+
 TEST_CASE("Trainer sequence branch toggles flag and updates weights", "[train][sequence]") {
     Trainer t;
     TelemetryEntry e;

@@ -3,6 +3,13 @@
 #include "loss.h"
 #include <fstream>
 #include <cmath>
+#include <random>
+
+// simple random integer in [0,n)
+static int hmRandInt(int n) {
+    static thread_local std::mt19937 rng(std::random_device{}());
+    return std::uniform_int_distribution<int>(0, n - 1)(rng);
+}
 
 // ─── Architecture (scaled down) ─────────────────────────────────────────────
 // Layer 0 Dense : kFeatSize(1024) → 32     (compact input projection)
@@ -23,10 +30,30 @@ void Trainer::observe(const TelemetryEntry& entry) {
     m_observations++;
     if (entry.kernelBase64.empty()) return;
 
-    // determine if we will train using raw sequence or histogram
+    // figure out which branch we will use for this entry
     auto seq = Feature::extractSequence(entry);
     m_lastUsedSequence = !seq.empty();
 
+    // do the actual weight update for the current example
+    trainOnEntry(entry);
+
+    // if we have stored past examples, sample one at random and train on it
+    if (!m_replayBuffer.empty()) {
+        int idx = hmRandInt((int)m_replayBuffer.size());
+        trainOnEntry(m_replayBuffer[idx]);
+    }
+
+    // push into replay buffer if sequence-based (otherwise histogram only)
+    if (m_lastUsedSequence) {
+        m_replayBuffer.push_back(entry);
+        if (m_replayBuffer.size() > m_replayCap)
+            m_replayBuffer.erase(m_replayBuffer.begin());
+    }
+}
+
+// helper that encapsulates the existing logic for a single observation; this
+// lets us easily re-use it when sampling from the replay buffer.
+void Trainer::trainOnEntry(const TelemetryEntry& entry) {
     // Reward signal: generation count (higher = kernel survived longer = better)
     float reward = static_cast<float>(entry.generation);
     if (reward > m_maxReward) m_maxReward = reward;
@@ -34,7 +61,7 @@ void Trainer::observe(const TelemetryEntry& entry) {
 
     const float lr = 0.005f;
     if (m_lastUsedSequence) {
-        // sequential update: convert each opcode to one-hot feature vector
+        auto seq = Feature::extractSequence(entry);
         m_policy.resetState();
         for (auto op : seq) {
             std::vector<float> features(kFeatSize, 0.0f);
@@ -47,7 +74,7 @@ void Trainer::observe(const TelemetryEntry& entry) {
             m_lastLoss = diff * diff;
             m_avgLoss = m_avgLoss * 0.9f + m_lastLoss * 0.1f;
 
-            // weight updates per step
+            // only update non-LSTM layers for simplicity
             for (int l = 0; l < m_policy.layerCount(); ++l) {
                 if (m_policy.layerType(l) == Policy::LayerType::LSTM) continue;
                 const int inl  = m_policy.layerInSize(l);
@@ -61,7 +88,6 @@ void Trainer::observe(const TelemetryEntry& entry) {
             }
         }
     } else {
-        // original histogram-based update
         auto features = Feature::extract(entry);
 
         std::vector<std::vector<float>> acts;

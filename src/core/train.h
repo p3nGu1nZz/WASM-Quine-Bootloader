@@ -25,8 +25,14 @@ public:
 
     // testing hooks
     bool test_lastUsedSequence() const { return m_lastUsedSequence; }
+    int  test_replaySize() const { return (int)m_replayBuffer.size(); }
+    void test_setReplayCap(size_t c) { m_replayCap = c; }
 
 private:
+    // perform a weight-update for a single telemetry entry; factored out so
+    // we can call it for replay-buffer samples as well.
+    void trainOnEntry(const TelemetryEntry& entry);
+
     // true if last observe() call processed a non-empty opcode sequence
     bool m_lastUsedSequence = false;
     Policy m_policy;
@@ -34,4 +40,8 @@ private:
     float m_avgLoss      = 0.0f;
     float m_lastLoss     = 0.0f;
     float m_maxReward    = 1.0f; // tracks max reward seen for normalisation
+
+    // replay buffer stores recent telemetry entries for mini-batch training
+    std::vector<TelemetryEntry> m_replayBuffer;
+    size_t m_replayCap = 256; // default capacity; can be tuned
 };
