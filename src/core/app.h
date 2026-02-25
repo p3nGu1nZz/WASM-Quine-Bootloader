@@ -137,6 +137,10 @@ public:
         handleBootFailure(reason);
     }
 
+    // Test-only helpers to manipulate internal state directly.
+    void test_forceEvolutionEnabled(bool v) { m_evolutionEnabled = v; }
+    void test_forceTrainingPhase(TrainingPhase p) { m_trainingPhase = p; }
+
     // Blacklist management
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);

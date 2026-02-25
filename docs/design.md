@@ -111,7 +111,9 @@ at the bottom a memory heatmap.  A new addition is a set of **neural weight
 heatmaps** positioned immediately above the heap visualizer; each layer of
 the policy network is rendered as a small grid of colored squares (red for
 positive weights, blue for negative) and updates in real time as training
-proceeds.
+proceeds.  To prevent the evolution scene from stalling, the panel rasterises
+each layer into an SDL texture only when the network weights change (typically
+once per generation) and then simply blits the cached image every frame.
 
 
 

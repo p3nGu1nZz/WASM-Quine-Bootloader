@@ -213,17 +213,25 @@ TEST_CASE("global requestAppExit helper sets flag and stops app", "[app][signal]
 TEST_CASE("evolution auto-stops at configured generation and switches to training", "[app][evolution]") {
     CliOptions opts;
     App a(opts);
-    // evolution is initially disabled until user/start; simulate enabling
     a.enableEvolution();
     REQUIRE(a.evolutionEnabled());
-    // perform 49 successful generations
     for (int i = 0; i < 49; ++i) {
         a.doReboot(true);
     }
     REQUIRE(a.evolutionEnabled());
-    // one more generation triggers the switch (generation 50)
     a.doReboot(true);
     REQUIRE(!a.evolutionEnabled());
     REQUIRE(a.trainingPhase() != TrainingPhase::COMPLETE);
+}
+
+TEST_CASE("update() re-enables evolution when training has already completed", "[app][evolution]") {
+    CliOptions opts;
+    App a(opts);
+    // pretend training already finished but evolution disabled
+    a.test_forceTrainingPhase(TrainingPhase::COMPLETE);
+    a.test_forceEvolutionEnabled(false);
+    REQUIRE_FALSE(a.evolutionEnabled());
+    a.update();
+    REQUIRE(a.evolutionEnabled());
 }
 

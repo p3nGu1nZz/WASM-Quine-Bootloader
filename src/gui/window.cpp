@@ -8,6 +8,7 @@
 #include <backends/imgui_impl_sdlrenderer3.h>
 
 #include <algorithm>
+#include <vector>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -76,6 +77,15 @@ void Gui::init(SDL_Window* window, SDL_Renderer* renderer) {
 }
 
 void Gui::shutdown() {
+    // release any cached textures we allocated for the weight heatmaps
+    for (auto &c : m_heatmapCache) {
+        if (c.tex) {
+            SDL_DestroyTexture(c.tex);
+            c.tex = nullptr;
+        }
+    }
+    m_heatmapCache.clear();
+
     ImGui_ImplSDLRenderer3_Shutdown();
     ImGui_ImplSDL3_Shutdown();
     ImGui::DestroyContext();
@@ -556,38 +566,96 @@ void Gui::renderWeightHeatmaps(const App& app, int winW) {
     int layers = pol.layerCount();
     if (layers == 0) return;
 
+    // Rebuild cache if the generation changed or the network layout differs
+    if (app.generation() != m_lastHeatmapGen ||
+        (int)m_heatmapCache.size() != layers) {
+        // free existing textures first
+        for (auto &c : m_heatmapCache) {
+            if (c.tex) SDL_DestroyTexture(c.tex);
+        }
+        m_heatmapCache.clear();
+        m_heatmapCache.resize(layers);
+        m_lastHeatmapGen = app.generation();
+
+        // create a pixel buffer and texture for each layer
+        for (int l = 0; l < layers; ++l) {
+            int in = pol.layerInSize(l);
+            int out = pol.layerOutSize(l);
+            if (in <= 0 || out <= 0) continue;
+            std::vector<uint32_t> pixels(in * out);
+            // we will map weight->color once here
+            // use SDL to mapRGBA so we don't make assumptions about byte order.
+        // SDL3 switched to PixelFormatDetails; these are cached internally,
+        // so no allocation or free is necessary.
+        const SDL_PixelFormatDetails* fmt =
+            SDL_GetPixelFormatDetails(SDL_PIXELFORMAT_RGBA32);
+        for (int i = 0; i < out; ++i) {
+            for (int j = 0; j < in; ++j) {
+                float val = pol.layerWeights(l)[i * in + j];
+                float tn = std::tanh(val);
+                uint8_t r = 0, g = 0, b = 0, a = 255;
+                if (tn >= 0) {
+                    r = static_cast<uint8_t>(tn * 255);
+                } else {
+                    b = static_cast<uint8_t>(-tn * 255);
+                }
+                pixels[i * in + j] = SDL_MapRGBA(fmt, nullptr, r, g, b, a);
+            }
+        }
+            SDL_Texture* tex = SDL_CreateTexture(
+                m_renderer,
+                SDL_PIXELFORMAT_RGBA32,
+                SDL_TEXTUREACCESS_STATIC,
+                in, out);
+            if (tex) {
+                SDL_UpdateTexture(tex, nullptr, pixels.data(), in * sizeof(uint32_t));
+                m_heatmapCache[l].tex = tex;
+                m_heatmapCache[l].w   = in;
+                m_heatmapCache[l].h   = out;
+            }
+        }
+    }
+
     ImGui::Separator();
     ImGui::TextDisabled("NN WEIGHT HEATMAPS");
     float visW = (float)winW - 20.0f;
-    ImDrawList* dl = ImGui::GetWindowDrawList();
 
     for (int l = 0; l < layers; ++l) {
         int in = pol.layerInSize(l);
         int out = pol.layerOutSize(l);
-        const auto& w = pol.layerWeights(l);
         if (in <= 0 || out <= 0) continue;
-
         float cell = std::min(4.0f, visW / (float)in);
         float layerH = cell * out;
         ImGui::Text("Layer %d (%dx%d)", l, out, in);
-        ImGui::Dummy({cell * in, layerH});
-        ImVec2 p = ImGui::GetCursorScreenPos();
-        for (int i = 0; i < out; ++i) {
-            for (int j = 0; j < in; ++j) {
-                float val = w[i * in + j];
-                float tn = std::tanh(val);
-                ImU32 col;
-                if (tn >= 0) {
-                    col = IM_COL32((int)(tn * 255), 0, 0, 255);
-                } else {
-                    col = IM_COL32(0, 0, (int)(-tn * 255), 255);
+
+        if (m_heatmapCache[l].tex) {
+            // draw the pre-rasterized texture, letting ImGui scale it
+            ImGui::Image((ImTextureID)m_heatmapCache[l].tex,
+                         ImVec2(cell * in, layerH));
+        } else {
+            // fallback to slow immediate-mode drawing (should rarely happen)
+            ImGui::Dummy({cell * in, layerH});
+            ImVec2 p = ImGui::GetCursorScreenPos();
+            const auto &w = pol.layerWeights(l);
+            ImDrawList* dl = ImGui::GetWindowDrawList();
+            for (int i = 0; i < out; ++i) {
+                for (int j = 0; j < in; ++j) {
+                    float val = w[i * in + j];
+                    float tn = std::tanh(val);
+                    ImU32 col;
+                    if (tn >= 0) {
+                        col = IM_COL32((int)(tn * 255), 0, 0, 255);
+                    } else {
+                        col = IM_COL32(0, 0, (int)(-tn * 255), 255);
+                    }
+                    dl->AddRectFilled({p.x + j * cell, p.y + i * cell},
+                                      {p.x + (j + 1) * cell,
+                                       p.y + (i + 1) * cell},
+                                      col);
                 }
-                dl->AddRectFilled({p.x + j * cell, p.y + i * cell},
-                                  {p.x + (j + 1) * cell, p.y + (i + 1) * cell},
-                                  col);
             }
+            ImGui::SetCursorScreenPos({p.x, p.y + layerH + 5.0f});
         }
-        ImGui::SetCursorScreenPos({p.x, p.y + layerH + 5.0f});
     }
 }
 

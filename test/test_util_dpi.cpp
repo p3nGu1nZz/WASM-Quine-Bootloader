@@ -7,6 +7,10 @@
 #include <filesystem>
 #include <unistd.h>
 
+// we need the SDL/ImGui backend symbols in tests
+#include <backends/imgui_impl_sdl3.h>
+#include <backends/imgui_impl_sdlrenderer3.h>
+
 
 TEST_CASE("computeDpiScale handles null window gracefully", "[dpi]") {
     REQUIRE(computeDpiScale(nullptr) == 1.0f);
@@ -117,6 +121,58 @@ TEST_CASE("executableDir returns non-empty string", "[util]") {
     REQUIRE(!ed.empty());
     // should be absolute path
     REQUIRE(ed[0] == '/');
+}
+
+TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatmap]") {
+    // create a tiny SDL context so the GUI can allocate textures
+    SDL_Init(SDL_INIT_VIDEO);
+    SDL_Window* w = SDL_CreateWindow("heat", 400,400, 0);
+    SDL_Renderer* r = SDL_CreateRenderer(w, nullptr);
+    Gui gui;
+    gui.init(w, r);
+
+    App app;
+    // ensure there is at least one layer so the heatmap code runs
+    auto &pol = const_cast<Policy&>(app.trainer().policy());
+    pol.addDense(5,5);
+
+    // helper lambda to drive a minimal ImGui frame then invoke the heatmap
+    auto drawOnce = [&](int width) {
+        ImGui_ImplSDLRenderer3_NewFrame();
+        ImGui_ImplSDL3_NewFrame();
+        ImGui::NewFrame();
+        ImGui::Begin("test");
+        gui.test_renderWeightHeatmaps(app, width);
+        ImGui::End();
+        ImGui::Render();
+    };
+
+    // initial invocation should populate cache
+    drawOnce(800);
+    REQUIRE(gui.test_heatmapCacheSize() == pol.layerCount());
+    SDL_Texture* tex0 = gui.test_heatmapTex(0);
+    REQUIRE(tex0 != nullptr);
+    int gen0 = gui.test_lastHeatmapGen();
+    REQUIRE(gen0 == app.generation());
+
+    // second draw without changing generation should reuse same texture
+    drawOnce(800);
+    REQUIRE(gui.test_lastHeatmapGen() == gen0);
+    REQUIRE(gui.test_heatmapTex(0) == tex0);
+
+    // simulate a generation advance and redraw; cache should refresh
+    app.doReboot(true);
+    REQUIRE(app.generation() == gen0 + 1);
+    drawOnce(800);
+    REQUIRE(gui.test_lastHeatmapGen() == app.generation());
+    SDL_Texture* tex1 = gui.test_heatmapTex(0);
+    REQUIRE(tex1 != nullptr);
+    REQUIRE(tex1 != tex0);
+
+    gui.shutdown();
+    SDL_DestroyRenderer(r);
+    SDL_DestroyWindow(w);
+    SDL_Quit();
 }
 
 TEST_CASE("sequenceDir sanitizes runId", "[util]") {

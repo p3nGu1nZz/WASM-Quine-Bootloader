@@ -246,6 +246,11 @@ bool App::update() {
     // in the constructor so this path is a no-op.
     if (!m_evolutionEnabled) {
         tickTraining();
+        // if training has already finished, re-enable evolution so the FSM
+        // can continue even if the GUI scene hasn't been switched yet.
+        if (m_trainingPhase == TrainingPhase::COMPLETE) {
+            m_evolutionEnabled = true;
+        }
         return true;
     }
 

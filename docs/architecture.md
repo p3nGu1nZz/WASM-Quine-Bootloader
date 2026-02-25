@@ -245,7 +245,7 @@ Panel helpers:
 | `renderKernelPanel` | Base64 kernel diff viewer |
 | `renderInstancesPanel` | Shows all spawned kernels with kill buttons and basic telemetry |
 | `renderStatusBar` | Bottom status line |
-| `renderWeightHeatmaps` | Draw per-layer policy weight grids above memory panel |
+| `renderWeightHeatmaps` | Draw per-layer policy weight grids above memory panel.  To avoid bogging down the evolution scene, the matrices are rasterised into SDL textures once per generation and merely blitted each frame; legacy fallback code remains for sanity. |
 
 Owns a `GuiHeatmap` instance (`m_heatmap`) which renders the memory panel.
 

@@ -59,6 +59,20 @@ private:
     // Sub-module: memory heatmap (owns its own heat-decay state)
     GuiHeatmap m_heatmap;
 
+    // Cached textures for neural network weight heatmaps.  Building the
+    // cell grid every frame was causing the evolution scene to drop to
+    // single-digit FPS, so we instead rasterize the layer matrices into
+    // SDL textures once per generation and just blit the resulting image
+    // each frame.  The cache is invalidated when the app's generation
+    // counter advances or the network layout changes.
+    struct LayerTexture {
+        SDL_Texture* tex = nullptr;
+        int w = 0;
+        int h = 0;
+    };
+    std::vector<LayerTexture> m_heatmapCache;
+    int m_lastHeatmapGen = -1;
+
     // Per-frame scroll / auto-scroll state
     bool   m_scrollLogs   = true;
     bool   m_scrollInstrs = true;
@@ -85,4 +99,18 @@ private:
     // draw heatmaps of each policy layer's weight matrix (used in evolution
     // scene).  Panels are stacked vertically and sized to fit the window width.
     void renderWeightHeatmaps(const App& app, int winW);
+
+public:
+    // helpers used by unit tests to probe cache state
+    int test_heatmapCacheSize() const { return static_cast<int>(m_heatmapCache.size()); }
+    SDL_Texture* test_heatmapTex(int idx) const {
+        if (idx < 0 || idx >= (int)m_heatmapCache.size()) return nullptr;
+        return m_heatmapCache[idx].tex;
+    }
+    int test_lastHeatmapGen() const { return m_lastHeatmapGen; }
+
+    // allow tests to directly exercise the internal heatmap renderer without
+    // having to go through a full frame.  This simply forwards to the private
+    // implementation.
+    void test_renderWeightHeatmaps(const App& app, int winW) { renderWeightHeatmaps(app, winW); }
 };
