@@ -25,40 +25,65 @@ void Trainer::observe(const TelemetryEntry& entry) {
     m_observations++;
     if (entry.kernelBase64.empty()) return;
 
-    // Extract opcode-frequency feature vector (kFeatSize floats)
-    auto features = Feature::extract(entry);
+    // determine if we will train using raw sequence or histogram
+    auto seq = Feature::extractSequence(entry);
+    m_lastUsedSequence = !seq.empty();
 
     // Reward signal: generation count (higher = kernel survived longer = better)
     float reward = static_cast<float>(entry.generation);
     if (reward > m_maxReward) m_maxReward = reward;
     float normReward = m_maxReward > 0.0f ? reward / m_maxReward : 0.0f;
 
-    // Forward pass – stores every layer's input activation for weight updates
-    std::vector<std::vector<float>> acts;
-    m_policy.forwardActivations(features, acts);
-    float prediction = acts.back().empty() ? 0.0f : acts.back()[0];
-
-    // MSE loss
-    float diff = prediction - normReward;
-    m_lastLoss = diff * diff;
-    // Exponential moving average of loss
-    m_avgLoss = m_avgLoss * 0.9f + m_lastLoss * 0.1f;
-
-    // Delta-rule weight update for every dense layer.
-    // Each layer's weights are nudged using its own input activation so that
-    // the full network participates in learning.
-    // (Biases are left unchanged to preserve forward(zero_input)==0.)
     const float lr = 0.005f;
-    for (int l = 0; l < m_policy.layerCount(); ++l) {
-        if (m_policy.layerType(l) == Policy::LayerType::LSTM) continue;
-        const int inl  = m_policy.layerInSize(l);
-        const int outl = m_policy.layerOutSize(l);
-        const auto& input_act = acts[l]; // input to this layer = acts[l]
-        auto w = m_policy.layerWeights(l);
-        for (int o = 0; o < outl; ++o)
-            for (int i = 0; i < inl; ++i)
-                w[o * inl + i] -= lr * diff * input_act[i];
-        m_policy.setLayerWeights(l, w);
+    if (m_lastUsedSequence) {
+        // sequential update: convert each opcode to one-hot feature vector
+        m_policy.resetState();
+        for (auto op : seq) {
+            std::vector<float> features(kFeatSize, 0.0f);
+            if (op < kFeatSize) features[op] = 1.0f;
+
+            std::vector<std::vector<float>> acts;
+            m_policy.forwardActivations(features, acts);
+            float prediction = acts.back().empty() ? 0.0f : acts.back()[0];
+            float diff = prediction - normReward;
+            m_lastLoss = diff * diff;
+            m_avgLoss = m_avgLoss * 0.9f + m_lastLoss * 0.1f;
+
+            // weight updates per step
+            for (int l = 0; l < m_policy.layerCount(); ++l) {
+                if (m_policy.layerType(l) == Policy::LayerType::LSTM) continue;
+                const int inl  = m_policy.layerInSize(l);
+                const int outl = m_policy.layerOutSize(l);
+                const auto& input_act = acts[l];
+                auto w = m_policy.layerWeights(l);
+                for (int o = 0; o < outl; ++o)
+                    for (int i = 0; i < inl; ++i)
+                        w[o * inl + i] -= lr * diff * input_act[i];
+                m_policy.setLayerWeights(l, w);
+            }
+        }
+    } else {
+        // original histogram-based update
+        auto features = Feature::extract(entry);
+
+        std::vector<std::vector<float>> acts;
+        m_policy.forwardActivations(features, acts);
+        float prediction = acts.back().empty() ? 0.0f : acts.back()[0];
+        float diff = prediction - normReward;
+        m_lastLoss = diff * diff;
+        m_avgLoss = m_avgLoss * 0.9f + m_lastLoss * 0.1f;
+
+        for (int l = 0; l < m_policy.layerCount(); ++l) {
+            if (m_policy.layerType(l) == Policy::LayerType::LSTM) continue;
+            const int inl  = m_policy.layerInSize(l);
+            const int outl = m_policy.layerOutSize(l);
+            const auto& input_act = acts[l];
+            auto w = m_policy.layerWeights(l);
+            for (int o = 0; o < outl; ++o)
+                for (int i = 0; i < inl; ++i)
+                    w[o * inl + i] -= lr * diff * input_act[i];
+            m_policy.setLayerWeights(l, w);
+        }
     }
 }
 
@@ -86,6 +111,7 @@ bool Trainer::save(const std::string& path) const {
 }
 
 bool Trainer::load(const std::string& path) {
+    m_lastUsedSequence = false;
     std::ifstream in(path);
     if (!in) return false;
     if (!(in >> m_observations)) return false;

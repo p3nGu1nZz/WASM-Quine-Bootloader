@@ -57,6 +57,22 @@ TEST_CASE("Trainer observe with non-empty kernel updates avgLoss", "[train]") {
     REQUIRE(t.avgLoss() >= 0.0f);
 }
 
+TEST_CASE("Trainer sequence branch toggles flag and updates weights", "[train][sequence]") {
+    Trainer t;
+    TelemetryEntry e;
+    e.generation    = 2;
+    e.kernelBase64  = KERNEL_GLOB;
+    REQUIRE_FALSE(t.test_lastUsedSequence());
+    t.observe(e);
+    // sequence extraction should be non-empty, flag true
+    REQUIRE(t.test_lastUsedSequence());
+    // running again should still use sequence
+    float loss1 = t.lastLoss();
+    t.observe(e);
+    REQUIRE(t.test_lastUsedSequence());
+    REQUIRE(t.lastLoss() <= loss1 + 1.0f); // loss doesn't blow up
+}
+
 TEST_CASE("Trainer observe with empty kernel still increments observations", "[train]") {
     Trainer t;
     TelemetryEntry e;

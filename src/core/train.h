@@ -23,7 +23,12 @@ public:
     float avgLoss()      const { return m_avgLoss; }
     float lastLoss()     const { return m_lastLoss; }
 
+    // testing hooks
+    bool test_lastUsedSequence() const { return m_lastUsedSequence; }
+
 private:
+    // true if last observe() call processed a non-empty opcode sequence
+    bool m_lastUsedSequence = false;
     Policy m_policy;
     int   m_observations = 0;
     float m_avgLoss      = 0.0f;
