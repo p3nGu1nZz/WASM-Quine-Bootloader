@@ -144,6 +144,15 @@ public:
     int test_trainingStep() const { return m_trainingStep; }
     int test_trainingLoadEnd() const { return m_trainingLoadEnd; }
 
+    // model saving info (bridge to private members defined later)
+    bool savingModel() const;
+    bool modelSaved() const;
+    // progress of the countdown before writing a checkpoint; ranges from 0.0
+    // (not started) to 1.0 (ready to save or finished).  This value is useful
+    // for the GUI to display a secondary progress bar during save.
+    float saveProgress() const;
+    int  test_savePhase() const;
+
     // Blacklist management
     bool isBlacklisted(const std::vector<uint8_t>& seq) const;
     void addToBlacklist(const std::vector<uint8_t>& seq);
@@ -242,6 +251,10 @@ private:
     int    m_mutationDelete   = 0;
     int    m_mutationModify   = 0;
     int    m_mutationAdd      = 0;
+    // checkpoint/save state (values used by App::tickTraining())
+    bool   m_modelSaved       = false;
+    bool   m_savingModel      = false;
+    int    m_savePhase        = 0;
     // heuristic blacklist: sequences that previously caused traps, mapped to decay weight
     // weight >0 means entry is still blacklisted; DECAY mode will decrement after each success
     struct VecHash {
@@ -309,6 +322,7 @@ private:
     int           m_trainingStep     = 0;     // monotonically-increasing step counter
     int           m_trainingTotal    = 0;     // total steps (set in constructor)
     int           m_trainingLoadEnd  = 0;     // step at which LOADING phase ends
+
 
     // optional time source (default uses SDL_GetTicks).  tests inject a fake
     // clock so that run-time limits can be verified deterministically.

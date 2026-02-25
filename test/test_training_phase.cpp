@@ -144,6 +144,36 @@ TEST_CASE("enableEvolution immediately marks training complete and starts evolut
     REQUIRE(app.update());
 }
 
+// ── Model saving countdown ─────────────────────────────────────────────────
+
+TEST_CASE("App saves model after training completion", "[training]") {
+    CliOptions opts = freshOpts(true);
+    uint64_t fakeTick = 0;
+    App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
+
+    // drive until training is done
+    while (!app.trainingDone())
+        app.update();
+    REQUIRE(app.trainingDone());
+    // the first update after training should have begun the save countdown
+    REQUIRE(app.savingModel());
+    REQUIRE(app.saveProgress() > 0.0f);
+
+    int prevPhase = app.test_savePhase();
+    app.update();
+    REQUIRE(app.test_savePhase() >= prevPhase);
+    float prog1 = app.saveProgress();
+    REQUIRE(prog1 <= 1.0f);
+
+    int iters = 0;
+    while (!app.modelSaved() && ++iters < 10)
+        app.update();
+    REQUIRE(app.modelSaved());
+    REQUIRE(!app.savingModel());
+    REQUIRE(prog1 <= app.saveProgress());
+    REQUIRE(app.saveProgress() == Approx(1.0f));
+}
+
 // ── Policy bounds safety ──────────────────────────────────────────────────────
 
 TEST_CASE("Policy layer accessors are bounds-safe", "[policy]") {

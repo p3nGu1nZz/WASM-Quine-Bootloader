@@ -276,13 +276,54 @@ float App::trainingProgress() const {
     return p > 1.0f ? 1.0f : p;
 }
 
+bool App::savingModel() const { return m_savingModel; }
+bool App::modelSaved() const { return m_modelSaved; }
+int App::test_savePhase() const { return m_savePhase; }
+
+float App::saveProgress() const {
+    // mirror the countdown logic in tickTraining(); the hard-coded saveWait
+    // value must stay in sync.
+    const int saveWait = 3; // number of update calls to wait
+    if (!m_savingModel) return 0.0f;
+    // m_savePhase is incremented *after* first entering the save state, so
+    // progress ranges from 1..saveWait; normalise to [0,1].
+    float prog = static_cast<float>(m_savePhase) / static_cast<float>(saveWait);
+    return prog > 1.0f ? 1.0f : prog;
+}
+
 void App::enableEvolution() {
     m_trainingPhase    = TrainingPhase::COMPLETE;
     m_evolutionEnabled = true;
 }
 
 void App::tickTraining() {
-    if (m_trainingPhase == TrainingPhase::COMPLETE) return;
+    if (m_trainingPhase == TrainingPhase::COMPLETE) {
+        if (!m_modelSaved) {
+            // begin or advance the save countdown
+            if (!m_savingModel) {
+                m_savingModel = true;
+                m_savePhase = 0;
+            }
+            const int saveWait = 3; // number of update calls to wait
+            if (m_savePhase < saveWait) {
+                m_savePhase++;
+            } else {
+                // perform actual save once countdown finishes
+                // build a filesystem path for the checkpoint and convert to
+                // string only when logging.  assign to `auto` so we keep the
+                // path type and can call `.string()` later.
+                auto path = telemetryRoot() / "model_checkpoint.dat";
+                if (m_trainer.save(path.string())) {
+                    m_logger.log("Saved model checkpoint to " + path.string(), "info");
+                } else {
+                    m_logger.log("WARNING: failed to save model checkpoint", "warning");
+                }
+                m_modelSaved = true;
+                m_savingModel = false;
+            }
+        }
+        return;
+    }
 
     const auto& entries = m_advisor.entries();
     int nEntries = (int)entries.size();
@@ -725,11 +766,15 @@ void App::doReboot(bool success) {
         m_genStartTime = now();
 
         // if we have reached the automatic training generation threshold,
-        // disable evolution and prepare to load the new telemetry data.
-        if (m_generation == kAutoTrainGen) {
-            m_logger.log("AUTO: reached generation " + std::to_string(kAutoTrainGen) +
+        // or a later multiple of it, disable evolution and prepare to load the
+        // new telemetry data.  this allows endless alternating cycles of
+        // evolution and training.
+        if (m_generation > 0 && m_generation % kAutoTrainGen == 0) {
+            m_logger.log("AUTO: reached generation " + std::to_string(m_generation) +
                           ", switching to training", "info");
             m_evolutionEnabled = false;
+            // clear any previous checkpoint flag so we will save again later
+            m_modelSaved = false;
             // re-scan telemetry so the advisor sees the latest entries
             namespace fs = std::filesystem;
             fs::path seqBase = telemetryRoot();

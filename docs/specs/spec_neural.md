@@ -145,3 +145,16 @@ execution is halted, the accumulated telemetry is reloaded, and a training
 phase begins automatically using the newest data.  This removes the need
 for manual mode-switching and keeps the training dataset narrowly focused
 on the most recent evolutionary events.
+
+### Checkpointing & GUI Feedback
+
+When training finishes (either via the automatic trigger or a direct
+`enableEvolution()` call), the application begins a short countdown before
+writing a checkpoint file named `model_checkpoint.dat` under the telemetry
+root.  The countdown lasts three `App::update()` ticks; during that interval
+`App::savingModel()` returns `true` and `App::saveProgress()` reports a
+fractional progress value.  The GUI's training scene displays a secondary
+progress bar labeled "Saving model..." while the countdown is active, and
+transition to the evolution scene is delayed until after the checkpoint is
+written.  This gives users visual confirmation that the model weights are
+being persisted and avoids sudden screen flips.

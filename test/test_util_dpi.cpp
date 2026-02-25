@@ -195,6 +195,23 @@ TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatm
     gui.renderFrame(app);
     REQUIRE(gui.test_scene() == (int)GuiScene::TRAINING);
 
+    // simulate training completion and ensure we remain on TRAINING while the
+    // save countdown runs, then transition to EVOLUTION once the checkpoint is
+    // written.
+    app.test_forceTrainingPhase(TrainingPhase::COMPLETE);
+    REQUIRE(!app.modelSaved());
+    // calling update should trigger the save countdown
+    app.update();
+    REQUIRE(app.savingModel());
+    // GUI should still show training scene
+    gui.renderFrame(app);
+    REQUIRE(gui.test_scene() == (int)GuiScene::TRAINING);
+    // drive updates until save finishes
+    while (!app.modelSaved()) app.update();
+    // now the next render should switch scenes
+    gui.renderFrame(app);
+    REQUIRE(gui.test_scene() == (int)GuiScene::EVOLUTION);
+
 
     gui.shutdown();
     SDL_DestroyRenderer(r);

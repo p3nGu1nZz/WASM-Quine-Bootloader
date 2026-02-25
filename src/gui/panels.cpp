@@ -105,6 +105,23 @@ void Gui::renderTrainingScene(App& app, int winW, int winH) {
     ImGui::ProgressBar(prog, { -1.0f, 22.0f * m_uiScale }, overlay);
     ImGui::PopStyleColor();
 
+    // ── Model-saving progress (visible when we are counting down to a
+    // checkpoint write).  We deliberately keep the training scene active
+    // while this is happening so the user sees the bar; evolution does not
+    // resume until after the save completes.
+    if (app.savingModel()) {
+        float sprog = app.saveProgress();
+        char o2[64];
+        std::snprintf(o2, sizeof(o2), "Saving model... %.0f%%", sprog * 100.0f);
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, { 0.29f, 0.87f, 0.38f, 0.85f });
+        ImGui::ProgressBar(sprog, { -1.0f, 22.0f * m_uiScale }, o2);
+        ImGui::PopStyleColor();
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+    }
+
     ImGui::Spacing();
     ImGui::Separator();
     ImGui::Spacing();
@@ -155,8 +172,10 @@ void Gui::renderTrainingScene(App& app, int winW, int winH) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    // if training completes, immediately transition back to evolution
-    if (app.trainingDone()) {
+    // if training completes *and* the model checkpoint has finished, then
+    // switch back to evolution.  we delay the transition when the save
+    // countdown is active so that the progress bar remains visible.
+    if (app.trainingDone() && !app.savingModel()) {
         app.enableEvolution();
         m_scene = GuiScene::EVOLUTION;
         // fall through; we still want to draw status bar below

@@ -26,7 +26,13 @@ public:
     // testing hooks
     bool test_lastUsedSequence() const { return m_lastUsedSequence; }
     int  test_replaySize() const { return (int)m_replayBuffer.size(); }
-    void test_setReplayCap(size_t c) { m_replayCap = c; }
+    void test_setReplayCap(size_t c) {
+        m_replayCap = c;
+        // trim existing entries if the cap was lowered
+        while (m_replayBuffer.size() > m_replayCap) {
+            m_replayBuffer.erase(m_replayBuffer.begin());
+        }
+    }
 
 private:
     // perform a weight-update for a single telemetry entry; factored out so
