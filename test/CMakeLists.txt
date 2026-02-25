@@ -44,7 +44,7 @@ add_executable(test_util_dpi test_util_dpi.cpp)
 target_sources(test_util_dpi PRIVATE
     ${IMGUI_SOURCES}
     ${CMAKE_SOURCE_DIR}/src/gui/window.cpp
-    ${CMAKE_SOURCE_DIR}/src/gui/window_panels.cpp
+    ${CMAKE_SOURCE_DIR}/src/gui/panels.cpp
     ${CMAKE_SOURCE_DIR}/src/gui/heatmap.cpp
 )
 target_include_directories(test_util_dpi PRIVATE

@@ -106,6 +106,7 @@ private:
     // scene).  Panels are stacked vertically and sized to fit the window width.
     void renderWeightHeatmaps(const App& app, int winW);
 
+
 public:
     // helpers used by unit tests to probe cache state
     int test_heatmapCacheSize() const { return static_cast<int>(m_heatmapCache.size()); }

@@ -1,3 +1,4 @@
+#include "gui/panels.h"
 #include "gui/window.h"
 #include "gui/colors.h"
 #include "util.h"
