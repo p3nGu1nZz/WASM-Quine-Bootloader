@@ -36,17 +36,16 @@ info "Running tests..."
 # If build directory already has test executables, execute them directly
 cd "$BUILD_DIR" || exit 1
 start_time=$(date +%s)
-if [[ -d "test" ]]; then
-    cd test
+
+# Prefer running all test binaries under bin/test_*
+if compgen -G "bin/test_*" > /dev/null; then
     total_tests=0
     total_assertions=0
-    for exe in *; do
+    for exe in bin/test_*; do
         if [[ -x "$exe" && ! -d "$exe" ]]; then
             info "Executing $exe"
-            # capture output to parse assertion summary
             output=$("./$exe" 2>&1)
             echo "$output"
-            # extract number of assertions from the Catch2 summary
             if [[ $output =~ ([0-9]+)[[:space:]]+assertions ]]; then
                 total_assertions=$((total_assertions + ${BASH_REMATCH[1]}))
             fi
@@ -60,7 +59,6 @@ if [[ -d "test" ]]; then
     end_time=$(date +%s)
     elapsed=$((end_time - start_time))
 
-    # prettified summary box
     echo -e "\n${GREEN}========================================${RESET}"
     echo -e "${GREEN}                 TEST SUMMARY           ${RESET}"
     echo -e "${GREEN}----------------------------------------${RESET}"
@@ -69,7 +67,7 @@ if [[ -d "test" ]]; then
     echo -e "${GREEN}Duration:       ${RESET}${elapsed}s"
     echo -e "${GREEN}========================================${RESET}\n"
 else
-    # fall back to ctest if no tests dir present
+    # fallback if no test binaries found
     ctest --output-on-failure
     info "All tests passed."
 fi
