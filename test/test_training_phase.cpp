@@ -1,0 +1,155 @@
+#include <catch2/catch_test_macros.hpp>
+#include <catch2/catch_approx.hpp>
+using Catch::Approx;
+#include "app.h"
+#include "policy.h"
+
+// Helper: advance App by calling update() N times without a time source.
+// Uses a CliOptions with useGui=true and an injected clock to avoid SDL.
+static void tickN(App& app, int n) {
+    for (int i = 0; i < n; ++i)
+        app.update();
+}
+
+// ── Training phase: initial state ────────────────────────────────────────────
+
+TEST_CASE("App GUI mode starts in LOADING training phase", "[training]") {
+    CliOptions opts;
+    opts.useGui = true;
+    App app(opts, []() -> uint64_t { return 0; });
+    REQUIRE(app.trainingPhase() == TrainingPhase::LOADING);
+    REQUIRE(!app.trainingDone());
+    REQUIRE(!app.isPaused());
+}
+
+TEST_CASE("App headless mode bypasses training immediately", "[training]") {
+    CliOptions opts;
+    opts.useGui = false;
+    App app(opts, []() -> uint64_t { return 0; });
+    REQUIRE(app.trainingDone());
+    REQUIRE(app.trainingPhase() == TrainingPhase::COMPLETE);
+    REQUIRE(app.trainingProgress() == Approx(1.0f));
+}
+
+// ── Progress is monotonically increasing ─────────────────────────────────────
+
+TEST_CASE("trainingProgress is monotonically increasing", "[training]") {
+    CliOptions opts;
+    opts.useGui = true;
+    uint64_t fakeTick = 0;
+    App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
+
+    float prev = app.trainingProgress();
+    REQUIRE(prev >= 0.0f);
+    REQUIRE(prev < 1.0f);
+
+    for (int i = 0; i < 80; ++i) {
+        app.update();
+        float cur = app.trainingProgress();
+        REQUIRE(cur >= prev);  // strictly non-decreasing
+        prev = cur;
+    }
+}
+
+// ── Phase transitions ─────────────────────────────────────────────────────────
+
+TEST_CASE("Training phase transitions LOADING -> TRAINING -> COMPLETE", "[training]") {
+    CliOptions opts;
+    opts.useGui = true;
+    uint64_t fakeTick = 0;
+    App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
+
+    REQUIRE(app.trainingPhase() == TrainingPhase::LOADING);
+
+    // Drive until TRAINING phase (at most 200 steps for the min-30 animation)
+    int iters = 0;
+    while (app.trainingPhase() == TrainingPhase::LOADING && iters < 200) {
+        app.update();
+        ++iters;
+    }
+    // Must have transitioned within 200 steps
+    REQUIRE(iters < 200);
+    REQUIRE(app.trainingPhase() == TrainingPhase::TRAINING);
+
+    // Drive until COMPLETE
+    iters = 0;
+    while (app.trainingPhase() == TrainingPhase::TRAINING && iters < 300) {
+        app.update();
+        ++iters;
+    }
+    REQUIRE(iters < 300);
+    REQUIRE(app.trainingPhase() == TrainingPhase::COMPLETE);
+    REQUIRE(app.trainingDone());
+    REQUIRE(app.trainingProgress() == Approx(1.0f));
+}
+
+// ── Progress reaches exactly 1.0 after COMPLETE ──────────────────────────────
+
+TEST_CASE("trainingProgress returns 1.0 when training is complete", "[training]") {
+    CliOptions opts;
+    opts.useGui = true;
+    uint64_t fakeTick = 0;
+    App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
+
+    // Advance well past the total training budget
+    for (int i = 0; i < 300; ++i) app.update();
+
+    REQUIRE(app.trainingProgress() == Approx(1.0f));
+    REQUIRE(app.trainingDone());
+}
+
+// ── enableEvolution ───────────────────────────────────────────────────────────
+
+TEST_CASE("enableEvolution immediately marks training complete and starts evolution", "[training]") {
+    CliOptions opts;
+    opts.useGui = true;
+    uint64_t fakeTick = 0;
+    App app(opts, [&fakeTick]() -> uint64_t { return fakeTick++; });
+
+    REQUIRE(!app.trainingDone());
+
+    // Call enableEvolution mid-training
+    app.enableEvolution();
+
+    REQUIRE(app.trainingDone());
+    REQUIRE(app.trainingPhase() == TrainingPhase::COMPLETE);
+    REQUIRE(app.trainingProgress() == Approx(1.0f));
+
+    // Now update() should run the FSM (IDLE → startBoot) instead of training
+    // Simply check that update() returns true (no crash/hang)
+    REQUIRE(app.update());
+}
+
+// ── Policy bounds safety ──────────────────────────────────────────────────────
+
+TEST_CASE("Policy layer accessors are bounds-safe", "[policy]") {
+    Policy p;
+    p.addDense(4, 2);
+
+    // Valid index
+    REQUIRE(p.layerCount() == 1);
+    REQUIRE(p.layerInSize(0) == 4);
+    REQUIRE(p.layerOutSize(0) == 2);
+    REQUIRE(p.layerWeights(0).size() == 8u);
+    REQUIRE(p.layerBiases(0).size() == 2u);
+
+    // Out-of-bounds: should return empty (no crash)
+    REQUIRE(p.layerInSize(-1) == 0);
+    REQUIRE(p.layerOutSize(99) == 0);
+    REQUIRE(p.layerWeights(-1).empty());
+    REQUIRE(p.layerBiases(99).empty());
+}
+
+// ── No uptime regression in headless ─────────────────────────────────────────
+
+TEST_CASE("Headless App update() reaches the FSM (not stuck in training)", "[training]") {
+    CliOptions opts;
+    opts.useGui = false;
+    App app(opts, []() -> uint64_t { return 0; });
+
+    // Should be immediately past training; FSM should advance on update()
+    REQUIRE(app.update());
+    // State should have moved away from IDLE after one tick
+    // (startBoot transitions IDLE -> BOOTING)
+    REQUIRE(app.state() != SystemState::IDLE);
+}

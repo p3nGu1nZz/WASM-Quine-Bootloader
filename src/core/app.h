@@ -275,8 +275,9 @@ private:
     // Evolution".  Training advances one step per update() call.
     TrainingPhase m_trainingPhase    = TrainingPhase::LOADING;
     bool          m_evolutionEnabled = false; // set by enableEvolution()
-    int           m_trainingIdx      = 0;     // cursor into advisor entries / epochs
+    int           m_trainingStep     = 0;     // monotonically-increasing step counter
     int           m_trainingTotal    = 0;     // total steps (set in constructor)
+    int           m_trainingLoadEnd  = 0;     // step at which LOADING phase ends
 
     // optional time source (default uses SDL_GetTicks).  tests inject a fake
     // clock so that run-time limits can be verified deterministically.

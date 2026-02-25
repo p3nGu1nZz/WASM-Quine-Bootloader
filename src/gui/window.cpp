@@ -84,11 +84,6 @@ void Gui::shutdown() {
 // ─── Frame ───────────────────────────────────────────────────────────────────
 
 void Gui::renderFrame(App& app) {
-    // Switch scene once the user has clicked "Start Evolution"
-    if (m_scene == GuiScene::TRAINING && app.trainingDone() && !app.isPaused()) {
-        // Stay in TRAINING until enableEvolution() is called by button click
-    }
-
     // Sync auto-scroll flags (only relevant for EVOLUTION scene)
     if (app.programCounter() != m_lastIP) {
         m_scrollInstrs = true;

@@ -13,6 +13,11 @@
 #include <stdexcept>
 #include <filesystem>
 #include <functional>
+
+// ── Training-phase constants ─────────────────────────────────────────────────
+// Shared by both the constructor (to compute m_trainingTotal) and tickTraining.
+static constexpr int kTrainMinAnimSteps = 30;
+static constexpr int kTrainEpochs       = 5;
 #include <atomic>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -123,12 +128,11 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
 
     // Determine training steps: LOADING phase (1 step per advisor entry, min 30)
     // then TRAINING phase (N_EPOCHS passes over advisor data, min 30 steps).
-    static constexpr int N_EPOCHS       = 5;
-    static constexpr int MIN_ANIM_STEPS = 30;
     int nEntries = (int)m_advisor.size();
-    int loadSteps  = std::max(MIN_ANIM_STEPS, nEntries);
-    int trainSteps = std::max(MIN_ANIM_STEPS, nEntries * N_EPOCHS);
-    m_trainingTotal = loadSteps + trainSteps;
+    int loadSteps  = std::max(kTrainMinAnimSteps, nEntries);
+    int trainSteps = std::max(kTrainMinAnimSteps, nEntries * kTrainEpochs);
+    m_trainingLoadEnd = loadSteps;
+    m_trainingTotal   = loadSteps + trainSteps;
 
     // In headless mode (no GUI) there is no training dashboard: complete
     // training synchronously and allow evolution to begin immediately.
@@ -244,8 +248,9 @@ bool App::update() {
 // ─── Training phase ──────────────────────────────────────────────────────────
 
 float App::trainingProgress() const {
+    if (m_trainingPhase == TrainingPhase::COMPLETE) return 1.0f;
     if (m_trainingTotal <= 0) return 1.0f;
-    float p = static_cast<float>(m_trainingIdx) / static_cast<float>(m_trainingTotal);
+    float p = static_cast<float>(m_trainingStep) / static_cast<float>(m_trainingTotal);
     return p > 1.0f ? 1.0f : p;
 }
 
@@ -258,27 +263,23 @@ void App::tickTraining() {
     if (m_trainingPhase == TrainingPhase::COMPLETE) return;
 
     const auto& entries = m_advisor.entries();
-    // Number of steps that belong to the LOADING phase.
-    static constexpr int MIN_ANIM_STEPS = 30;
-    static constexpr int N_EPOCHS       = 5;
-    int nEntries   = (int)entries.size();
-    int loadSteps  = std::max(MIN_ANIM_STEPS, nEntries);
-    int trainSteps = std::max(MIN_ANIM_STEPS, nEntries * N_EPOCHS);
+    int nEntries = (int)entries.size();
 
-    m_trainingIdx++;
+    m_trainingStep++;
 
     if (m_trainingPhase == TrainingPhase::LOADING) {
-        if (m_trainingIdx >= loadSteps) {
+        if (m_trainingStep >= m_trainingLoadEnd) {
             m_trainingPhase = TrainingPhase::TRAINING;
-            m_trainingIdx   = 0;
         }
     } else if (m_trainingPhase == TrainingPhase::TRAINING) {
         // Observe one entry per step (cycling through entries)
         if (!entries.empty()) {
-            int idx = (m_trainingIdx - 1) % nEntries;
+            // trainIdx is 1-based within the TRAINING phase
+            int trainIdx = m_trainingStep - m_trainingLoadEnd;
+            int idx = (trainIdx - 1) % nEntries;
             m_trainer.observe(entries[idx]);
         }
-        if (m_trainingIdx >= trainSteps) {
+        if (m_trainingStep >= m_trainingTotal) {
             m_trainingPhase = TrainingPhase::COMPLETE;
         }
     }

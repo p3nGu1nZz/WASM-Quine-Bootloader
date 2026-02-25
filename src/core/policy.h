@@ -28,8 +28,14 @@ public:
     int layerCount()             const { return (int)m_layers.size(); }
     int layerInSize(int i)       const { return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].in  : 0; }
     int layerOutSize(int i)      const { return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].out : 0; }
-    const std::vector<float>& layerWeights(int i) const { return m_layers[i].weights; }
-    const std::vector<float>& layerBiases(int i)  const { return m_layers[i].biases;  }
+    const std::vector<float>& layerWeights(int i) const {
+        static const std::vector<float> empty;
+        return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].weights : empty;
+    }
+    const std::vector<float>& layerBiases(int i) const {
+        static const std::vector<float> empty;
+        return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].biases : empty;
+    }
 
 private:
     // each layer: weights (outSize x inSize), biases (outSize)

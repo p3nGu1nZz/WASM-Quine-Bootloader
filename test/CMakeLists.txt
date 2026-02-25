@@ -165,3 +165,14 @@ target_link_libraries(test_train PRIVATE
     Catch2::Catch2WithMain
 )
 add_test(NAME train_test COMMAND test_train)
+
+# Training-phase / GUI scene logic tests
+add_executable(test_training_phase test_training_phase.cpp)
+target_include_directories(test_training_phase PRIVATE
+    ${CMAKE_SOURCE_DIR}/src
+)
+target_link_libraries(test_training_phase PRIVATE
+    core
+    Catch2::Catch2WithMain
+)
+add_test(NAME training_phase_test COMMAND test_training_phase)
