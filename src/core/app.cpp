@@ -560,6 +560,13 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
                 te.trapCode = m_lastTrapReason;
                 trainAndMaybeSave(te);
             }
+        } catch (const EvolutionException& ee) {
+            std::string msg = std::string("EVOLUTION REJECTED: ") + ee.what();
+            if (!ee.binary.empty())
+                msg += " candidate=" + ee.binary;
+            m_logger.log(msg, "warning");
+            m_nextKernel.clear();
+            m_pendingMutation.clear();
         } catch (const std::exception& e) {
             m_logger.log(std::string("EVOLUTION REJECTED: ") + e.what(), "warning");
             m_nextKernel.clear();

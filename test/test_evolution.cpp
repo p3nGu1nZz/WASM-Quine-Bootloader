@@ -41,9 +41,15 @@ TEST_CASE("evolveBinary produces valid magic header", "[evolution]") {
         REQUIRE(decoded[1] == 0x61);
         REQUIRE(decoded[2] == 0x73);
         REQUIRE(decoded[3] == 0x6D);
+    } catch (const EvolutionException& ee) {
+        // mutation was rejected; ensure the exception carries the candidate
+        REQUIRE(!ee.binary.empty());
+        std::string msg = ee.what();
+        bool ok = (msg.find("Evolution generated unreachable opcode") != std::string::npos) ||
+                  (msg.find("Validation failed") != std::string::npos);
+        REQUIRE(ok);
     } catch (const std::exception& e) {
-        // validation may reject the mutation; that's acceptable as long as it
-        // reports a sensible error
+        // other failures treated as before
         std::string msg = e.what();
         bool ok = (msg.find("Evolution generated unreachable opcode") != std::string::npos) ||
                   (msg.find("Validation failed") != std::string::npos);
@@ -52,6 +58,7 @@ TEST_CASE("evolveBinary produces valid magic header", "[evolution]") {
 }
 
 TEST_CASE("evolveBinary outputs are loadable and runnable", "[evolution][validation]") {
+    bool sawStackError = false;
     for (int seed = 0; seed < 100; ++seed) {
         try {
             auto res = evolveBinary(KERNEL_GLOB, {}, seed, MutationStrategy::RANDOM);
@@ -59,6 +66,14 @@ TEST_CASE("evolveBinary outputs are loadable and runnable", "[evolution][validat
             REQUIRE_NOTHROW(wk.bootDynamic(res.binary, {}, {}, {}, {}, {}));
             REQUIRE_NOTHROW(wk.runDynamic(""));
             wk.terminate();
+        } catch (const EvolutionException& ee) {
+            // if we get an exception e.g. due to stack mismatch, remember it
+            std::string msg = ee.what();
+            if (msg.find("incorrect value count on stack") != std::string::npos) {
+                sawStackError = true;
+            }
+            // failure is acceptable; we just want to know if the previous bug
+            // (stack imbalance from call stripping) ever occurs again.
         } catch (const std::exception& e) {
             // mutation was rejected during validation; that's also good
             std::string msg = e.what();
@@ -67,15 +82,16 @@ TEST_CASE("evolveBinary outputs are loadable and runnable", "[evolution][validat
             REQUIRE(ok);
         }
     }
+    REQUIRE(!sawStackError); // ensure we no longer hit the old call-removal bug
 }
 
-TEST_CASE("evolveBinary never emits CALL opcodes", "[evolution][safety]") {
+TEST_CASE("mutationSequence does not contain CALL instructions", "[evolution][safety]") {
     for (int seed = 0; seed < 500; ++seed) {
         try {
             auto res = evolveBinary(KERNEL_GLOB, {}, seed, MutationStrategy::RANDOM);
-            auto bytes = base64_decode(res.binary);
-            auto instrs = parseInstructions(bytes.data(), bytes.size());
-            for (const auto& inst : instrs) {
+            auto instrs = parseInstructions(res.mutationSequence.data(),
+                                            res.mutationSequence.size());
+            for (auto& inst : instrs) {
                 REQUIRE(inst.opcode != 0x10);
             }
         } catch (...) {

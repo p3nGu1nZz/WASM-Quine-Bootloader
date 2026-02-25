@@ -85,10 +85,12 @@ After mutation the binary is base-64 encoded and validated by checking:
   no-op `runDynamic("")` to ensure the module loads and its
   `run` export is callable without trapping.
 
-Any mutation that fails these sanity checks throws an exception.  The
-calling code catches the exception and treats the candidate as rejected,
-falling back to the previously stable kernel (or rolling another mutation
-if inside a repair cycle).
+Any mutation that fails these sanity checks throws an exception
+(implemented as `EvolutionException`).  The exception object includes the
+base64-encoded candidate so callers or telemetry can examine what was
+rejected.  The calling code catches the exception and treats the candidate
+as rejected, falling back to the previously stable kernel (or rolling
+another mutation if inside a repair cycle).
 
 ---
 
@@ -115,7 +117,12 @@ are still ignored so wrapper scripts can forward extra arguments.
 wrapper that forwards to its `AppLogger`, making it easy for UI
 handlers or shortcuts (see `main.cpp`) to append entries without
 reaching into the logger object.
-* **CALL sanitisation:** The evolution engine now strips all `call`
+* **CALL handling:** The evolution engine no longer strips every
+  `call` from the kernel; only instructions introduced by mutation are
+  filtered.  Keeping the original calls preserves stack balance (previously
+  we saw repeated validation failures when log invocations were replaced by
+  NOPs).  New genomes are still sanitized to avoid references to nonexistent
+  functions.
   opcodes from mutated kernels and the host ignores CALL instructions when
   executing; this prevents crashes caused by calls pointing at nonexistent
   functions and decouples the quine trigger from instruction semantics.

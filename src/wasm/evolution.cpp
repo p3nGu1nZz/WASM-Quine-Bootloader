@@ -205,17 +205,14 @@ EvolutionResult evolveBinary(
                                      bytes.begin() + endOpIndex);
     auto parsedInstructions = parseInstructions(instrBytes.data(), instrBytes.size());
 
-    // tighten up parsed instruction list: any CALL opcode is potentially
-    // dangerous (may refer to a nonexistent function index after mutation)
-    // and we no longer rely on CALL as a host-side trigger.  Convert them to
-    // NOP so they disappear from subsequent evolution steps.
-    for (auto &inst : parsedInstructions) {
-        if (inst.opcode == 0x10) {          // CALL
-            inst.opcode = 0x01;              // nop
-            inst.args.clear();
-            inst.length = 1;
-        }
-    }
+    // We deliberately *do not* strip existing CALL instructions from the
+    // current kernel.  The base module may import host functions (for
+    // example, `env.log`) whose arguments are pushed immediately before the
+    // call; replacing the call with a NOP would leave those values on the
+    // stack and result in validation failures.  We only need to worry about
+    // calls arising from *mutations* (which may point to nonexistent targets),
+    // so sanitisation is applied to the random genomes below when they are
+    // generated.
 
     // 4. Evolution logic
     int action = attemptSeed % 4;
@@ -227,6 +224,7 @@ EvolutionResult evolveBinary(
         case (int)EvolutionAction::MODIFY:
         case (int)EvolutionAction::INSERT: {
             auto seq = getGenome(knownInstructions, strategy == MutationStrategy::SMART);
+            stripCalls(seq); // ensure our mutation does not introduce new calls
             mutationSequence = seq;
             int  idx    = (int)(randF() * (float)(parsedInstructions.size() + 1));
             auto before = flatten(std::vector<Instruction>(
@@ -335,20 +333,6 @@ EvolutionResult evolveBinary(
     if (newInstructionsBytes.empty() && !parsedInstructions.empty())
         newInstructionsBytes = flatten(parsedInstructions);
 
-    // drop any remaining CALLs from the final byte stream as well; this
-    // also handles the case where parsedInstructions (sanitized earlier)
-    // contained calls that were copied verbatim.
-    {
-        auto tmp = parseInstructions(newInstructionsBytes.data(),
-                                      newInstructionsBytes.size());
-        std::vector<uint8_t> filtered;
-        for (const auto& inst : tmp) {
-            if (inst.opcode == 0x10) continue;
-            filtered.push_back(inst.opcode);
-            filtered.insert(filtered.end(), inst.args.begin(), inst.args.end());
-        }
-        newInstructionsBytes.swap(filtered);
-    }
     // quick sanity: the mutation sequence itself should not contain an
     // explicit `unreachable` opcode.  parseInstructions will treat any
     // 0x00 byte as such, so we can detect bad genomes early and abort.
@@ -421,7 +405,8 @@ EvolutionResult evolveBinary(
             wk.runDynamic("");
             wk.terminate();
         } catch (const std::exception& e) {
-            throw std::runtime_error(std::string("Validation failed: ") + e.what());
+            std::string b64 = base64_encode(newBytes);
+            throw EvolutionException(std::string("Validation failed: ") + e.what(), b64);
         }
     }
 

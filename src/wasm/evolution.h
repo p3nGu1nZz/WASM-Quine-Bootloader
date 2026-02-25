@@ -4,8 +4,18 @@
 #include "cli.h"  // for MutationStrategy (search path includes src/core)
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 enum class EvolutionAction { MODIFY = 0, INSERT = 1, ADD = 2, DELETE = 3 };
+
+// Exception type thrown when evolution fails.  The `binary` field holds the
+// base64-encoded candidate that provoked the error (if available) which makes
+// debugging invalid mutations much easier.
+struct EvolutionException : public std::runtime_error {
+    std::string binary;
+    EvolutionException(const std::string& msg, const std::string& bin = "")
+        : std::runtime_error(msg), binary(bin) {}
+};
 
 struct EvolutionResult {
     std::string     binary;           // base64-encoded evolved binary
