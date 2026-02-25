@@ -6,8 +6,8 @@
 #include "wasm/kernel.h"
 #include "wasm/parser.h"
 #include "cli.h"
-#include "advisor.h"
-#include "train.h"
+#include "nn/advisor.h"
+#include "nn/train.h"
 #include <climits>
 #include <functional>
 #include <map>

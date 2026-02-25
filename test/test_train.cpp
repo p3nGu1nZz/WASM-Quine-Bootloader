@@ -1,8 +1,8 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
-#include "train.h"
-#include "advisor.h"
+#include "nn/train.h"
+#include "nn/advisor.h"
 #include "constants.h"  // KERNEL_GLOB
 
 #include <catch2/catch_test_macros.hpp>
