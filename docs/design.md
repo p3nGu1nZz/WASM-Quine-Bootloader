@@ -115,10 +115,10 @@ are still ignored so wrapper scripts can forward extra arguments.
 wrapper that forwards to its `AppLogger`, making it easy for UI
 handlers or shortcuts (see `main.cpp`) to append entries without
 reaching into the logger object.
-
-
-The desktop UI is built with Dear ImGui running on top of an SDL3 window.
-To ensure text and widgets remain legible on high‑resolution displays, the
+* **CALL sanitisation:** The evolution engine now strips all `call`
+  opcodes from mutated kernels and the host ignores CALL instructions when
+  executing; this prevents crashes caused by calls pointing at nonexistent
+  functions and decouples the quine trigger from instruction semantics.
 code computes a simple scale factor at startup that is proportional to the
 window's pixel area (larger windows → bigger DPI).  The helper
 `computeDpiScale(SDL_Window*)` lives in `src/util.cpp` and defaults to 1.0
