@@ -110,3 +110,12 @@ Future host imports (currently unimplemented):
 - **Experience inheritance** – propagate a compressed weight snapshot
   from parent to child kernel via `env.spawn`.
 - **Compression** – spatial hashing / delta encoding for large graphs.
+
+## Automatic Training Trigger
+
+The host application now includes a simple scheduling mechanism: once the
+system has successfully executed **50 generations** during an evolution run,
+execution is halted, the accumulated telemetry is reloaded, and a training
+phase begins automatically using the newest data.  This removes the need
+for manual mode-switching and keeps the training dataset narrowly focused
+on the most recent evolutionary events.

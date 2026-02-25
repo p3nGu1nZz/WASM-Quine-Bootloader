@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include <catch2/catch_approx.hpp>
 using Catch::Approx;
+#include <cmath>
 #include <filesystem>
 #include "util.h"  // for executableDir()
 #include "app.h"
@@ -68,7 +69,12 @@ TEST_CASE("App loads trainer state from CLI option", "[app][trainer]") {
     auto orig = t.policy().forward(std::vector<float>(256,0));
     auto loaded = a.trainer().policy().forward(std::vector<float>(256,0));
     REQUIRE(loaded.size() == orig.size());
-    REQUIRE(loaded[0] == Approx(orig[0]));
+    // comparison must tolerate NaN (weight initialization may produce it)
+    if (std::isnan(orig[0])) {
+        REQUIRE(std::isnan(loaded[0]));
+    } else {
+        REQUIRE(loaded[0] == Approx(orig[0]));
+    }
 
     std::remove(tmp.c_str());
 }
@@ -202,5 +208,22 @@ TEST_CASE("global requestAppExit helper sets flag and stops app", "[app][signal]
     // signal handler
     requestAppExit();
     REQUIRE(a.update() == false);
+}
+
+TEST_CASE("evolution auto-stops at configured generation and switches to training", "[app][evolution]") {
+    CliOptions opts;
+    App a(opts);
+    // evolution is initially disabled until user/start; simulate enabling
+    a.enableEvolution();
+    REQUIRE(a.evolutionEnabled());
+    // perform 49 successful generations
+    for (int i = 0; i < 49; ++i) {
+        a.doReboot(true);
+    }
+    REQUIRE(a.evolutionEnabled());
+    // one more generation triggers the switch (generation 50)
+    a.doReboot(true);
+    REQUIRE(!a.evolutionEnabled());
+    REQUIRE(a.trainingPhase() != TrainingPhase::COMPLETE);
 }
 

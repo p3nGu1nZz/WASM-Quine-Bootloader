@@ -81,4 +81,8 @@ private:
     void renderAdvisorPanel(const App& app, float w, float h);
     void renderInstancesPanel(App& app, float w, float h);
     void renderStatusBar(const App& app);
+
+    // draw heatmaps of each policy layer's weight matrix (used in evolution
+    // scene).  Panels are stacked vertically and sized to fit the window width.
+    void renderWeightHeatmaps(const App& app, int winW);
 };

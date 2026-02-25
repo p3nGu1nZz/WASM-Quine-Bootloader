@@ -125,6 +125,9 @@ public:
     // call from GUI when the user clicks "Start Evolution"
     void          enableEvolution();
 
+    // query whether the evolution FSM is currently enabled (used by GUI)
+    bool          evolutionEnabled() const { return m_evolutionEnabled; }
+
     // test helpers
     // simulate a boot failure triggered by the given mutation sequence
     // (calls private handleBootFailure internally)
@@ -158,6 +161,10 @@ public:
     void saveBlacklist() const;
 
     // helpers used by tests to validate constructor path decisions
+
+    // recompute training step counts from the current advisor entries
+    // and reset the phase to LOADING; used when telemetry is reloaded.
+    void          prepareTrainingSteps();
     std::filesystem::path logsDir() const { return m_logsDir; }
     std::filesystem::path seqBaseDir() const { return m_seqBase; }
 

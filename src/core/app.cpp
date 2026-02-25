@@ -18,6 +18,9 @@
 // Shared by both the constructor (to compute m_trainingTotal) and tickTraining.
 static constexpr int kTrainMinAnimSteps = 30;
 static constexpr int kTrainEpochs       = 5;
+// generation count at which we automatically pause evolution and begin
+// a fresh training cycle using the telemetry we just collected.
+static constexpr int kAutoTrainGen      = 50;
 #include <atomic>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -131,13 +134,9 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
         }
     }
 
-    // Determine training steps: LOADING phase (1 step per advisor entry, min 30)
-    // then TRAINING phase (N_EPOCHS passes over advisor data, min 30 steps).
-    int nEntries = (int)m_advisor.size();
-    int loadSteps  = std::max(kTrainMinAnimSteps, nEntries);
-    int trainSteps = std::max(kTrainMinAnimSteps, nEntries * kTrainEpochs);
-    m_trainingLoadEnd = loadSteps;
-    m_trainingTotal   = loadSteps + trainSteps;
+    // Determine training steps based on advisor entries.  This logic is
+    // used at startup and when we reload telemetry after an evolution run.
+    prepareTrainingSteps();
 
     // In headless mode (no GUI) there is no training dashboard: complete
     // training synchronously and allow evolution to begin immediately.
@@ -188,6 +187,19 @@ uint64_t App::now() const {
 void App::updateKernelData() {
     m_currentKernelBytes = base64_decode(m_currentKernel);
     m_instructions = extractCodeSection(m_currentKernelBytes);
+}
+
+// Recalculate the training/animation step counts from current advisor
+// entries and reset the training phase to LOADING.  This is invoked at
+// startup and also whenever we reload telemetry midway through a run.
+void App::prepareTrainingSteps() {
+    int nEntries = (int)m_advisor.size();
+    int loadSteps  = std::max(kTrainMinAnimSteps, nEntries);
+    int trainSteps = std::max(kTrainMinAnimSteps, nEntries * kTrainEpochs);
+    m_trainingLoadEnd = loadSteps;
+    m_trainingTotal   = loadSteps + trainSteps;
+    m_trainingStep    = 0;
+    m_trainingPhase   = TrainingPhase::LOADING;
 }
 
 size_t App::kernelBytes() const {
@@ -699,13 +711,26 @@ void App::doReboot(bool success) {
         m_generation++;
         // record generation start time
         m_genStartTime = now();
+
+        // if we have reached the automatic training generation threshold,
+        // disable evolution and prepare to load the new telemetry data.
+        if (m_generation == kAutoTrainGen) {
+            m_logger.log("AUTO: reached generation " + std::to_string(kAutoTrainGen) +
+                          ", switching to training", "info");
+            m_evolutionEnabled = false;
+            // re-scan telemetry so the advisor sees the latest entries
+            namespace fs = std::filesystem;
+            fs::path seqBase = telemetryRoot();
+            m_advisor = Advisor(seqBase.string());
+            prepareTrainingSteps();
+        }
+
+        // check against user-specified generation limit as well
         if (m_opts.maxGen > 0 && m_generation >= m_opts.maxGen) {
             m_shouldExit = true;
         }
-        // also honour the wall‑clock limit if it was reached during a long
-        // generation; this duplicates the check in update(), but ensures the
-        // flag is set even if `update()` isn't called again (e.g. GUI loop
-        // ignoring return value).
+
+        // wall-clock limit duplicate check; see comment above
         if (m_opts.maxRunMs > 0 && m_uptimeMs >= m_opts.maxRunMs) {
             m_shouldExit = true;
         }

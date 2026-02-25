@@ -104,6 +104,10 @@ void Gui::renderFrame(App& app) {
     if (m_scene == GuiScene::TRAINING) {
         renderTrainingScene(app, winW, winH);
     } else {
+        // automatically switch to training if evolution has been disabled
+        if (!app.evolutionEnabled() && app.trainingPhase() != TrainingPhase::COMPLETE) {
+            m_scene = GuiScene::TRAINING;
+        }
         ImGui::SetNextWindowPos({ 0, 0 });
         ImGui::SetNextWindowSize({ (float)winW, (float)winH });
         ImGui::SetNextWindowBgAlpha(0.0f);
@@ -138,6 +142,9 @@ void Gui::renderFrame(App& app) {
             ImGui::SameLine();
             renderInstancesPanel(app, 260.0f * m_uiScale, panelH);
         }
+
+        // weight heatmaps per layer appear just above the memory panel
+        renderWeightHeatmaps(app, winW);
 
         m_heatmap.renderPanel(app, winW);
         renderStatusBar(app);
@@ -295,30 +302,11 @@ void Gui::renderTrainingScene(App& app, int winW, int winH) {
     ImGui::Separator();
     ImGui::Spacing();
 
-    // ── Start Evolution button ────────────────────────────────────────────────
-    bool done = app.trainingDone();
-    float btnW = 220.0f * m_uiScale;
-    float btnH =  40.0f * m_uiScale;
-    ImGui::SetCursorPosX((panelW - btnW) * 0.5f);
-
-    if (!done) {
-        // Greyed out while training
-        ImGui::BeginDisabled(true);
-    } else {
-        ImGui::PushStyleColor(ImGuiCol_Button,        { 0.00f, 0.50f, 0.20f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.00f, 0.70f, 0.30f, 1.0f });
-        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  { 0.10f, 0.90f, 0.40f, 1.0f });
-    }
-
-    if (ImGui::Button("START EVOLUTION", { btnW, btnH })) {
+    // if training completes, immediately transition back to evolution
+    if (app.trainingDone()) {
         app.enableEvolution();
         m_scene = GuiScene::EVOLUTION;
-    }
-
-    if (!done) {
-        ImGui::EndDisabled();
-    } else {
-        ImGui::PopStyleColor(3);
+        // fall through; we still want to draw status bar below
     }
 
     ImGui::EndChild();
@@ -557,6 +545,50 @@ void Gui::renderInstancesPanel(App& app, float w, float h) {
         }
     }
     ImGui::EndChild();
+}
+
+// Render heatmaps of each policy layer's weight matrix.  Each layer is shown
+// as a small grid of colored cells (red for positive weights, blue for
+// negative) stacked vertically.  This panel is drawn in the evolution scene
+// above the heap memory heatmap.
+void Gui::renderWeightHeatmaps(const App& app, int winW) {
+    const Policy& pol = app.trainer().policy();
+    int layers = pol.layerCount();
+    if (layers == 0) return;
+
+    ImGui::Separator();
+    ImGui::TextDisabled("NN WEIGHT HEATMAPS");
+    float visW = (float)winW - 20.0f;
+    ImDrawList* dl = ImGui::GetWindowDrawList();
+
+    for (int l = 0; l < layers; ++l) {
+        int in = pol.layerInSize(l);
+        int out = pol.layerOutSize(l);
+        const auto& w = pol.layerWeights(l);
+        if (in <= 0 || out <= 0) continue;
+
+        float cell = std::min(4.0f, visW / (float)in);
+        float layerH = cell * out;
+        ImGui::Text("Layer %d (%dx%d)", l, out, in);
+        ImGui::Dummy({cell * in, layerH});
+        ImVec2 p = ImGui::GetCursorScreenPos();
+        for (int i = 0; i < out; ++i) {
+            for (int j = 0; j < in; ++j) {
+                float val = w[i * in + j];
+                float tn = std::tanh(val);
+                ImU32 col;
+                if (tn >= 0) {
+                    col = IM_COL32((int)(tn * 255), 0, 0, 255);
+                } else {
+                    col = IM_COL32(0, 0, (int)(-tn * 255), 255);
+                }
+                dl->AddRectFilled({p.x + j * cell, p.y + i * cell},
+                                  {p.x + (j + 1) * cell, p.y + (i + 1) * cell},
+                                  col);
+            }
+        }
+        ImGui::SetCursorScreenPos({p.x, p.y + layerH + 5.0f});
+    }
 }
 
 void Gui::renderStatusBar(const App& app) {
