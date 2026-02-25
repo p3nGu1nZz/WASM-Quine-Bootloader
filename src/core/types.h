@@ -13,6 +13,13 @@ enum class SystemState {
     REPAIRING,
 };
 
+// Phases of the startup training sequence shown in the GUI.
+enum class TrainingPhase {
+    LOADING,   // animating through telemetry entries
+    TRAINING,  // running gradient updates on advisor data
+    COMPLETE,  // done; evolution may start
+};
+
 
 
 struct LogEntry {

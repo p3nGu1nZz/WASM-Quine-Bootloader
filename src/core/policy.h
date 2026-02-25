@@ -24,6 +24,13 @@ public:
     void setLayerWeights(int idx, const std::vector<float>& w);
     void setLayerBiases(int idx, const std::vector<float>& b);
 
+    // read-only accessors for architecture inspection / training
+    int layerCount()             const { return (int)m_layers.size(); }
+    int layerInSize(int i)       const { return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].in  : 0; }
+    int layerOutSize(int i)      const { return (i >= 0 && i < (int)m_layers.size()) ? m_layers[i].out : 0; }
+    const std::vector<float>& layerWeights(int i) const { return m_layers[i].weights; }
+    const std::vector<float>& layerBiases(int i)  const { return m_layers[i].biases;  }
+
 private:
     // each layer: weights (outSize x inSize), biases (outSize)
     struct Layer { std::vector<float> weights; std::vector<float> biases; int in, out; };

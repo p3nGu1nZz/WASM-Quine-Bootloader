@@ -113,6 +113,14 @@ public:
     // expose reboot helper for tests
     void doReboot(bool success);
 
+    // ── Training phase (shown in GUI before evolution begins) ─────────────────
+    TrainingPhase trainingPhase()    const { return m_trainingPhase; }
+    bool          trainingDone()     const { return m_trainingPhase == TrainingPhase::COMPLETE; }
+    // 0.0 = not started, 1.0 = fully complete
+    float         trainingProgress() const;
+    // call from GUI when the user clicks "Start Evolution"
+    void          enableEvolution();
+
     // test helpers
     // simulate a boot failure triggered by the given mutation sequence
     // (calls private handleBootFailure internally)
@@ -156,6 +164,10 @@ private:
 private:
     // FSM helpers
     void transitionTo(SystemState s);
+
+    // Training tick: advance the startup RL training phase by one step.
+    // Called every frame from update() until training is complete.
+    void tickTraining();
 
     // Boot sequence steps (called from update())
     void startBoot();
@@ -257,6 +269,14 @@ private:
 
     // internal flag used by requestExit() and signal handlers
     bool m_shouldExit = false;
+
+    // ── Startup training phase ────────────────────────────────────────────────
+    // In GUI mode the FSM is held in IDLE until the user clicks "Start
+    // Evolution".  Training advances one step per update() call.
+    TrainingPhase m_trainingPhase    = TrainingPhase::LOADING;
+    bool          m_evolutionEnabled = false; // set by enableEvolution()
+    int           m_trainingIdx      = 0;     // cursor into advisor entries / epochs
+    int           m_trainingTotal    = 0;     // total steps (set in constructor)
 
     // optional time source (default uses SDL_GetTicks).  tests inject a fake
     // clock so that run-time limits can be verified deterministically.

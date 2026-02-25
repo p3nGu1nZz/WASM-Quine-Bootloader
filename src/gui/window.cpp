@@ -7,6 +7,7 @@
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlrenderer3.h>
 
+#include <algorithm>
 #include <fstream>
 #include <iomanip>
 #include <sstream>
@@ -83,7 +84,12 @@ void Gui::shutdown() {
 // ─── Frame ───────────────────────────────────────────────────────────────────
 
 void Gui::renderFrame(App& app) {
-    // Sync auto-scroll flags
+    // Switch scene once the user has clicked "Start Evolution"
+    if (m_scene == GuiScene::TRAINING && app.trainingDone() && !app.isPaused()) {
+        // Stay in TRAINING until enableEvolution() is called by button click
+    }
+
+    // Sync auto-scroll flags (only relevant for EVOLUTION scene)
     if (app.programCounter() != m_lastIP) {
         m_scrollInstrs = true;
         m_lastIP       = app.programCounter();
@@ -100,56 +106,224 @@ void Gui::renderFrame(App& app) {
     int winW, winH;
     SDL_GetWindowSize(SDL_GetRenderWindow(m_renderer), &winW, &winH);
 
-    ImGui::SetNextWindowPos({ 0, 0 });
-    ImGui::SetNextWindowSize({ (float)winW, (float)winH });
-    ImGui::SetNextWindowBgAlpha(0.0f);
-    ImGui::Begin("##Root", nullptr,
-        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
-        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove);
+    if (m_scene == GuiScene::TRAINING) {
+        renderTrainingScene(app, winW, winH);
+    } else {
+        ImGui::SetNextWindowPos({ 0, 0 });
+        ImGui::SetNextWindowSize({ (float)winW, (float)winH });
+        ImGui::SetNextWindowBgAlpha(0.0f);
+        ImGui::Begin("##Root", nullptr,
+            ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove);
 
-    if (m_monoFont) ImGui::PushFont(m_monoFont);
+        if (m_monoFont) ImGui::PushFont(m_monoFont);
 
-    renderTopBar(app, winW);
+        renderTopBar(app, winW);
 
-    float headerH = ImGui::GetCursorPosY();
-    float footerH = 130.0f * m_uiScale;
-    float panelH  = (float)winH - headerH - footerH;
-    float logW    = (float)winW * 0.40f;
-    float instrW  = 240.0f * m_uiScale;
-    float kernelW = (float)winW - logW - instrW;
+        float headerH = ImGui::GetCursorPosY();
+        float footerH = 130.0f * m_uiScale;
+        float panelH  = (float)winH - headerH - footerH;
+        float logW    = (float)winW * 0.40f;
+        float instrW  = 240.0f * m_uiScale;
+        float kernelW = (float)winW - logW - instrW;
 
-    renderLogPanel(app, logW, panelH);
-    ImGui::SameLine();
-    renderInstrPanel(app, instrW, panelH);
-    ImGui::SameLine();
-    renderKernelPanel(app, kernelW, panelH);
-
-    if (m_showAdvisor) {
-        // show small advisor panel on right side
+        renderLogPanel(app, logW, panelH);
         ImGui::SameLine();
-        renderAdvisorPanel(app, 300.0f * m_uiScale, panelH);
+        renderInstrPanel(app, instrW, panelH);
+        ImGui::SameLine();
+        renderKernelPanel(app, kernelW, panelH);
+
+        if (m_showAdvisor) {
+            ImGui::SameLine();
+            renderAdvisorPanel(app, 300.0f * m_uiScale, panelH);
+        }
+
+        if (app.instanceCount() > 0) {
+            ImGui::SameLine();
+            renderInstancesPanel(app, 260.0f * m_uiScale, panelH);
+        }
+
+        m_heatmap.renderPanel(app, winW);
+        renderStatusBar(app);
+
+        if (m_monoFont) ImGui::PopFont();
+        ImGui::End();
     }
 
-    if (app.instanceCount() > 0) {
-        ImGui::SameLine();
-        // allocate a modest width for the instances overview
-        renderInstancesPanel(app, 260.0f * m_uiScale, panelH);
-    }
-
-    m_heatmap.renderPanel(app, winW);
-    renderStatusBar(app);
-
-    if (m_monoFont) ImGui::PopFont();
-    ImGui::End();
-
-    // Use a neutral background color (era theming removed)
+    // Use a neutral background color
     ImVec4 bg = { 0.01f, 0.03f, 0.10f, 1.0f };
     SDL_SetRenderDrawColorFloat(m_renderer, bg.x, bg.y, bg.z, 1.0f);
     SDL_RenderClear(m_renderer);
     ImGui::Render();
     ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), m_renderer);
     SDL_RenderPresent(m_renderer);
+}
+
+// ─── Training scene ──────────────────────────────────────────────────────────
+
+void Gui::renderTrainingScene(App& app, int winW, int winH) {
+    ImGui::SetNextWindowPos({ 0, 0 });
+    ImGui::SetNextWindowSize({ (float)winW, (float)winH });
+    ImGui::SetNextWindowBgAlpha(0.0f);
+    ImGui::Begin("##TrainRoot", nullptr,
+        ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
+        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoCollapse |
+        ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoMove);
+
+    if (m_monoFont) ImGui::PushFont(m_monoFont);
+
+    // ── Header ───────────────────────────────────────────────────────────────
+    ImGui::Separator();
+    ImGui::TextColored({ 0.11f, 0.83f, 0.93f, 1.0f }, "QUINEOS v2.0.4");
+    ImGui::SameLine(0, 30);
+    ImGui::TextColored({ 0.78f, 0.50f, 0.98f, 1.0f }, "NEURAL NETWORK RL TRAINING DASHBOARD");
+    ImGui::Separator();
+
+    // ── Central panel ────────────────────────────────────────────────────────
+    float panelW = std::min((float)winW - 40.0f, 900.0f * m_uiScale);
+    float panelX = ((float)winW - panelW) * 0.5f;
+    ImGui::SetCursorPosX(panelX);
+
+    ImGui::BeginChild("##TrainPanel", { panelW, (float)winH - 100.0f * m_uiScale }, true);
+
+    // Phase indicator
+    const char* phaseStr = "LOADING TELEMETRY";
+    ImVec4      phaseCol = { 0.39f, 0.66f, 0.97f, 1.0f };
+    if (app.trainingPhase() == TrainingPhase::TRAINING) {
+        phaseStr = "TRAINING POLICY";
+        phaseCol = { 0.98f, 0.82f, 0.10f, 1.0f };
+    } else if (app.trainingPhase() == TrainingPhase::COMPLETE) {
+        phaseStr = "TRAINING COMPLETE";
+        phaseCol = { 0.29f, 0.87f, 0.38f, 1.0f };
+    }
+    ImGui::TextColored(phaseCol, "PHASE: %s", phaseStr);
+    ImGui::Spacing();
+
+    // ── Side-by-side: telemetry stats | policy architecture ──────────────────
+    float halfW = (panelW - 30.0f) * 0.5f;
+
+    ImGui::BeginChild("##TelStats", { halfW, 130.0f * m_uiScale }, true);
+    ImGui::TextDisabled("TELEMETRY DATA");
+    ImGui::Separator();
+    ImGui::Text("Entries loaded : %d", (int)app.advisor().entryCount());
+    ImGui::Text("Observations   : %d", app.trainer().observations());
+    if (app.advisor().entryCount() > 0) {
+        float avgGen = 0.0f;
+        for (const auto& e : app.advisor().entries())
+            avgGen += static_cast<float>(e.generation);
+        avgGen /= static_cast<float>(app.advisor().entryCount());
+        ImGui::Text("Avg generation : %.1f", avgGen);
+        float score = app.advisor().score({});
+        ImGui::Text("Advisor score  : %.3f", score);
+    }
+    ImGui::EndChild();
+
+    ImGui::SameLine();
+
+    ImGui::BeginChild("##PolicyArch", { halfW, 130.0f * m_uiScale }, true);
+    ImGui::TextDisabled("POLICY NETWORK");
+    ImGui::Separator();
+    const Policy& pol = app.trainer().policy();
+    int totalParams = 0;
+    for (int l = 0; l < pol.layerCount(); ++l) {
+        int w = pol.layerInSize(l) * pol.layerOutSize(l);
+        int b = pol.layerOutSize(l);
+        totalParams += w + b;
+        ImGui::Text("Layer %d: %4d -> %-4d  (Dense)", l, pol.layerInSize(l), pol.layerOutSize(l));
+    }
+    ImGui::Separator();
+    ImGui::Text("Total params   : %d", totalParams);
+    if (app.trainer().observations() > 0)
+        ImGui::Text("Avg loss (EMA) : %.6f", app.trainer().avgLoss());
+    ImGui::EndChild();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+
+    // ── Overall progress bar ──────────────────────────────────────────────────
+    float prog = app.trainingProgress();
+    char overlay[64];
+    std::snprintf(overlay, sizeof(overlay), "%.0f%%  (%d obs)",
+                  prog * 100.0f, app.trainer().observations());
+    ImGui::PushStyleColor(ImGuiCol_PlotHistogram, { 0.11f, 0.83f, 0.93f, 0.85f });
+    ImGui::ProgressBar(prog, { -1.0f, 22.0f * m_uiScale }, overlay);
+    ImGui::PopStyleColor();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Advisor entry table ───────────────────────────────────────────────────
+    ImGui::TextDisabled("RECENT TELEMETRY ENTRIES");
+    ImGui::Spacing();
+
+    if (app.advisor().entryCount() == 0) {
+        ImGui::TextDisabled("No prior run sequences found in bin/seq/");
+        ImGui::TextDisabled("Training will begin fresh once evolution starts.");
+    } else {
+        // Table header
+        ImGui::TextDisabled("%-6s  %-20s  %s", "GEN", "TRAP", "KERNEL (first 40 chars)");
+        ImGui::Separator();
+        ImGui::BeginChild("##EntryScroll", { 0, 160.0f * m_uiScale }, false,
+                          ImGuiWindowFlags_HorizontalScrollbar);
+        const auto& entries = app.advisor().entries();
+        // show at most 50 most-recent entries
+        int startIdx = (int)entries.size() > 50 ? (int)entries.size() - 50 : 0;
+        for (int i = startIdx; i < (int)entries.size(); ++i) {
+            const auto& e = entries[i];
+            std::string ker = e.kernelBase64.size() > 40
+                              ? e.kernelBase64.substr(0, 40) + "..."
+                              : e.kernelBase64;
+            std::string trap = e.trapCode.empty() ? "none" : e.trapCode;
+            ImVec4 col = e.trapCode.empty()
+                         ? ImVec4{ 0.29f, 0.87f, 0.38f, 1.0f }
+                         : ImVec4{ 0.96f, 0.26f, 0.21f, 1.0f };
+            ImGui::TextColored(col, "%-6d  %-20s  %s",
+                               e.generation, trap.c_str(), ker.c_str());
+        }
+        ImGui::EndChild();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    // ── Start Evolution button ────────────────────────────────────────────────
+    bool done = app.trainingDone();
+    float btnW = 220.0f * m_uiScale;
+    float btnH =  40.0f * m_uiScale;
+    ImGui::SetCursorPosX((panelW - btnW) * 0.5f);
+
+    if (!done) {
+        // Greyed out while training
+        ImGui::BeginDisabled(true);
+    } else {
+        ImGui::PushStyleColor(ImGuiCol_Button,        { 0.00f, 0.50f, 0.20f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, { 0.00f, 0.70f, 0.30f, 1.0f });
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive,  { 0.10f, 0.90f, 0.40f, 1.0f });
+    }
+
+    if (ImGui::Button("START EVOLUTION", { btnW, btnH })) {
+        app.enableEvolution();
+        m_scene = GuiScene::EVOLUTION;
+    }
+
+    if (!done) {
+        ImGui::EndDisabled();
+    } else {
+        ImGui::PopStyleColor(3);
+    }
+
+    ImGui::EndChild();
+
+    // ── Status bar ────────────────────────────────────────────────────────────
+    ImGui::SetCursorPosY((float)winH - 30.0f * m_uiScale);
+    ImGui::Separator();
+    ImGui::TextDisabled("WASM-QUINE-BOOTLOADER_SYS v2.4 // STARTUP TRAINING");
+
+    if (m_monoFont) ImGui::PopFont();
+    ImGui::End();
 }
 
 // ─── Panel implementations ───────────────────────────────────────────────────

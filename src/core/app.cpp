@@ -121,6 +121,24 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
         }
     }
 
+    // Determine training steps: LOADING phase (1 step per advisor entry, min 30)
+    // then TRAINING phase (N_EPOCHS passes over advisor data, min 30 steps).
+    static constexpr int N_EPOCHS       = 5;
+    static constexpr int MIN_ANIM_STEPS = 30;
+    int nEntries = (int)m_advisor.size();
+    int loadSteps  = std::max(MIN_ANIM_STEPS, nEntries);
+    int trainSteps = std::max(MIN_ANIM_STEPS, nEntries * N_EPOCHS);
+    m_trainingTotal = loadSteps + trainSteps;
+
+    // In headless mode (no GUI) there is no training dashboard: complete
+    // training synchronously and allow evolution to begin immediately.
+    if (!m_opts.useGui) {
+        for (const auto& e : m_advisor.entries())
+            m_trainer.observe(e);
+        m_trainingPhase    = TrainingPhase::COMPLETE;
+        m_evolutionEnabled = true;
+    }
+
     // remove any stray files left in the working directory by older versions
     // (bootloader_*.log, quine_telemetry_gen*.txt)
     {
@@ -201,6 +219,15 @@ bool App::update() {
 
     if (m_paused) return true;
 
+    // Advance the startup training phase before running the evolution FSM.
+    // In GUI mode the FSM is gated behind m_evolutionEnabled (set when the
+    // user clicks "Start Evolution").  In headless mode both flags are set
+    // in the constructor so this path is a no-op.
+    if (!m_evolutionEnabled) {
+        tickTraining();
+        return true;
+    }
+
     switch (m_fsm.current()) {
         case SystemState::IDLE:             startBoot();      break;
         case SystemState::BOOTING:          tickBooting();    break;
@@ -212,6 +239,49 @@ bool App::update() {
     }
 
     return true;
+}
+
+// ─── Training phase ──────────────────────────────────────────────────────────
+
+float App::trainingProgress() const {
+    if (m_trainingTotal <= 0) return 1.0f;
+    float p = static_cast<float>(m_trainingIdx) / static_cast<float>(m_trainingTotal);
+    return p > 1.0f ? 1.0f : p;
+}
+
+void App::enableEvolution() {
+    m_trainingPhase    = TrainingPhase::COMPLETE;
+    m_evolutionEnabled = true;
+}
+
+void App::tickTraining() {
+    if (m_trainingPhase == TrainingPhase::COMPLETE) return;
+
+    const auto& entries = m_advisor.entries();
+    // Number of steps that belong to the LOADING phase.
+    static constexpr int MIN_ANIM_STEPS = 30;
+    static constexpr int N_EPOCHS       = 5;
+    int nEntries   = (int)entries.size();
+    int loadSteps  = std::max(MIN_ANIM_STEPS, nEntries);
+    int trainSteps = std::max(MIN_ANIM_STEPS, nEntries * N_EPOCHS);
+
+    m_trainingIdx++;
+
+    if (m_trainingPhase == TrainingPhase::LOADING) {
+        if (m_trainingIdx >= loadSteps) {
+            m_trainingPhase = TrainingPhase::TRAINING;
+            m_trainingIdx   = 0;
+        }
+    } else if (m_trainingPhase == TrainingPhase::TRAINING) {
+        // Observe one entry per step (cycling through entries)
+        if (!entries.empty()) {
+            int idx = (m_trainingIdx - 1) % nEntries;
+            m_trainer.observe(entries[idx]);
+        }
+        if (m_trainingIdx >= trainSteps) {
+            m_trainingPhase = TrainingPhase::COMPLETE;
+        }
+    }
 }
 
 // ─── Boot sequence steps ─────────────────────────────────────────────────────
