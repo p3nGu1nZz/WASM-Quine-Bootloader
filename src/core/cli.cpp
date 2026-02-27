@@ -52,12 +52,13 @@ CliOptions parseCli(int argc, char** argv) {
         {"max-exec-ms",     required_argument, nullptr, 'X'},
         {"save-model",       required_argument, nullptr, 's'},
         {"load-model",       required_argument, nullptr, 'L'},
+        {"kernel",          required_argument, nullptr, 'k'},
         {nullptr, 0, nullptr, 0}
     };
 
     int opt;
     int longIndex = 0;
-    const char* optString = "ghfwpl:d:F:m:H:M:TX:s:L:";
+    const char* optString = "ghfwpl:d:F:m:H:M:TX:s:L:k:";
     while ((opt = getopt_long(argc, argv, optString, longOpts, &longIndex)) != -1) {
         switch (opt) {
             case 'g':
@@ -159,6 +160,18 @@ CliOptions parseCli(int argc, char** argv) {
                 break;
             case 'L':
                 if (optarg) opts.loadModelPath = optarg;
+                break;
+            case 'k':
+                if (optarg) {
+                    if (std::strcmp(optarg, "seq") == 0) {
+                        opts.kernelType = KernelType::SEQ;
+                    } else if (std::strcmp(optarg, "glob") == 0) {
+                        opts.kernelType = KernelType::GLOB;
+                    } else {
+                        std::cerr << "Warning: unknown kernel type '" << optarg << "'\n";
+                        opts.parseError = true;
+                    }
+                }
                 break;
             case '?':
             default:

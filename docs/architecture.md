@@ -54,6 +54,7 @@ main.cpp
 |---|---|
 | `KERNEL_GLOB` | Base64-encoded minimal WASM binary (the initial quine kernel) |
 | `KERNEL_SEQ`  | Base64-encoded tiny recurrent kernel used to prototype the in-kernel autoregressive model (updates hidden state and reports weights to host) |
+| `KERNEL_SEQ`  | Base64-encoded tiny recurrent kernel used to prototype the in-kernel autoregressive model (updates hidden state and reports weights to host) |
 | `DEFAULT_BOOT_CONFIG` | Default `BootConfig` values |
 
 **Dependencies:** `types.h`
@@ -200,7 +201,7 @@ deleted in `terminate()`.
 | Symbol | Description |
 |---|---|
 | `EvolutionResult` | `{ binary (base64), mutationSequence, description }` |
-| `evolveBinary(b64, knownInstructions, seed, strategy)` | Apply one mutation to the code section; return a new base64 binary. `strategy` may be RANDOM, BLACKLIST or SMART to bias selection. The result is validated (magic/header, code parsing, trial boot) before acceptance; invalid candidates cause an `EvolutionException` with the failing base64 attached. Existing `call` instructions are left intact while any calls introduced by the mutation are stripped. |
+| `evolveBinary(b64, knownInstructions, seed, strategy)` | Apply one mutation to the code section; return a new base64 binary. `strategy` may be RANDOM, BLACKLIST or SMART to bias selection. The result is validated (magic/header, code parsing, trial boot) before acceptance; invalid candidates cause an `EvolutionException` with the failing base64 attached. Existing `call` instructions are left intact while any calls introduced by the mutation are stripped.  If the kernel implements the `env.record_weight` import (e.g. the `seq` prototype), evolveBinary will execute the candidate once and store any returned floats in `EvolutionResult::weightFeedback`, allowing the host to experiment with on-the-fly evaluation. |
 
 Uses `std::mt19937` seeded from `std::random_device` for all random choices.
 

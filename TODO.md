@@ -24,15 +24,18 @@ marked with `[ ]`.
 
 ## Pending / future work
 
-- [ ] Implement in-kernel sequence predictor that runs inside WASM at
-      mutation time (seed with self-replicating quine variations).
-- [ ] Provide CLI flag/option to select between histogram network and
-      sequence-model kernel (e.g. `--kernel=seq`).
+- [x] Implement in-kernel sequence predictor that runs inside WASM at
+      mutation time (seed with self-replicating quine variations).  The
+      kernel is executed by `evolveBinary()` and any weights it reports are
+      exposed via `EvolutionResult::weightFeedback`.
+- [x] Provide CLI flag/option to select between histogram network and
+      sequence-model kernel (`--kernel=glob|seq`).
 - [ ] Allow evolution and training to proceed concurrently (producer-
       consumer telemetry queue).
 - [ ] Package a standalone ISO distribution of the bootloader.
-- [ ] Add CLI options for checkpoint paths, model hot-reload, and kernel
-      selection.
+- [x] Add CLI options for checkpoint paths, model hot-reload, and kernel
+      selection.  (`--save-model` / `--load-model` / `--kernel` already
+      exist.)
 - [ ] Extend auto-train logic to adaptively schedule based on loss plateau
       and buffer staleness.
 - [ ] Investigate exporting the trained model to the kernel and enabling

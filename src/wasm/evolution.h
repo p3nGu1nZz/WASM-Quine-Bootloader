@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+#include <cstring> // for memcpy
 
 enum class EvolutionAction { MODIFY = 0, INSERT = 1, ADD = 2, DELETE = 3 };
 
@@ -22,6 +23,12 @@ struct EvolutionResult {
     std::vector<uint8_t> mutationSequence; // empty = no mutation tracked
     EvolutionAction actionUsed;
     std::string     description;
+
+    // optional weights reported by kernels that implement the
+    // `env.record_weight` import.  Each callback invocation appends two
+    // floats (encoded as raw bits) to this vector; sequence-model kernels
+    // currently send exactly two values per `run`.
+    std::vector<float> weightFeedback;
 };
 
 // Produce an evolved WASM binary from the current base64-encoded kernel.

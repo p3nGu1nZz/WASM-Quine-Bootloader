@@ -98,6 +98,20 @@ TEST_CASE("CLI telemetry-format parsing") {
     REQUIRE(o3.parseError == true);
 }
 
+TEST_CASE("CLI --kernel selection", "[cli]") {
+    const char* argv[] = {"bootloader", "--kernel=seq"};
+    CliOptions opts = parseCli(2, const_cast<char**>(argv));
+    REQUIRE(opts.kernelType == KernelType::SEQ);
+
+    const char* argv2[] = {"bootloader", "--kernel=glob"};
+    CliOptions opts2 = parseCli(2, const_cast<char**>(argv2));
+    REQUIRE(opts2.kernelType == KernelType::GLOB);
+
+    const char* argv3[] = {"bootloader", "--kernel=unknown"};
+    CliOptions opts3 = parseCli(2, const_cast<char**>(argv3));
+    REQUIRE(opts3.parseError == true);
+}
+
 TEST_CASE("CLI --max-exec-ms parsing") {
     const char* argv[] = {"bootloader", "--max-exec-ms", "500"};
     CliOptions opts = parseCli(3, const_cast<char**>(argv));

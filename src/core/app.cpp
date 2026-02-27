@@ -68,8 +68,13 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
     } else {
         m_nowFn = [](){ return static_cast<uint64_t>(SDL_GetTicks()); };
     }
-    m_stableKernel   = KERNEL_GLOB;
-    m_currentKernel  = KERNEL_GLOB;
+    if (m_opts.kernelType == KernelType::SEQ) {
+        m_stableKernel   = KERNEL_SEQ;
+        m_currentKernel  = KERNEL_SEQ;
+    } else {
+        m_stableKernel   = KERNEL_GLOB;
+        m_currentKernel  = KERNEL_GLOB;
+    }
     m_lastFrameTicks = now();
 
     // initialise telemetry bounds

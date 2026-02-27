@@ -12,6 +12,11 @@ enum class TelemetryFormat { TEXT, JSON };
 enum class MutationStrategy { RANDOM, BLACKLIST, SMART };
 enum class HeuristicMode { NONE, BLACKLIST, DECAY };
 
+// Select which built-in kernel the bootloader should seed evolution with.
+// `GLOB` is the original self-replicating quine; `SEQ` is a tiny recurrent
+// module that maintains two floats and reports them via `env.record_weight`.
+enum class KernelType { GLOB, SEQ };
+
 struct CliOptions {
     bool useGui      = true;   // false would eventually enable headless mode
     bool fullscreen  = true;   // only meaningful when useGui == true
@@ -33,6 +38,9 @@ struct CliOptions {
 
     // per-kernel execution timeout (milliseconds); 0 = disabled
     int maxExecMs = 0;
+
+    // which kernel to use as the starting point
+    KernelType kernelType = KernelType::GLOB;
 
     // flag set if any parsing error/warning occurred
     bool parseError = false;

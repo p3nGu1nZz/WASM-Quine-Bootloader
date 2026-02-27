@@ -5,6 +5,7 @@ using Catch::Approx;
 #include <filesystem>
 #include "util.h"  // for executableDir()
 #include "app.h"
+#include "constants.h"  // for KERNEL_SEQ
 
 TEST_CASE("Blacklist helper methods behave correctly", "[app]") {
     CliOptions opts;
@@ -138,6 +139,14 @@ TEST_CASE("App.log helper adds entries", "[app][log]") {
     a.log("test message", "debug");
     REQUIRE(!a.logs().empty());
     REQUIRE(a.logs().back().message == "test message");
+}
+
+TEST_CASE("App respects CLI kernel selection", "[app][cli]") {
+    CliOptions opts;
+    opts.kernelType = KernelType::SEQ;
+    App a(opts);
+    REQUIRE(a.currentKernel() == KERNEL_SEQ);
+    REQUIRE(a.stableKernel() == KERNEL_SEQ);
 }
 
 TEST_CASE("App.scoreSequence delegates to Advisor and returns reasonable values", "[app][advisor]") {

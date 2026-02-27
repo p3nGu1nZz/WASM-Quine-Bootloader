@@ -23,6 +23,12 @@ Additional options implemented by `parseCli()`:
 - `--max-run-ms=<n>` – abort as soon as the process has been running for roughly `n` milliseconds.  Useful as a simple watchdog when invoking the bootloader from external harnesses or when integrating into services that impose time limits.
 - `--max-exec-ms=<n>` – limit the duration of each WASM kernel execution to about `n` milliseconds.  When a kernel exceeds the threshold it is forcibly terminated and the generation is treated as a failure; this protects against infinite loops or runaway code.  This feature is implemented via a fork‑based watchdog on Unix platforms.
 - `--save-model=<path>` / `--load-model=<path>` – persist or restore the trainer model to/from disk.
+- `--kernel=<glob|seq>` – choose which built-in WASM module to use as the seed for evolution.  `glob` is the original quine; `seq` is a minimal recurrent kernel that reports internal weights via `env.record_weight` and is executed once for each candidate during mutation.  EvolutionResults record any floats emitted by such kernels in their `weightFeedback` field.
+- `--kernel=<glob|seq>` – choose the initial kernel used for evolution.  `glob`
+  picks the standard quine, while `seq` selects a minimal RNN that reports
+  its hidden weights via `env.record_weight`.  This kernel will also be
+  executed once per candidate during `evolveBinary()` and the resulting
+  floats are made available in the `EvolutionResult` for experimentation.
 
 Unrecognised flags or malformed values generate a warning on stderr and set the `parseError` field in the returned `CliOptions`.  Completely unknown options are otherwise ignored so that wrapper scripts can forward extra arguments to the bootloader.
 

@@ -395,8 +395,8 @@ EvolutionResult evolveBinary(
     // to the overall generation time, and catching errors here allows the
     // caller's try/catch wrappers to reject the mutation cleanly and
     // continue searching for a different sequence.
+    std::string b64 = base64_encode(newBytes);
     {
-        std::string b64 = base64_encode(newBytes);
         try {
             WasmKernel wk;
             // no callbacks needed for validation
@@ -405,15 +405,37 @@ EvolutionResult evolveBinary(
             wk.runDynamic("");
             wk.terminate();
         } catch (const std::exception& e) {
-            std::string b64 = base64_encode(newBytes);
             throw EvolutionException(std::string("Validation failed: ") + e.what(), b64);
         }
     }
 
-    return {
-        base64_encode(newBytes),
+    // OPTIONAL: run the candidate kernel once with a weight callback so we
+    // can observe any internal predictor outputs.  This demonstrates the
+    // in-kernel sequence model executing at mutation time; callers can use
+    // the resulting floats to bias selection if desired.
+    std::vector<float> feedback;
+    try {
+        WasmKernel wk;
+        auto weightCb = [&](uint32_t a, uint32_t b) {
+            float f1, f2;
+            std::memcpy(&f1, &a, sizeof(f1));
+            std::memcpy(&f2, &b, sizeof(f2));
+            feedback.push_back(f1);
+            feedback.push_back(f2);
+        };
+        wk.bootDynamic(b64, {}, {}, {}, weightCb, {});
+        wk.runDynamic(b64);
+        wk.terminate();
+    } catch (...) {
+        // ignore errors; feedback will remain empty
+    }
+
+    EvolutionResult result{
+        std::move(b64),
         mutationSequence,
         (EvolutionAction)action,
         description
     };
+    result.weightFeedback = std::move(feedback);
+    return result;
 }
