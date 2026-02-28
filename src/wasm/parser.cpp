@@ -1,6 +1,5 @@
 #include "wasm/parser.h"
-#include <sstream>
-#include <iomanip>
+#include <cstdio>
 
 std::string getOpcodeName(uint8_t byte) {
     switch (byte) {
@@ -14,10 +13,9 @@ std::string getOpcodeName(uint8_t byte) {
         case 0x41: return "i32.const";
         case 0x10: return "call";
         default: {
-            std::ostringstream ss;
-            ss << "0x" << std::uppercase << std::hex << std::setw(2)
-               << std::setfill('0') << (int)byte;
-            return ss.str();
+            char buf[8];
+            std::snprintf(buf, sizeof(buf), "0x%02X", (unsigned)byte);
+            return std::string(buf);
         }
     }
 }
@@ -39,77 +37,101 @@ LEB128Result decodeLEB128(const uint8_t* bytes, size_t size, int offset) {
     return { result, count };
 }
 
-std::vector<uint8_t> encodeLEB128(uint32_t value) {
-    std::vector<uint8_t> bytes;
-    if (value == 0) { bytes.push_back(0); return bytes; }
-    while (true) {
+LEB128Encoded encodeLEB128(uint32_t value) {
+    LEB128Encoded enc;
+    enc.length = 0;
+    if (value == 0) {
+        enc.data[0] = 0;
+        enc.length = 1;
+        return enc;
+    }
+    while (value > 0 && enc.length < 5) {
         uint8_t byte = (uint8_t)(value & 0x7F);
         value >>= 7;
-        if (value == 0) {
-            bytes.push_back(byte);
-            break;
-        } else {
-            bytes.push_back(byte | 0x80);
-        }
+        if (value != 0) byte |= 0x80;
+        enc.data[enc.length++] = byte;
     }
-    return bytes;
+    return enc;
+}
+
+// Helper: compute the byte length of an instruction starting at data[ptr]
+// without allocating any memory.  Returns {instrLen, argLen}.
+static inline void computeInstrLen(const uint8_t* data, size_t len, int ptr,
+                                   int& instrLen, int& argLen) {
+    uint8_t opcode = data[ptr];
+    instrLen = 1;
+    argLen = 0;
+    if (opcode == 0x41 || opcode == 0x20 || opcode == 0x21 ||
+        opcode == 0x22 || opcode == 0x10) {
+        auto leb = decodeLEB128(data, len, ptr + 1);
+        argLen = leb.length;
+        instrLen += argLen;
+    } else if (opcode == 0x04) {
+        instrLen = 2;
+        argLen = 1;
+    }
+    if (ptr + instrLen > (int)len) {
+        instrLen = (int)len - ptr;
+        argLen = instrLen > 1 ? instrLen - 1 : 0;
+    }
 }
 
 std::vector<Instruction> parseInstructions(const uint8_t* data, size_t len) {
     std::vector<Instruction> instructions;
+    instructions.reserve(len / 2); // heuristic: avg ~ 2 bytes per instr
     int ptr = 0;
     while (ptr < (int)len) {
-        uint8_t opcode = data[ptr];
-        std::vector<uint8_t> args;
-        int instLen = 1;
+        Instruction inst;
+        inst.opcode = data[ptr];
+        inst.originalOffset = ptr;
 
-        if (opcode == 0x41) { // i32.const
-            auto leb = decodeLEB128(data, len, ptr + 1);
-            instLen += leb.length;
-            args.assign(data + ptr + 1, data + ptr + instLen);
-        } else if (opcode == 0x20 || opcode == 0x21 ||
-                   opcode == 0x22 || opcode == 0x10) {
-            auto leb = decodeLEB128(data, len, ptr + 1);
-            instLen += leb.length;
-            args.assign(data + ptr + 1, data + ptr + instLen);
-        } else if (opcode == 0x04) { // if
-            instLen = 2; // opcode + blocktype byte
-            args.assign(data + ptr + 1, data + ptr + instLen);
+        int instrLen, argLen;
+        computeInstrLen(data, len, ptr, instrLen, argLen);
+
+        inst.length = instrLen;
+        inst.argLen = (uint8_t)(argLen < kMaxInstrArgs ? argLen : kMaxInstrArgs);
+        if (inst.argLen > 0) {
+            std::memcpy(inst.args, data + ptr + 1, inst.argLen);
         }
 
-        if (ptr + instLen > (int)len) {
-            instLen = (int)len - ptr;
-            if (instLen > 1)
-                args.assign(data + ptr + 1, data + ptr + instLen);
-            else
-                args.clear();
-        }
-
-        instructions.push_back({ opcode, args, instLen, ptr });
-        ptr += instLen;
+        instructions.push_back(inst);
+        ptr += instrLen;
     }
     return instructions;
 }
 
-std::vector<Instruction> extractCodeSection(const std::vector<uint8_t>& bytes) {
-    if (bytes.size() < 8) return {};
+std::vector<uint8_t> extractOpcodes(const uint8_t* data, size_t len) {
+    std::vector<uint8_t> opcodes;
+    opcodes.reserve(len / 2);
+    int ptr = 0;
+    while (ptr < (int)len) {
+        opcodes.push_back(data[ptr]);
+        int instrLen, argLen;
+        computeInstrLen(data, len, ptr, instrLen, argLen);
+        ptr += instrLen;
+    }
+    return opcodes;
+}
 
-    int  ptr                   = 8;
-    int  codeSectionStart      = -1;
-    int  codeSectionContentStart = -1;
+// Helper: navigate the WASM binary to find the first function body's
+// instruction range.  Returns {instructionStart, endOpIndex} or {-1,-1}.
+static std::pair<int,int> locateCodeBody(const std::vector<uint8_t>& bytes) {
+    if (bytes.size() < 8) return {-1, -1};
+
+    int ptr = 8;
+    int codeSectionContentStart = -1;
 
     while (ptr < (int)bytes.size()) {
-        uint8_t id      = bytes[ptr];
+        uint8_t id       = bytes[ptr];
         auto    sizeData = decodeLEB128(bytes.data(), bytes.size(), ptr + 1);
         if (id == 10) {
-            codeSectionStart       = ptr;
             codeSectionContentStart = ptr + 1 + sizeData.length;
             break;
         }
         ptr = ptr + 1 + sizeData.length + (int)sizeData.value;
     }
 
-    if (codeSectionStart == -1) return {};
+    if (codeSectionContentStart == -1) return {-1, -1};
 
     auto numFuncsData    = decodeLEB128(bytes.data(), bytes.size(), codeSectionContentStart);
     int  funcBodySizeOff = codeSectionContentStart + numFuncsData.length;
@@ -128,8 +150,18 @@ std::vector<Instruction> extractCodeSection(const std::vector<uint8_t>& bytes) {
     int funcEnd          = funcContentStart + (int)funcBodySizeData.value;
     int endOpIndex       = funcEnd - 1;
 
-    if (instructionStart >= endOpIndex) return {};
+    if (instructionStart >= endOpIndex) return {-1, -1};
+    return {instructionStart, endOpIndex};
+}
 
-    return parseInstructions(bytes.data() + instructionStart,
-                             (size_t)(endOpIndex - instructionStart));
+std::vector<Instruction> extractCodeSection(const std::vector<uint8_t>& bytes) {
+    auto [start, end] = locateCodeBody(bytes);
+    if (start < 0) return {};
+    return parseInstructions(bytes.data() + start, (size_t)(end - start));
+}
+
+std::vector<uint8_t> extractCodeSectionOpcodes(const std::vector<uint8_t>& bytes) {
+    auto [start, end] = locateCodeBody(bytes);
+    if (start < 0) return {};
+    return extractOpcodes(bytes.data() + start, (size_t)(end - start));
 }

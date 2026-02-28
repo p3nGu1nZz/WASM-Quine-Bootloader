@@ -14,7 +14,9 @@ static void writeExport(const fs::path& path, int gen, const std::string& kernel
     o << "Final Generation: " << gen << "\n";
     if (!trap.empty()) o << "Traps: " << trap << "\n";
     o << "CURRENT KERNEL (BASE64):\n";
+    o << std::string(80, '-') << "\n";
     o << kernel << "\n";
+    o << std::string(80, '-') << "\n";
 }
 
 TEST_CASE("Advisor loads entries from telemetry files", "[advisor]") {

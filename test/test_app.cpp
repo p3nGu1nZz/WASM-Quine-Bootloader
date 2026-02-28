@@ -135,9 +135,11 @@ TEST_CASE("exportHistory includes instances section", "[export]") {
 TEST_CASE("App.log helper adds entries", "[app][log]") {
     CliOptions opts;
     App a(opts);
-    REQUIRE(a.logs().empty());
+    // The constructor may auto-load a model checkpoint and add a log
+    // entry; record the baseline size rather than assuming zero.
+    size_t baseline = a.logs().size();
     a.log("test message", "debug");
-    REQUIRE(!a.logs().empty());
+    REQUIRE(a.logs().size() == baseline + 1);
     REQUIRE(a.logs().back().message == "test message");
 }
 
@@ -257,6 +259,7 @@ TEST_CASE("update() re-enables evolution when training has already completed", "
     App a(opts);
     // pretend training already finished but evolution disabled
     a.test_forceTrainingPhase(TrainingPhase::COMPLETE);
+    a.test_forceModelSaved(true);
     a.test_forceEvolutionEnabled(false);
     REQUIRE_FALSE(a.evolutionEnabled());
     a.update();
@@ -274,6 +277,7 @@ TEST_CASE("evolution/training cycles can repeat indefinitely", "[app][cycle]") {
 
     // simulate finishing the training phase and let update re-enable
     a.test_forceTrainingPhase(TrainingPhase::COMPLETE);
+    a.test_forceModelSaved(true);
     a.update();
     REQUIRE(a.evolutionEnabled());
 

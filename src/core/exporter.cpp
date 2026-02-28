@@ -3,6 +3,7 @@
 #include "util.h"
 #include "wasm/parser.h"
 
+#include <cstdio>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -16,11 +17,11 @@ std::string buildReport(const ExportData& d) {
             const auto& inst = d.instructions[i];
             std::string name = getOpcodeName(inst.opcode);
             std::string args;
-            for (uint8_t a : inst.args) {
+            for (int ai = 0; ai < inst.argLen; ++ai) {
                 if (!args.empty()) args += ' ';
-                std::ostringstream hex;
-                hex << "0x" << std::uppercase << std::hex << (int)a;
-                args += hex.str();
+                char hex[8];
+                std::snprintf(hex, sizeof(hex), "0x%02X", (unsigned)inst.args[ai]);
+                args += hex;
             }
             ss << std::setw(3) << std::setfill('0') << i
                << " | 0x" << std::uppercase << std::hex

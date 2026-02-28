@@ -67,10 +67,9 @@ static std::string describeSequence(const std::vector<uint8_t>& seq) {
     for (size_t i = 0; i < instrs.size(); i++) {
         if (i) desc += ", ";
         desc += getOpcodeName(instrs[i].opcode);
-        if (!instrs[i].args.empty()) {
-            std::ostringstream ss;
-            ss << " " << (int)instrs[i].args[0];
-            desc += ss.str();
+        if (instrs[i].argLen > 0) {
+            desc += ' ';
+            desc += std::to_string((int)instrs[i].args[0]);
         }
     }
     return desc;
@@ -78,9 +77,11 @@ static std::string describeSequence(const std::vector<uint8_t>& seq) {
 
 static std::vector<uint8_t> flatten(const std::vector<Instruction>& instrs) {
     std::vector<uint8_t> out;
+    out.reserve(instrs.size() * 2);
     for (const auto& inst : instrs) {
         out.push_back(inst.opcode);
-        out.insert(out.end(), inst.args.begin(), inst.args.end());
+        if (inst.argLen > 0)
+            out.insert(out.end(), inst.args, inst.args + inst.argLen);
     }
     return out;
 }
@@ -279,7 +280,7 @@ EvolutionResult evolveBinary(
                         auto& p0 = parsedInstructions[i];
                         auto& p1 = parsedInstructions[i+1];
                         auto& p4 = parsedInstructions[i+4];
-                        if (p0.opcode == 0x41 && !p0.args.empty() && p0.args[0] == 1 &&
+                        if (p0.opcode == 0x41 && p0.argLen > 0 && p0.args[0] == 1 &&
                             p1.opcode == 0x04 && p4.opcode == 0x0B && randF() < 0.5f) {
                             targetIdx   = i;
                             deleteCount = 5;
@@ -364,28 +365,31 @@ EvolutionResult evolveBinary(
                                       bytes.begin() + funcBodySizeOff);
 
     uint32_t newSectionContentLen = (uint32_t)(preFuncSize.size() +
-                                                newFuncBodySizeEnc.size() +
+                                                newFuncBodySizeEnc.length +
                                                 newFuncBodyLen);
     auto newSectionSizeEnc = encodeLEB128(newSectionContentLen);
 
     std::vector<uint8_t> preCode(bytes.begin(), bytes.begin() + codeSectionStart + 1);
 
     std::vector<uint8_t> newBytes;
-    newBytes.reserve(preCode.size() + newSectionSizeEnc.size() + preFuncSize.size() +
-                     newFuncBodySizeEnc.size() + preInstructions.size() +
+    newBytes.reserve(preCode.size() + newSectionSizeEnc.length + preFuncSize.size() +
+                     newFuncBodySizeEnc.length + preInstructions.size() +
                      newInstructionsBytes.size() + postInstructions.size());
 
-    auto append = [&](const std::vector<uint8_t>& v) {
+    auto appendVec = [&](const std::vector<uint8_t>& v) {
         newBytes.insert(newBytes.end(), v.begin(), v.end());
     };
+    auto appendLEB = [&](const LEB128Encoded& e) {
+        newBytes.insert(newBytes.end(), e.data, e.data + e.length);
+    };
 
-    append(preCode);
-    append(newSectionSizeEnc);
-    append(preFuncSize);
-    append(newFuncBodySizeEnc);
-    append(preInstructions);
-    append(newInstructionsBytes);
-    append(postInstructions);
+    appendVec(preCode);
+    appendLEB(newSectionSizeEnc);
+    appendVec(preFuncSize);
+    appendLEB(newFuncBodySizeEnc);
+    appendVec(preInstructions);
+    appendVec(newInstructionsBytes);
+    appendVec(postInstructions);
 
     // Before handing the new binary back to the caller we perform a
     // *validation* pass.  Several hard-to-debug issues (including the
@@ -434,8 +438,8 @@ EvolutionResult evolveBinary(
         std::move(b64),
         mutationSequence,
         (EvolutionAction)action,
-        description
+        description,
+        std::move(feedback)
     };
-    result.weightFeedback = std::move(feedback);
     return result;
 }

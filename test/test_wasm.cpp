@@ -16,9 +16,9 @@ using Catch::Approx;
 TEST_CASE("LEB128 encode/decode round trip", "[wasm]") {
     for (uint32_t v : {0u, 1u, 127u, 128u, 255u, 256u, 0xFFFFFFFFu}) {
         auto enc = encodeLEB128(v);
-        auto dec = decodeLEB128(enc.data(), enc.size(), 0);
+        auto dec = decodeLEB128(enc.data, enc.length, 0);
         REQUIRE(dec.value == v);
-        REQUIRE(dec.length == (int)enc.size());
+        REQUIRE(dec.length == (int)enc.length);
     }
 }
 
@@ -28,7 +28,7 @@ TEST_CASE("parseInstructions handles simple sequences", "[wasm]") {
     auto instrs = parseInstructions(data.data(), data.size());
     REQUIRE(instrs.size() == 3);
     REQUIRE(instrs[0].opcode == 0x41);
-    REQUIRE(instrs[0].args.size() == 1);
+    REQUIRE(instrs[0].argLen == 1);
     REQUIRE(instrs[1].opcode == 0x1A);
     REQUIRE(instrs[2].opcode == 0x0B);
 }
@@ -45,7 +45,7 @@ TEST_CASE("parseInstructions handles multi-byte LEB128 and control ops", "[wasm]
     auto instrs = parseInstructions(data.data(), data.size());
     REQUIRE(instrs.size() == 4);
     REQUIRE(instrs[0].opcode == 0x41);
-    REQUIRE(instrs[0].args.size() == 2); // two-byte immediate
+    REQUIRE(instrs[0].argLen == 2); // two-byte immediate
     REQUIRE(instrs[1].opcode == 0x1A);
     REQUIRE(instrs[2].opcode == 0x04);
     REQUIRE(instrs[3].opcode == 0x0B);

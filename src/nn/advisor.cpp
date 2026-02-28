@@ -57,7 +57,9 @@ void Advisor::parseFile(const std::string& path) {
         } else if (line == "CURRENT KERNEL (BASE64):") {
             inKernelSection = true;
         } else if (inKernelSection) {
-            if (line.empty()) break;
+            // skip dash separator lines and empty lines
+            if (line.empty()) continue;
+            if (line.find_first_not_of('-') == std::string::npos) continue;
             te.kernelBase64 = line;
             inKernelSection = false;
         }

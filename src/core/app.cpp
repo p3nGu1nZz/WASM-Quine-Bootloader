@@ -3,7 +3,9 @@
 #include "base64.h"
 #include "util.h"
 #include "exporter.h"
+#include "nn/feature.h"
 #include "wasm/evolution.h"
+#include "wasm/parser.h"
 
 #include <SDL3/SDL.h>
 
@@ -127,12 +129,20 @@ App::App(const CliOptions& opts, std::function<uint64_t()> nowFn)
     if (m_opts.heuristic != HeuristicMode::NONE) {
         m_blacklist.reserve(512);
     }
-    // load model if requested
+    // load model if requested, or auto-load the most recent checkpoint
     if (!m_opts.loadModelPath.empty()) {
         if (!m_trainer.load(m_opts.loadModelPath)) {
             m_logger.log("WARNING: failed to load model from " + m_opts.loadModelPath, "warning");
         } else {
             m_logger.log("Loaded model from " + m_opts.loadModelPath, "info");
+        }
+    } else {
+        // look for an auto-saved checkpoint from a previous run
+        auto cpPath = telemetryRoot() / "model_checkpoint.dat";
+        if (fs::exists(cpPath)) {
+            if (m_trainer.load(cpPath.string())) {
+                m_logger.log("Auto-loaded model checkpoint from " + cpPath.string(), "info");
+            }
         }
     }
 
@@ -248,9 +258,11 @@ bool App::update() {
     // in the constructor so this path is a no-op.
     if (!m_evolutionEnabled) {
         tickTraining();
-        // if training has already finished, re-enable evolution so the FSM
-        // can continue even if the GUI scene hasn't been switched yet.
-        if (m_trainingPhase == TrainingPhase::COMPLETE) {
+        // only re-enable evolution after training is complete AND the
+        // model checkpoint has been saved (or attempted).  This ensures
+        // the save countdown inside tickTraining() runs to completion
+        // before the FSM takes over.
+        if (m_trainingPhase == TrainingPhase::COMPLETE && m_modelSaved) {
             m_evolutionEnabled = true;
         }
         return true;
@@ -283,6 +295,8 @@ bool App::modelSaved() const { return m_modelSaved; }
 int App::test_savePhase() const { return m_savePhase; }
 
 float App::saveProgress() const {
+    // if model has already been saved, report full progress
+    if (m_modelSaved) return 1.0f;
     // mirror the countdown logic in tickTraining(); the hard-coded saveWait
     // value must stay in sync.
     const int saveWait = 3; // number of update calls to wait
@@ -518,8 +532,66 @@ void App::requestExit() {
     m_shouldExit = true;
 }
 
-void App::trainAndMaybeSave(const TelemetryEntry& te) {
+void App::trainAndMaybeSave(const TelemetryEntry& te,
+                            const std::vector<uint8_t>& mutSeq) {
+    // run the full sequence through a policy copy so the LSTM processes
+    // every opcode, not just the last one.  The copy is necessary because
+    // we need resetState() which is non-const.
+    float predBefore = 0.0f;
+    int seqLen = 0;
+    if (!te.kernelBase64.empty()) {
+        auto seq = Feature::extractSequence(te);
+        seqLen = (int)seq.size();
+        if (!seq.empty()) {
+            Policy pol = m_trainer.policy(); // copy
+            pol.resetState();
+            for (auto op : seq) {
+                std::vector<float> feat(kFeatSize, 0.0f);
+                if (op < kFeatSize) feat[op] = 1.0f;
+                auto out = pol.forward(feat);
+                predBefore = out.empty() ? 0.0f : out[0];
+            }
+        } else {
+            auto feat = Feature::extract(te);
+            auto out = m_trainer.policy().forward(feat);
+            predBefore = out.empty() ? 0.0f : out[0];
+        }
+    }
+
     m_trainer.observe(te);
+
+    // build a compact description of the mutation opcodes
+    std::string mutDesc;
+    if (!mutSeq.empty()) {
+        auto insts = parseInstructions(mutSeq.data(), mutSeq.size());
+        for (size_t i = 0; i < insts.size(); ++i) {
+            if (i) mutDesc += ",";
+            mutDesc += getOpcodeName(insts[i].opcode);
+        }
+    }
+
+    // log NN feedback: generation, mutation, model prediction, loss
+    {
+        float reward = static_cast<float>(te.generation);
+        float loss = m_trainer.lastLoss();
+        float avgLoss = m_trainer.avgLoss();
+        int obs = m_trainer.observations();
+        std::ostringstream ss;
+        ss << std::fixed;
+        ss << "NN: gen=" << te.generation
+           << " seq=" << seqLen;
+        if (!mutDesc.empty()) {
+            ss << " mut=[" << mutDesc << "]";
+        }
+        ss << " pred=" << std::setprecision(4) << predBefore
+           << " reward=" << std::setprecision(1) << reward
+           << " loss=" << std::setprecision(6) << loss
+           << " avgLoss=" << std::setprecision(6) << avgLoss
+           << " obs=" << obs
+           << (m_trainer.test_lastUsedSequence() ? " [SEQ]" : " [HIST]");
+        m_logger.log(ss.str(), "info");
+    }
+
     if (!m_opts.saveModelPath.empty()) {
         m_trainer.save(m_opts.saveModelPath);
     }
@@ -618,7 +690,7 @@ void App::onWasmLog(uint32_t ptr, uint32_t len,
                 te.generation = m_generation;
                 te.kernelBase64 = m_currentKernel;
                 te.trapCode = m_lastTrapReason;
-                trainAndMaybeSave(te);
+                trainAndMaybeSave(te, evo.mutationSequence);
             }
         } catch (const EvolutionException& ee) {
             std::string msg = std::string("EVOLUTION REJECTED: ") + ee.what();

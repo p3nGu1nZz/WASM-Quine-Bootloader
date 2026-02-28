@@ -155,7 +155,8 @@ TEST_CASE("App saves model after training completion", "[training]") {
     while (!app.trainingDone())
         app.update();
     REQUIRE(app.trainingDone());
-    // the first update after training should have begun the save countdown
+    // the save countdown begins on the NEXT update after training completes
+    app.update();
     REQUIRE(app.savingModel());
     REQUIRE(app.saveProgress() > 0.0f);
 

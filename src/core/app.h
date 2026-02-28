@@ -115,8 +115,11 @@ public:
     std::filesystem::path telemetryRootPublic() const { return telemetryRoot(); }
 
     // helper used by tests to apply a telemetry entry and optionally
-    // persist the model via CLI flag.
-    void trainAndMaybeSave(const TelemetryEntry& te);
+    // persist the model via CLI flag.  The optional `mutSeq` carries the raw
+    // bytes of the mutation that produced this kernel so the log can show
+    // which instructions actually changed.
+    void trainAndMaybeSave(const TelemetryEntry& te,
+                           const std::vector<uint8_t>& mutSeq = {});
 
     // expose reboot helper for tests
     void doReboot(bool success);
@@ -144,6 +147,7 @@ public:
     // Test-only helpers to manipulate internal state directly.
     void test_forceEvolutionEnabled(bool v) { m_evolutionEnabled = v; }
     void test_forceTrainingPhase(TrainingPhase p) { m_trainingPhase = p; }
+    void test_forceModelSaved(bool v) { m_modelSaved = v; }
     // expose internal counters for unit tests
     int test_trainingStep() const { return m_trainingStep; }
     int test_trainingLoadEnd() const { return m_trainingLoadEnd; }

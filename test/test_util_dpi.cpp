@@ -181,7 +181,9 @@ TEST_CASE("weight heatmap drawing caches textures for performance", "[gui][heatm
     REQUIRE(gui.test_lastHeatmapGen() == app.generation());
     SDL_Texture* tex1 = gui.test_heatmapTex(0);
     REQUIRE(tex1 != nullptr);
-    REQUIRE(tex1 != tex0);
+    // Note: we cannot rely on tex1 != tex0 here because the allocator may
+    // reuse the same address after destroy+create.  Verifying that
+    // lastHeatmapGen advanced is sufficient proof of cache invalidation.
 
     // draw a few more full frames to exercise the FPS counter
     for (int i = 0; i < 5; ++i) {

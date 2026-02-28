@@ -4,6 +4,7 @@
 #include "util.h"
 #include "wasm/parser.h"
 
+#include <cstdio>
 #include <imgui.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_sdlrenderer3.h>
@@ -307,11 +308,13 @@ void Gui::renderInstrPanel(const App& app, float w, float h) {
             ImGui::PushStyleColor(ImGuiCol_Text, IM_COL32(120, 120, 120, 180));
         }
 
-        if (!inst.args.empty()) {
-            std::ostringstream ss;
-            for (uint8_t a : inst.args)
-                ss << " 0x" << std::uppercase << std::hex << (int)a;
-            ImGui::Text("%-12s%s", name.c_str(), ss.str().c_str());
+        if (inst.argLen > 0) {
+            char argBuf[64] = {};
+            int pos = 0;
+            for (int ai = 0; ai < inst.argLen && pos < 58; ++ai)
+                pos += std::snprintf(argBuf + pos, sizeof(argBuf) - pos,
+                                     " 0x%02X", (unsigned)inst.args[ai]);
+            ImGui::Text("%-12s%s", name.c_str(), argBuf);
         } else {
             ImGui::TextUnformatted(name.c_str());
         }
@@ -484,48 +487,41 @@ void Gui::renderWeightHeatmaps(const App& app, int winW) {
     ImGui::TextDisabled("NN WEIGHT HEATMAPS");
     float visW = (float)winW - 20.0f;
 
-    // Layout each layer as a horizontal row of fixed height.  Compute the
-    // unscaled width for each row (in * out * rowH) so we can calculate a
-    // global scaling factor that shrinks the entire strip to fit the panel.
-    const float rowH = 16.0f;
-    std::vector<float> layerWidth(layers);
-    float totalWidth = 0.0f;
+    // Layout: distribute available width proportionally among layers;
+    // each layer's share is proportional to its weight count.  The panel
+    // has a fixed height so the textures render at a readable size.
+    const float panelH = 100.0f;  // target panel height in pixels
+    const float pad    = 4.0f;    // gap between layer images
+
+    // compute total weight count for proportional sizing
+    int totalWeights = 0;
     for (int l = 0; l < layers; ++l) {
         int in = pol.layerInSize(l);
         int out = pol.layerOutSize(l);
-        if (in <= 0 || out <= 0) {
-            layerWidth[l] = 0.0f;
-            continue;
-        }
-        layerWidth[l] = (float)in * (float)out * rowH;
-        totalWidth += layerWidth[l];
+        if (in > 0 && out > 0) totalWeights += in * out;
     }
-    float scale = 1.0f;
-    if (totalWidth > visW && visW > 0.0f) {
-        scale = visW / totalWidth;
-    }
+    if (totalWeights <= 0) return;
 
-    // wrap the row in a child window to enable horizontal scrolling if the
-    // scaled width still exceeds the visible area.
-    ImGui::BeginChild("##WeightHeatmaps", ImVec2(visW, rowH + 10.0f),
-                      true, ImGuiWindowFlags_HorizontalScrollbar);
+    float usableW = visW - pad * (float)(layers - 1);
+    if (usableW < 10.0f) usableW = 10.0f;
+
+    ImGui::BeginChild("##WeightHeatmaps", ImVec2(visW, panelH + 10.0f),
+                      true, ImGuiWindowFlags_NoScrollbar);
     for (int l = 0; l < layers; ++l) {
         int in = pol.layerInSize(l);
         int out = pol.layerOutSize(l);
         if (in <= 0 || out <= 0) continue;
+        float fraction = (float)(in * out) / (float)totalWeights;
+        float drawW = usableW * fraction;
+        if (drawW < 4.0f) drawW = 4.0f;
+        float drawH = panelH;
         if (m_heatmapCache[l].tex) {
-            float drawW = layerWidth[l] * scale;
-            float drawH = rowH * scale;
             ImGui::Image((ImTextureID)m_heatmapCache[l].tex,
                          ImVec2(drawW, drawH));
-            ImGui::SameLine();
         } else {
-            // fallback: just reserve space for the texture
-            float drawW = layerWidth[l] * scale;
-            float drawH = rowH * scale;
             ImGui::Dummy(ImVec2(drawW, drawH));
-            ImGui::SameLine();
         }
+        ImGui::SameLine(0, pad);
     }
     ImGui::EndChild();
 }
